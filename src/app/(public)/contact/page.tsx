@@ -6,12 +6,12 @@ import { JsonLd, buildBreadcrumbSchema } from '@/components/seo/JsonLd'
 import { ContactForm } from './ContactForm'
 
 export async function generateMetadata(): Promise<Metadata> {
-  return generatePageMetadata('contact', 'Contact Us', 'Get in touch with Bhuwanta. Schedule a consultation, inquire about properties, or just say hello.')
+  return generatePageMetadata('contact', 'Book Site Visit', 'Book a site visit with Bhuwanta. Schedule a consultation, inquire about properties, or explore our premium offerings.')
 }
 
 export default async function ContactPage() {
   let data = {
-    pageHeading: 'Get in Touch',
+    pageHeading: 'Book Site Visit',
     formLabels: {
       name: 'Your Name',
       email: 'Email Address',
@@ -43,7 +43,7 @@ export default async function ContactPage() {
         <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-[#003d4f]/3 rounded-full blur-[150px]" />
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <p className="text-sm font-semibold text-[#BA9832] mb-4 tracking-wider uppercase">Reach Out</p>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-[#002935]">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-[#002935]">
             {data.pageHeading?.split(' ').slice(0, -1).join(' ') || 'Get in'}{' '}
             <span className="text-gradient">{data.pageHeading?.split(' ').slice(-1)[0] || 'Touch'}</span>
           </h1>
@@ -56,7 +56,7 @@ export default async function ContactPage() {
       {/* Contact Section */}
       <section className="section-padding pt-0 bg-white">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-12">
             {/* Contact Info */}
             <div className="lg:col-span-2 space-y-6">
               {[

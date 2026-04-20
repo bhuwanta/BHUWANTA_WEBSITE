@@ -97,7 +97,7 @@ export default async function BlogPostPage({
     <>
       <JsonLd data={[breadcrumb, articleSchema]} />
 
-      <article className="pt-32 section-padding">
+      <article className="pt-28 sm:pt-32 section-padding">
         <div className="max-w-3xl mx-auto">
           {/* Back link */}
           <Link
@@ -122,11 +122,11 @@ export default async function BlogPostPage({
               </div>
             )}
 
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground leading-tight mb-6">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground leading-tight mb-6">
               {post.title}
             </h1>
 
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-sm text-muted-foreground">
               <span className="flex items-center gap-1.5">
                 <Calendar className="w-4 h-4" />
                 {formatDate(post.publishDate)}
@@ -139,7 +139,7 @@ export default async function BlogPostPage({
           </header>
 
           {/* Body */}
-          <div className="prose prose-invert prose-lg max-w-none prose-headings:font-bold prose-p:text-muted-foreground prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-strong:text-foreground prose-blockquote:border-primary/50 prose-blockquote:text-muted-foreground">
+          <div className="prose prose-lg max-w-none prose-headings:font-bold prose-p:text-[#5a6a82] prose-a:text-[#003d4f] prose-a:no-underline hover:prose-a:underline prose-strong:text-[#002935] prose-blockquote:border-[#BA9832]/50 prose-blockquote:text-[#5a6a82]">
             {post.body && <PortableText value={post.body} />}
           </div>
         </div>

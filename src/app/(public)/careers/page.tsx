@@ -79,7 +79,7 @@ export default async function CareersPage() {
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#003d4f]/3 rounded-full blur-[150px]" />
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <p className="text-sm font-semibold text-[#BA9832] mb-4 tracking-wider uppercase">Join Our Team</p>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-[#002935]">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-[#002935]">
             Build Your <span className="text-gradient">Career</span>
           </h1>
           <p className="text-lg text-[#5a6a82] max-w-2xl mx-auto">

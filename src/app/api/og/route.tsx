@@ -6,7 +6,7 @@ export const runtime = 'edge'
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const title = searchParams.get('title') || 'Bhuwanta'
-  const subtitle = searchParams.get('subtitle') || 'Premium Real Estate'
+  const subtitle = searchParams.get('subtitle') || 'Luxury Living Redefined'
 
   return new ImageResponse(
     (
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
             width: '400px',
             height: '400px',
             borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(0, 41, 53, 0.15) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, rgba(186, 152, 50, 0.15) 0%, transparent 70%)',
           }}
         />
         <div
@@ -52,38 +52,20 @@ export async function GET(request: NextRequest) {
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '16px',
+            justifyContent: 'center',
             marginBottom: '40px',
           }}
         >
-          <div
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={`${new URL(request.url).origin}/logo.png`}
+            alt="Bhuwanta"
             style={{
-              width: '48px',
-              height: '48px',
-              borderRadius: '12px',
-              background: 'linear-gradient(135deg, #BA9832 0%, #7D651F 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '24px',
-              fontWeight: 'bold',
-              color: 'black',
+              height: '120px',
+              width: 'auto',
+              objectFit: 'contain',
             }}
-          >
-            B
-          </div>
-          <span
-            style={{
-              fontSize: '24px',
-              fontWeight: 700,
-              letterSpacing: '2px',
-              background: 'linear-gradient(135deg, #BA9832 0%, #7D651F 100%)',
-              backgroundClip: 'text',
-              color: 'transparent',
-            }}
-          >
-            BHUWANTA
-          </span>
+          />
         </div>
 
         {/* Title */}

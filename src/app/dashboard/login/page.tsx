@@ -2,8 +2,10 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Building2, Loader2, Eye, EyeOff } from 'lucide-react'
+import Image from 'next/image'
+import { Loader2, Eye, EyeOff } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import logo from '@/images/logo.png'
 
 export default function DashboardLoginPage() {
   const [email, setEmail] = useState('')
@@ -40,11 +42,16 @@ export default function DashboardLoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#002935] via-[#003d4f] to-[#002935] p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
-        <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="w-12 h-12 rounded-xl gradient-gold flex items-center justify-center shadow-lg shadow-[#BA9832]/20">
-            <Building2 className="w-6 h-6 text-white" />
+        <div className="flex items-center justify-center mb-8">
+          <div className="relative h-16 w-auto">
+            <Image 
+              src={logo} 
+              alt="Bhuwanta" 
+              height={64}
+              className="h-16 w-auto object-contain"
+              priority
+            />
           </div>
-          <span className="text-2xl font-bold tracking-tight text-white">BHUWANTA</span>
         </div>
 
         <div className="bg-white rounded-2xl p-8 shadow-2xl shadow-black/10">

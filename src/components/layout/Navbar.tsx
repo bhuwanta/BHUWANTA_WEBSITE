@@ -1,9 +1,12 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useState, useEffect } from 'react'
-import { Menu, X, Building2 } from 'lucide-react'
+import { usePathname } from 'next/navigation'
+import { Menu, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import logo from '@/images/logo.png'
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -15,8 +18,12 @@ const navLinks = [
 ]
 
 export function Navbar() {
+  const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+
+  const isHome = pathname === '/'
+  const showGlass = scrolled || !isHome
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20)
@@ -28,21 +35,45 @@ export function Navbar() {
     <nav
       className={cn(
         'fixed top-0 left-0 right-0 z-50 transition-all duration-500',
-        scrolled
-          ? 'bg-white/95 backdrop-blur-xl border-b border-[#e8ecf2] shadow-sm'
-          : 'bg-white'
+        showGlass
+          ? 'bg-white/80 backdrop-blur-xl border-b border-[#e8ecf2] shadow-sm py-4'
+          : 'bg-transparent py-6'
       )}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between h-12">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 group" id="nav-logo">
-            <div className="w-10 h-10 rounded-lg gradient-gold flex items-center justify-center transition-premium group-hover:scale-110 glow-gold">
-              <Building2 className="w-5 h-5 text-white" />
+          <Link href="/" className="flex items-center group gap-3 sm:gap-5" id="nav-logo">
+            <div className="relative h-10 w-auto transition-transform duration-500 scale-[1.25] sm:scale-[1.4] origin-left group-hover:scale-[1.3] sm:group-hover:scale-[1.45]">
+              <Image 
+                src={logo} 
+                alt="Bhuwanta" 
+                height={40}
+                className={cn(
+                  "h-10 w-auto object-contain transition-all duration-500",
+                  !showGlass && "drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]" 
+                )}
+                priority
+              />
             </div>
-            <span className="text-xl font-bold tracking-tight text-[#002935]">
-              BHUWANTA
-            </span>
+            <div className="flex flex-col items-center pt-0.5 pl-1 sm:pl-3">
+              <span 
+                className={cn(
+                  "text-lg sm:text-xl font-bold tracking-[0.15em] sm:tracking-[0.2em] transition-colors duration-500",
+                  showGlass ? "text-[#002935]" : "text-[#BA9832]"
+                )}
+              >
+                BHUWANTA
+              </span>
+              <span 
+                className={cn(
+                  "text-[7px] sm:text-[9px] font-medium tracking-[0.1em] uppercase transition-colors duration-500",
+                  showGlass ? "text-[#002935]/80" : "text-[#BA9832]/80"
+                )}
+              >
+                Land Today. Landmark Tomorrow.
+              </span>
+            </div>
           </Link>
 
           {/* Right Section: Nav + CTA */}
@@ -54,7 +85,12 @@ export function Navbar() {
                   key={link.href}
                   href={link.href}
                   id={`nav-${link.label.toLowerCase()}`}
-                  className="px-4 py-2 text-sm font-medium text-[#5a6a82] hover:text-[#002935] animated-underline transition-premium rounded-lg hover:bg-[#f3f5f8]"
+                  className={cn(
+                    "px-4 py-2 text-sm font-medium transition-premium rounded-lg",
+                    showGlass 
+                      ? "text-[#5a6a82] hover:text-[#002935] hover:bg-[#f3f5f8]" 
+                      : "text-white/80 hover:text-white hover:bg-white/10"
+                  )}
                 >
                   {link.label}
                 </Link>
@@ -66,14 +102,22 @@ export function Navbar() {
               <Link
                 href="/contact"
                 id="nav-cta"
-                className="hidden sm:inline-flex px-5 py-2.5 text-sm font-semibold rounded-lg gradient-gold text-white transition-premium hover:scale-105 glow-gold"
+                className={cn(
+                  "hidden sm:inline-flex px-5 py-2.5 text-sm font-semibold rounded-lg transition-premium hover:scale-105 glow-gold",
+                  showGlass
+                    ? "gradient-gold text-white"
+                    : "bg-white text-[#002935] hover:bg-[#BA9832] hover:text-white"
+                )}
               >
-                Get in Touch
+                Book Site Visit
               </Link>
 
               {/* Mobile hamburger */}
               <button
-                className="md:hidden p-2 text-[#002935]"
+                className={cn(
+                  "md:hidden p-2 transition-colors",
+                  showGlass ? "text-[#002935]" : "text-white"
+                )}
                 onClick={() => setIsOpen(!isOpen)}
                 aria-label="Toggle menu"
                 id="nav-mobile-toggle"
@@ -88,8 +132,8 @@ export function Navbar() {
       {/* Mobile Menu */}
       <div
         className={cn(
-          'md:hidden overflow-hidden transition-all duration-500 bg-white',
-          isOpen ? 'max-h-[400px] border-t border-[#e8ecf2]' : 'max-h-0'
+          'md:hidden overflow-hidden transition-all duration-500',
+          isOpen ? 'max-h-[400px] border-t border-[#e8ecf2] bg-white' : 'max-h-0'
         )}
       >
         <div className="px-4 py-4 space-y-1">
@@ -108,7 +152,7 @@ export function Navbar() {
             onClick={() => setIsOpen(false)}
             className="block px-4 py-3 text-sm font-semibold text-center rounded-lg gradient-gold text-white mt-3"
           >
-            Get in Touch
+            Book Site Visit
           </Link>
         </div>
       </div>

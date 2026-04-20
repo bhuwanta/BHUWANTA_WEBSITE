@@ -11,10 +11,10 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Bhuwanta | Premium Real Estate',
+    default: 'Bhuwanta | Luxury Living Redefined',
     template: '%s | Bhuwanta',
   },
-  description: 'Premium real estate solutions by Bhuwanta. Discover luxury properties, residential projects, and commercial spaces.',
+  description: 'Experience unparalleled luxury with Bhuwanta. Discover exclusive residential projects and premium properties designed for the modern lifestyle.',
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
   openGraph: {
     type: 'website',
@@ -27,6 +27,10 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
+  },
+  icons: {
+    icon: '/logo.png',
+    apple: '/logo.png',
   },
 }
 

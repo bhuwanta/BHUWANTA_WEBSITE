@@ -1,5 +1,7 @@
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
+import { WhatsAppFloat } from '@/components/ui/WhatsAppFloat'
+import { LeadPopup } from '@/components/ui/LeadPopup'
 import { JsonLd, buildWebSiteSchema, buildOrganizationSchema } from '@/components/seo/JsonLd'
 
 export default function PublicLayout({
@@ -26,6 +28,8 @@ export default function PublicLayout({
       <Navbar />
       <main className="min-h-screen">{children}</main>
       <Footer />
+      <WhatsAppFloat />
+      <LeadPopup />
     </>
   )
 }

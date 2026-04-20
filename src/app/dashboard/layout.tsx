@@ -1,14 +1,16 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState } from 'react'
 import {
-  Building2, Image as ImageIcon, Briefcase, Search, Globe, Users, BarChart3,
+  ImageIcon, Briefcase, Search, Globe, Users, BarChart3,
   Mail, Settings, LogOut, Menu, X, ChevronRight, Home
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
+import logo from '@/images/logo.png'
 
 const sidebarLinks = [
   { href: '/dashboard', icon: Home, label: 'Overview' },
@@ -44,13 +46,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Logo */}
       <div className="p-6 border-b border-[#e8ecf2]">
         <Link href="/dashboard" className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg gradient-gold flex items-center justify-center">
-            <Building2 className="w-4 h-4 text-white" />
+          <div className="relative h-8 w-auto">
+            <Image 
+              src={logo} 
+              alt="Bhuwanta" 
+              height={32}
+              className="h-8 w-auto object-contain"
+            />
           </div>
-          <div>
-            <span className="font-bold text-[#002935] text-sm">BHUWANTA</span>
-            <span className="block text-[10px] text-[#5a6a82]">Dashboard</span>
-          </div>
+          <span className="block text-[10px] font-medium text-[#5a6a82] uppercase tracking-widest mt-1">Dashboard</span>
         </Link>
       </div>
 

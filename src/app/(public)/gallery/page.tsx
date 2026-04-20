@@ -69,7 +69,7 @@ export default async function GalleryPage() {
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#003d4f]/3 rounded-full blur-[150px]" />
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <p className="text-sm font-semibold text-[#BA9832] mb-4 tracking-wider uppercase">Our Portfolio</p>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-[#002935]">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-[#002935]">
             {pageHeading.split(' ').slice(0, -1).join(' ')}{' '}
             <span className="text-gradient">{pageHeading.split(' ').slice(-1)[0]}</span>
           </h1>
