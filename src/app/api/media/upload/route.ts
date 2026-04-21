@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     const sanityDoc = await writeClient.fetch(docQuery, { page })
     
     if (!sanityDoc?._id) {
-      return NextResponse.json({ error: `Sanity document for '${page}' not found. Please create it in /studio first.` }, { status: 404 })
+      return NextResponse.json({ error: `Sanity document for '${page}' not found. Please create it in /dashboard/blog first.` }, { status: 404 })
     }
 
     const docId = sanityDoc._id

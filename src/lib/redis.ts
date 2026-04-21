@@ -13,7 +13,7 @@ export const redis = process.env.UPSTASH_REDIS_REST_URL
 export const contactRateLimiter = redis
   ? new Ratelimit({
       redis,
-      limiter: Ratelimit.slidingWindow(5, '60 s'),
+      limiter: Ratelimit.slidingWindow(5, '1 h'),
       analytics: true,
       prefix: 'ratelimit:contact',
     })

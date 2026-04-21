@@ -1,5 +1,5 @@
 import { createClient, type QueryParams } from 'next-sanity'
-import imageUrlBuilder from '@sanity/image-url'
+import { createImageUrlBuilder } from '@sanity/image-url'
 
 export const client = createClient({
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID!,
@@ -8,7 +8,7 @@ export const client = createClient({
   useCdn: process.env.NODE_ENV === 'production',
 })
 
-const builder = imageUrlBuilder(client)
+const builder = createImageUrlBuilder(client)
 export function urlFor(source: any) {
   return builder.image(source)
 }
@@ -125,3 +125,51 @@ export const contactQuery = `*[_type == "contact"][0]{
   formLabels,
   thankYouMessage
 }`
+
+export const jobListingsQuery = `*[_type == "jobListing" && isActive == true] | order(postedAt desc){
+  _id,
+  title,
+  department,
+  location,
+  employmentType,
+  salaryMin,
+  salaryMax,
+  description,
+  requirements,
+  applyUrl,
+  postedAt
+}`
+
+export const siteSettingsQuery = `*[_type == "siteSettings"][0]{
+  siteName,
+  tagline,
+  logo,
+  favicon,
+  navLinks[]{ label, href },
+  ctaButtonText,
+  ctaButtonLink,
+  footerAddress,
+  footerAddressLabel,
+  googleMapsUrl,
+  footerPhone,
+  footerEmail,
+  copyrightText,
+  metaTitleTemplate,
+  defaultMetaDescription,
+  defaultOgImage,
+  googleSiteVerification,
+  socialLinks,
+  googleAnalyticsId,
+  googleTagManagerId,
+  metaPixelId
+}`
+export const autoresponderQuery = `*[_type == "autoresponder"][0]{
+  fromName,
+  fromEmail,
+  subjectLine,
+  "logoUrl": logo.asset->url,
+  messageBody,
+  "attachmentUrl": attachmentFile.asset->url,
+  "attachmentFilename": attachmentFile.asset->originalFilename
+}
+`

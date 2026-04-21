@@ -1,7 +1,11 @@
+'use client'
+
 import Link from 'next/link'
 import Image from 'next/image'
 import { Mail, Phone, MapPin } from 'lucide-react'
-import logo from '@/images/logo.png'
+import { useEffect, useState } from 'react'
+import { client, urlFor } from '@/lib/sanity'
+import logoFallback from '@/images/logo.png'
 
 const LinkedinIcon = (props: any) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
@@ -27,7 +31,7 @@ const YoutubeIcon = (props: any) => (
   </svg>
 )
 
-const footerLinks = [
+const defaultFooterLinks = [
   { href: '/about', label: 'About Us' },
   { href: '/projects', label: 'Projects' },
   { href: '/gallery', label: 'Gallery' },
@@ -36,7 +40,57 @@ const footerLinks = [
   { href: '/contact', label: 'Contact' },
 ]
 
+interface FooterSettings {
+  siteName?: string
+  tagline?: string
+  logo?: any
+  navLinks?: { label: string; href: string }[]
+  footerAddress?: string
+  footerAddressLabel?: string
+  googleMapsUrl?: string
+  footerPhone?: string
+  footerEmail?: string
+  copyrightText?: string
+  socialLinks?: {
+    linkedin?: string
+    facebook?: string
+    instagram?: string
+    youtube?: string
+    twitter?: string
+  }
+}
+
 export function Footer() {
+  const [settings, setSettings] = useState<FooterSettings>({})
+
+  useEffect(() => {
+    client.fetch(`*[_type == "siteSettings"][0]{
+      siteName, tagline, logo, navLinks[]{ label, href },
+      footerAddress, footerAddressLabel, googleMapsUrl,
+      footerPhone, footerEmail, copyrightText, socialLinks
+    }`).then((data: FooterSettings) => {
+      if (data) setSettings(data)
+    }).catch(() => {})
+  }, [])
+
+  const siteName = settings.siteName || 'BHUWANTA'
+  const tagline = settings.tagline || 'Land Today. Landmark Tomorrow.'
+  const logoSrc = settings.logo ? urlFor(settings.logo).height(96).url() : null
+  const footerLinks = settings.navLinks?.length ? settings.navLinks : defaultFooterLinks
+  const address = settings.footerAddress || 'Floor #4, Flat No. #406, Alluri Trade Center, Near KPHB Metro (Pillar #761), Hyderabad, Telangana - 500072'
+  const addressLabel = settings.footerAddressLabel || 'Headquarters'
+  const mapsUrl = settings.googleMapsUrl || 'https://maps.app.goo.gl/USjC2iYeGiXbZ5U16'
+  const phone = settings.footerPhone || '+91 XXXXX XXXXX'
+  const email = settings.footerEmail || 'info@bhuwanta.com'
+  const copyright = settings.copyrightText || 'Bhuwanta. All rights reserved.'
+
+  const socialItems = [
+    { name: 'LinkedIn', icon: LinkedinIcon, url: settings.socialLinks?.linkedin },
+    { name: 'Facebook', icon: FacebookIcon, url: settings.socialLinks?.facebook },
+    { name: 'Instagram', icon: InstagramIcon, url: settings.socialLinks?.instagram },
+    { name: 'YouTube', icon: YoutubeIcon, url: settings.socialLinks?.youtube },
+  ].filter(s => s.url)
+
   return (
     <footer className="relative bg-[#002935] border-t border-white/10 pt-2">
       {/* Decorative top border gradient */}
@@ -51,30 +105,31 @@ export function Footer() {
               <Link href="/" className="flex items-center group gap-3 sm:gap-4 mb-2">
                 <div className="relative h-12 w-auto transition-transform duration-500 scale-[1.3] sm:scale-[1.5] origin-left group-hover:scale-[1.35] sm:group-hover:scale-[1.55]">
                   <Image 
-                    src={logo} 
-                    alt="Bhuwanta" 
+                    src={logoSrc || logoFallback} 
+                    alt={siteName} 
                     height={48}
+                    width={logoSrc ? 144 : undefined}
                     className="h-12 w-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]"
                   />
                 </div>
                 <span className="text-xl font-bold tracking-[0.2em] text-[#BA9832] pl-2 sm:pl-4 transition-colors duration-500">
-                  BHUWANTA
+                  {siteName}
                 </span>
               </Link>
               <p className="text-[11px] sm:text-xs font-medium tracking-[0.15em] text-[#BA9832] uppercase pl-1 sm:pl-2">
-                Land Today. Landmark Tomorrow.
+                {tagline}
               </p>
             </div>
             <div className="mb-6 flex flex-col gap-3">
               <div className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-[#BA9832] mt-0.5 shrink-0" />
                 <div className="text-sm text-white/70 leading-relaxed pr-2">
-                  <strong className="block text-white mb-1 text-base tracking-wide">Headquarters</strong>
-                  <p>Floor #4, Flat No. #406, Alluri Trade Center, Near KPHB Metro (Pillar #761), Hyderabad, Telangana - 500072</p>
+                  <strong className="block text-white mb-1 text-base tracking-wide">{addressLabel}</strong>
+                  <p>{address}</p>
                 </div>
               </div>
               <a 
-                href="https://maps.app.goo.gl/USjC2iYeGiXbZ5U16" 
+                href={mapsUrl} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="w-fit ml-8 px-4 py-2.5 text-xs font-bold rounded-lg bg-[#BA9832]/10 text-[#BA9832] hover:bg-[#BA9832] hover:text-white transition-premium border border-[#BA9832]/20 shadow-none flex items-center gap-2 uppercase tracking-wider"
@@ -112,11 +167,11 @@ export function Footer() {
             <ul className="space-y-4">
               <li className="flex items-center gap-3 group">
                 <Phone className="w-4 h-4 text-[#BA9832] shrink-0" />
-                <span className="text-sm text-white/70 group-hover:text-white transition-colors">+91 XXXXX XXXXX</span>
+                <a href={`tel:${phone.replace(/\s/g, '')}`} className="text-sm text-white/70 group-hover:text-white transition-colors">{phone}</a>
               </li>
               <li className="flex items-center gap-3 group">
                 <Mail className="w-4 h-4 text-[#BA9832] shrink-0" />
-                <span className="text-sm text-white/70 group-hover:text-white transition-colors">info@bhuwanta.com</span>
+                <a href={`mailto:${email}`} className="text-sm text-white/70 group-hover:text-white transition-colors">{email}</a>
               </li>
             </ul>
           </div>
@@ -127,15 +182,17 @@ export function Footer() {
               Follow Us
             </h3>
             <div className="flex flex-col gap-3">
-              {[
-                { name: 'LinkedIn', icon: LinkedinIcon },
-                { name: 'Facebook', icon: FacebookIcon },
-                { name: 'Instagram', icon: InstagramIcon },
-                { name: 'YouTube', icon: YoutubeIcon },
-              ].map((social) => (
+              {(socialItems.length > 0 ? socialItems : [
+                { name: 'LinkedIn', icon: LinkedinIcon, url: '#' },
+                { name: 'Facebook', icon: FacebookIcon, url: '#' },
+                { name: 'Instagram', icon: InstagramIcon, url: '#' },
+                { name: 'YouTube', icon: YoutubeIcon, url: '#' },
+              ]).map((social) => (
                 <a
                   key={social.name}
-                  href="#"
+                  href={social.url || '#'}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="flex items-center gap-3 text-sm text-white/70 hover:text-[#BA9832] group transition-premium"
                   aria-label={social.name}
                 >
@@ -152,7 +209,7 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="mt-12 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-xs text-white/50">
-            © {new Date().getFullYear()} Bhuwanta. All rights reserved.
+            © {new Date().getFullYear()} {copyright}
           </p>
           <div className="flex gap-6 pr-4 md:pr-24 lg:pr-28 pb-20 md:pb-0">
             <Link href="/policies" className="text-xs text-white/50 hover:text-white transition-premium">

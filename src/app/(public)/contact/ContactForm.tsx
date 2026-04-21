@@ -8,14 +8,20 @@ interface ContactFormProps {
     name: string
     email: string
     phone: string
-    message: string
-    interest: string
+    budget: string
     submit: string
   }
   thankYouMessage: string
 }
 
-export function ContactForm({ labels, thankYouMessage }: ContactFormProps) {
+export function ContactForm({ labels: rawLabels, thankYouMessage }: ContactFormProps) {
+  const labels = rawLabels || {
+    name: 'Full Name',
+    email: 'Email (Optional)',
+    phone: 'Phone Number',
+    budget: 'Approx. Budget',
+    submit: 'Book Site Visit',
+  }
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -30,9 +36,8 @@ export function ContactForm({ labels, thankYouMessage }: ContactFormProps) {
       name: formData.get('name') as string,
       email: formData.get('email') as string,
       phone: formData.get('phone') as string,
-      message: formData.get('message') as string,
-      propertyInterest: formData.get('interest') as string,
-      sourcePage: 'contact',
+      budget: formData.get('budget') as string,
+      sourcePage: 'Website',
     }
 
     try {
@@ -73,6 +78,7 @@ export function ContactForm({ labels, thankYouMessage }: ContactFormProps) {
         </div>
       )}
 
+      {/* Name & Phone Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div>
           <label htmlFor="name" className="block text-sm font-medium text-[#002935] mb-2">
@@ -83,10 +89,27 @@ export function ContactForm({ labels, thankYouMessage }: ContactFormProps) {
             id="name"
             name="name"
             required
-            className="w-full px-4 py-3 rounded-lg bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] placeholder:text-[#5a6a82]/50 focus:outline-none focus:border-[#003d4f]/50 focus:ring-1 focus:ring-[#003d4f]/30 transition-premium text-sm"
+            className="w-full px-4 py-3 rounded-lg bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] placeholder:text-[#5a6a82]/50 focus:outline-none focus:border-[#BA9832]/50 focus:ring-1 focus:ring-[#BA9832]/30 transition-premium text-sm"
             placeholder="John Doe"
           />
         </div>
+        <div>
+          <label htmlFor="phone" className="block text-sm font-medium text-[#002935] mb-2">
+            {labels.phone} <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="tel"
+            id="phone"
+            name="phone"
+            required
+            className="w-full px-4 py-3 rounded-lg bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] placeholder:text-[#5a6a82]/50 focus:outline-none focus:border-[#BA9832]/50 focus:ring-1 focus:ring-[#BA9832]/30 transition-premium text-sm"
+            placeholder="+91 XXXXX XXXXX"
+          />
+        </div>
+      </div>
+
+      {/* Email & Budget Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-[#002935] mb-2">
             {labels.email} <span className="text-red-500">*</span>
@@ -96,55 +119,23 @@ export function ContactForm({ labels, thankYouMessage }: ContactFormProps) {
             id="email"
             name="email"
             required
-            className="w-full px-4 py-3 rounded-lg bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] placeholder:text-[#5a6a82]/50 focus:outline-none focus:border-[#003d4f]/50 focus:ring-1 focus:ring-[#003d4f]/30 transition-premium text-sm"
+            className="w-full px-4 py-3 rounded-lg bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] placeholder:text-[#5a6a82]/50 focus:outline-none focus:border-[#BA9832]/50 focus:ring-1 focus:ring-[#BA9832]/30 transition-premium text-sm"
             placeholder="john@example.com"
           />
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div>
-          <label htmlFor="phone" className="block text-sm font-medium text-[#002935] mb-2">
-            {labels.phone}
+          <label htmlFor="budget" className="block text-sm font-medium text-[#002935] mb-2">
+            {labels.budget} <span className="text-red-500">*</span>
           </label>
           <input
-            type="tel"
-            id="phone"
-            name="phone"
-            className="w-full px-4 py-3 rounded-lg bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] placeholder:text-[#5a6a82]/50 focus:outline-none focus:border-[#003d4f]/50 focus:ring-1 focus:ring-[#003d4f]/30 transition-premium text-sm"
-            placeholder="+91 XXXXX XXXXX"
+            type="text"
+            id="budget"
+            name="budget"
+            required
+            className="w-full px-4 py-3 rounded-lg bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] placeholder:text-[#5a6a82]/50 focus:outline-none focus:border-[#BA9832]/50 focus:ring-1 focus:ring-[#BA9832]/30 transition-premium text-sm"
+            placeholder="e.g. 50 Lakhs"
           />
         </div>
-        <div>
-          <label htmlFor="interest" className="block text-sm font-medium text-[#002935] mb-2">
-            {labels.interest}
-          </label>
-          <select
-            id="interest"
-            name="interest"
-            className="w-full px-4 py-3 rounded-lg bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] focus:outline-none focus:border-[#003d4f]/50 focus:ring-1 focus:ring-[#003d4f]/30 transition-premium text-sm"
-          >
-            <option value="">Select...</option>
-            <option value="residential">Residential Property</option>
-            <option value="commercial">Commercial Space</option>
-            <option value="plots">Plots & Land</option>
-            <option value="general">General Inquiry</option>
-          </select>
-        </div>
-      </div>
-
-      <div>
-        <label htmlFor="message" className="block text-sm font-medium text-[#002935] mb-2">
-          {labels.message} <span className="text-red-500">*</span>
-        </label>
-        <textarea
-          id="message"
-          name="message"
-          required
-          rows={5}
-          className="w-full px-4 py-3 rounded-lg bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] placeholder:text-[#5a6a82]/50 focus:outline-none focus:border-[#003d4f]/50 focus:ring-1 focus:ring-[#003d4f]/30 transition-premium text-sm resize-none"
-          placeholder="Tell us about your requirements..."
-        />
       </div>
 
       <button

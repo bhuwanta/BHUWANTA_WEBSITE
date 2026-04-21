@@ -5,7 +5,7 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bhuwanta.com'
   
   let allowRules = ['/']
-  let disallowRules = ['/dashboard', '/studio', '/api']
+  let disallowRules = ['/dashboard', '/api']
   
   // Try to fetch custom rules from Supabase (maybe later we can adjust)
   // For now we use the required defaults from the implementation plan

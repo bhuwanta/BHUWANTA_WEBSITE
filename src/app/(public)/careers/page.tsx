@@ -1,8 +1,7 @@
 import { Metadata } from 'next'
 import { MapPin, Briefcase, DollarSign, ExternalLink } from 'lucide-react'
 import { generatePageMetadata } from '@/lib/seo'
-import { sanityFetch, careersQuery } from '@/lib/sanity'
-import { createClient } from '@/lib/supabase/server'
+import { sanityFetch, careersQuery, jobListingsQuery } from '@/lib/sanity'
 import { JsonLd, buildBreadcrumbSchema, buildJobPostingSchema } from '@/components/seo/JsonLd'
 import { PortableText } from '@portabletext/react'
 
@@ -13,17 +12,17 @@ export async function generateMetadata(): Promise<Metadata> {
 export const revalidate = 300
 
 interface JobListing {
-  id: string
+  _id: string
   title: string
   department: string
   location: string
-  employment_type: string
-  salary_min: number | null
-  salary_max: number | null
+  employmentType: string
+  salaryMin: number | null
+  salaryMax: number | null
   description: string
   requirements: string[]
-  apply_url: string | null
-  posted_at: string
+  applyUrl: string | null
+  postedAt: string
 }
 
 export default async function CareersPage() {
@@ -41,13 +40,8 @@ export default async function CareersPage() {
   } catch { /* fallback */ }
 
   try {
-    const supabase = await createClient()
-    const { data } = await supabase
-      .from('job_listings')
-      .select('*')
-      .eq('is_active', true)
-      .order('posted_at', { ascending: false })
-    if (data) jobs = data
+    const jobData = await sanityFetch<JobListing[]>({ query: jobListingsQuery, tags: ['jobListing'] })
+    if (jobData) jobs = jobData
   } catch { /* fallback */ }
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bhuwanta.com'
@@ -60,13 +54,13 @@ export default async function CareersPage() {
     buildJobPostingSchema({
       title: job.title,
       description: job.description,
-      datePosted: job.posted_at,
-      employmentType: job.employment_type,
+      datePosted: job.postedAt,
+      employmentType: job.employmentType,
       location: job.location,
-      salaryMin: job.salary_min || undefined,
-      salaryMax: job.salary_max || undefined,
+      salaryMin: job.salaryMin || undefined,
+      salaryMax: job.salaryMax || undefined,
       companyName: 'Bhuwanta',
-      applyUrl: job.apply_url || undefined,
+      applyUrl: job.applyUrl || undefined,
     })
   )
 
@@ -122,7 +116,7 @@ export default async function CareersPage() {
             <div className="space-y-4">
               {jobs.map((job) => (
                 <div
-                  key={job.id}
+                  key={job._id}
                   className="glass-card rounded-xl p-6 transition-premium hover:border-[#BA9832]/30 hover:shadow-md"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
@@ -140,20 +134,20 @@ export default async function CareersPage() {
                           {job.location}
                         </span>
                         <span className="px-2 py-0.5 rounded-full bg-[#003d4f]/10 text-[#003d4f] border border-[#003d4f]/20 font-medium">
-                          {job.employment_type.replace('-', ' ')}
+                          {job.employmentType.replace('-', ' ')}
                         </span>
-                        {job.salary_min && job.salary_max && (
+                        {job.salaryMin && job.salaryMax && (
                           <span className="flex items-center gap-1">
                             <DollarSign className="w-3.5 h-3.5 text-[#BA9832]" />
-                            ₹{(job.salary_min / 100000).toFixed(0)}L - ₹{(job.salary_max / 100000).toFixed(0)}L
+                            ₹{(job.salaryMin / 100000).toFixed(0)}L - ₹{(job.salaryMax / 100000).toFixed(0)}L
                           </span>
                         )}
                       </div>
                       <p className="text-sm text-[#5a6a82] line-clamp-2">{job.description}</p>
                     </div>
-                    {job.apply_url && (
+                    {job.applyUrl && (
                       <a
-                        href={job.apply_url}
+                        href={job.applyUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg gradient-gold text-white transition-premium hover:scale-105 shrink-0"

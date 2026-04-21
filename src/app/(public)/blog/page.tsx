@@ -59,7 +59,7 @@ export default async function BlogPage() {
             <div className="text-center py-20">
               <div className="bg-white rounded-2xl p-12 max-w-md mx-auto border border-[#e8ecf2] shadow-sm">
                 <p className="text-[#5a6a82] mb-2">No blog posts yet.</p>
-                <p className="text-sm text-[#5a6a82]/60">Create posts in Sanity Studio at /studio.</p>
+                <p className="text-sm text-[#5a6a82]/60">Create posts in Sanity Studio at /dashboard/blog.</p>
               </div>
             </div>
           ) : (

@@ -6,9 +6,10 @@ import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import logo from '@/images/logo.png'
+import { client, urlFor } from '@/lib/sanity'
+import logoFallback from '@/images/logo.png'
 
-const navLinks = [
+const defaultNavLinks = [
   { href: '/', label: 'Home' },
   { href: '/about', label: 'About' },
   { href: '/projects', label: 'Projects' },
@@ -17,10 +18,20 @@ const navLinks = [
   { href: '/careers', label: 'Careers' },
 ]
 
+interface SiteSettings {
+  siteName?: string
+  tagline?: string
+  logo?: any
+  navLinks?: { label: string; href: string }[]
+  ctaButtonText?: string
+  ctaButtonLink?: string
+}
+
 export function Navbar() {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const [settings, setSettings] = useState<SiteSettings>({})
 
   const isHome = pathname === '/'
   const showGlass = scrolled || !isHome
@@ -30,6 +41,21 @@ export function Navbar() {
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  useEffect(() => {
+    client.fetch(`*[_type == "siteSettings"][0]{
+      siteName, tagline, logo, navLinks[]{ label, href }, ctaButtonText, ctaButtonLink
+    }`).then((data: SiteSettings) => {
+      if (data) setSettings(data)
+    }).catch(() => {})
+  }, [])
+
+  const navLinks = settings.navLinks?.length ? settings.navLinks : defaultNavLinks
+  const siteName = settings.siteName || 'BHUWANTA'
+  const tagline = settings.tagline || 'Land Today. Landmark Tomorrow.'
+  const ctaText = settings.ctaButtonText || 'Book Site Visit'
+  const ctaLink = settings.ctaButtonLink || '/contact'
+  const logoSrc = settings.logo ? urlFor(settings.logo).height(80).url() : null
 
   return (
     <nav
@@ -46,9 +72,10 @@ export function Navbar() {
           <Link href="/" className="flex items-center group gap-3 sm:gap-5" id="nav-logo">
             <div className="relative h-10 w-auto transition-transform duration-500 scale-[1.25] sm:scale-[1.4] origin-left group-hover:scale-[1.3] sm:group-hover:scale-[1.45]">
               <Image 
-                src={logo} 
-                alt="Bhuwanta" 
+                src={logoSrc || logoFallback} 
+                alt={siteName} 
                 height={40}
+                width={logoSrc ? 120 : undefined}
                 className={cn(
                   "h-10 w-auto object-contain transition-all duration-500",
                   !showGlass && "drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]" 
@@ -63,7 +90,7 @@ export function Navbar() {
                   showGlass ? "text-[#002935]" : "text-[#BA9832]"
                 )}
               >
-                BHUWANTA
+                {siteName}
               </span>
               <span 
                 className={cn(
@@ -71,7 +98,7 @@ export function Navbar() {
                   showGlass ? "text-[#002935]/80" : "text-[#BA9832]/80"
                 )}
               >
-                Land Today. Landmark Tomorrow.
+                {tagline}
               </span>
             </div>
           </Link>
@@ -100,16 +127,11 @@ export function Navbar() {
             {/* CTA + Mobile Toggle */}
             <div className="flex items-center gap-4">
               <Link
-                href="/contact"
+                href={ctaLink}
                 id="nav-cta"
-                className={cn(
-                  "hidden sm:inline-flex px-5 py-2.5 text-sm font-semibold rounded-lg transition-premium hover:scale-105 glow-gold",
-                  showGlass
-                    ? "gradient-gold text-white"
-                    : "bg-white text-[#002935] hover:bg-[#BA9832] hover:text-white"
-                )}
+                className="hidden sm:inline-flex px-5 py-2.5 text-sm font-semibold rounded-lg transition-premium hover:scale-105 glow-gold gradient-gold text-white"
               >
-                Book Site Visit
+                {ctaText}
               </Link>
 
               {/* Mobile hamburger */}
@@ -148,11 +170,11 @@ export function Navbar() {
             </Link>
           ))}
           <Link
-            href="/contact"
+            href={ctaLink}
             onClick={() => setIsOpen(false)}
             className="block px-4 py-3 text-sm font-semibold text-center rounded-lg gradient-gold text-white mt-3"
           >
-            Book Site Visit
+            {ctaText}
           </Link>
         </div>
       </div>

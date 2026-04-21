@@ -5,8 +5,15 @@ import { projectsSchema } from './projects'
 import { blogSchema } from './blog'
 import { careersSchema } from './careers'
 import { contactSchema } from './contact'
+import { jobListingSchema } from './jobListing'
+import { siteSettingsSchema } from './siteSettings'
+import { autoresponderSchema } from './autoresponder'
+import { leadSchema } from './lead'
 
 export const schemaTypes = [
+  siteSettingsSchema,
+  autoresponderSchema,
+  leadSchema,
   homeSchema,
   aboutSchema,
   gallerySchema,
@@ -14,4 +21,5 @@ export const schemaTypes = [
   blogSchema,
   careersSchema,
   contactSchema,
+  jobListingSchema,
 ]

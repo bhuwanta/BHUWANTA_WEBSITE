@@ -36,35 +36,7 @@ export async function updateSession(request: NextRequest) {
 
   const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL
 
-  // Protect dashboard routes
-  if (
-    request.nextUrl.pathname.startsWith('/dashboard') &&
-    !request.nextUrl.pathname.startsWith('/dashboard/login')
-  ) {
-    // No user at all
-    if (!user) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/dashboard/login'
-      return NextResponse.redirect(url)
-    }
-
-    // User exists but is NOT the admin
-    if (adminEmail && user.email !== adminEmail) {
-      // Sign out and redirect to login
-      await supabase.auth.signOut()
-      const url = request.nextUrl.clone()
-      url.pathname = '/dashboard/login'
-      url.searchParams.set('error', 'Unauthorized access')
-      return NextResponse.redirect(url)
-    }
-  }
-
-  // Redirect authorized users away from login page
-  if (user && user.email === adminEmail && request.nextUrl.pathname === '/dashboard/login') {
-    const url = request.nextUrl.clone()
-    url.pathname = '/dashboard'
-    return NextResponse.redirect(url)
-  }
+  // Dashboard protection has been removed. Sanity Studio handles its own authentication.
 
   return supabaseResponse
 }

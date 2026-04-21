@@ -13,12 +13,11 @@ export default async function ContactPage() {
   let data = {
     pageHeading: 'Book Site Visit',
     formLabels: {
-      name: 'Your Name',
-      email: 'Email Address',
+      name: 'Full Name',
       phone: 'Phone Number',
-      message: 'Your Message',
-      interest: 'Property Interest',
-      submit: 'Send Message',
+      email: 'Email (Optional)',
+      message: 'Approx. Budget',
+      submit: 'Book Site Visit',
     },
     thankYouMessage: 'Thank you for reaching out! Our team will get back to you within 24 hours.',
   }

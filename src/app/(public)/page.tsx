@@ -51,9 +51,9 @@ export default async function HomePage() {
         <div className="relative z-10 max-w-5xl mx-auto px-4 text-center">
 
           <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold tracking-tight leading-[1.1] mb-6 sm:mb-8">
-            <span className="text-white">Redefining</span>
+            <span className="text-white">{data.heroHeading?.split(' ').slice(0, -2).join(' ')}</span>
             <br />
-            <span className="text-gradient">Luxury Living</span>
+            <span className="text-gradient">{data.heroHeading?.split(' ').slice(-2).join(' ')}</span>
           </h1>
 
           <p className="text-base sm:text-lg md:text-xl text-white/70 max-w-2xl mx-auto mb-8 sm:mb-12 leading-relaxed px-2">

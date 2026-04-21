@@ -11,8 +11,7 @@ export async function sendContactNotification(lead: {
   name: string
   email: string
   phone?: string
-  message: string
-  propertyInterest?: string
+  budget?: string
   sourcePage?: string
 }) {
   if (!resend) {
@@ -20,19 +19,20 @@ export async function sendContactNotification(lead: {
     return null
   }
 
+  const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'info@bhuwanta.com'
+
   return resend.emails.send({
     from: FROM_EMAIL,
-    to: FROM_EMAIL, // Send to team email
-    subject: `New Lead: ${lead.name} — ${lead.propertyInterest || 'General Inquiry'}`,
+    to: ADMIN_EMAIL,
+    subject: `New Lead: ${lead.name} — ₹${lead.budget || 'Not specified'}`,
     html: `
       <h2>New Contact Form Submission</h2>
       <table style="border-collapse: collapse; width: 100%;">
         <tr><td style="padding: 8px; font-weight: bold;">Name:</td><td style="padding: 8px;">${lead.name}</td></tr>
         <tr><td style="padding: 8px; font-weight: bold;">Email:</td><td style="padding: 8px;">${lead.email}</td></tr>
         ${lead.phone ? `<tr><td style="padding: 8px; font-weight: bold;">Phone:</td><td style="padding: 8px;">${lead.phone}</td></tr>` : ''}
-        <tr><td style="padding: 8px; font-weight: bold;">Interest:</td><td style="padding: 8px;">${lead.propertyInterest || 'Not specified'}</td></tr>
-        <tr><td style="padding: 8px; font-weight: bold;">Source:</td><td style="padding: 8px;">${lead.sourcePage || 'Contact Page'}</td></tr>
-        <tr><td style="padding: 8px; font-weight: bold;">Message:</td><td style="padding: 8px;">${lead.message}</td></tr>
+        <tr><td style="padding: 8px; font-weight: bold;">Budget:</td><td style="padding: 8px;">${lead.budget || 'Not specified'}</td></tr>
+        <tr><td style="padding: 8px; font-weight: bold;">Source:</td><td style="padding: 8px;">${lead.sourcePage || 'Website'}</td></tr>
       </table>
     `,
   })
