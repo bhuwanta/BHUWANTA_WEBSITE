@@ -8,20 +8,25 @@ interface ContactFormProps {
     name: string
     email: string
     phone: string
-    budget: string
+    query: string
+    message: string
     submit: string
   }
+  queryOptions: string[]
   thankYouMessage: string
 }
 
-export function ContactForm({ labels: rawLabels, thankYouMessage }: ContactFormProps) {
+export function ContactForm({ labels: rawLabels, queryOptions, thankYouMessage }: ContactFormProps) {
   const labels = rawLabels || {
     name: 'Full Name',
-    email: 'Email (Optional)',
+    email: 'Email Address',
     phone: 'Phone Number',
-    budget: 'Approx. Budget',
-    submit: 'Book Site Visit',
+    query: 'Your Query',
+    message: 'Message',
+    submit: 'Send Message',
   }
+  const options = queryOptions?.length ? queryOptions : ['Site Visit', 'Project Info', 'Investment Query', 'Other']
+
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -36,8 +41,8 @@ export function ContactForm({ labels: rawLabels, thankYouMessage }: ContactFormP
       name: formData.get('name') as string,
       email: formData.get('email') as string,
       phone: formData.get('phone') as string,
-      budget: formData.get('budget') as string,
-      sourcePage: 'Website',
+      budget: `${formData.get('query') || ''} — ${formData.get('message') || ''}`.trim(),
+      sourcePage: 'Contact Page',
     }
 
     try {
@@ -78,7 +83,7 @@ export function ContactForm({ labels: rawLabels, thankYouMessage }: ContactFormP
         </div>
       )}
 
-      {/* Name & Phone Grid */}
+      {/* Name & Phone */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div>
           <label htmlFor="name" className="block text-sm font-medium text-[#002935] mb-2">
@@ -90,7 +95,7 @@ export function ContactForm({ labels: rawLabels, thankYouMessage }: ContactFormP
             name="name"
             required
             className="w-full px-4 py-3 rounded-lg bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] placeholder:text-[#5a6a82]/50 focus:outline-none focus:border-[#BA9832]/50 focus:ring-1 focus:ring-[#BA9832]/30 transition-premium text-sm"
-            placeholder="John Doe"
+            placeholder="Your full name"
           />
         </div>
         <div>
@@ -108,34 +113,49 @@ export function ContactForm({ labels: rawLabels, thankYouMessage }: ContactFormP
         </div>
       </div>
 
-      {/* Email & Budget Grid */}
+      {/* Email & Query Type */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-[#002935] mb-2">
-            {labels.email} <span className="text-red-500">*</span>
+            {labels.email}
           </label>
           <input
             type="email"
             id="email"
             name="email"
-            required
             className="w-full px-4 py-3 rounded-lg bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] placeholder:text-[#5a6a82]/50 focus:outline-none focus:border-[#BA9832]/50 focus:ring-1 focus:ring-[#BA9832]/30 transition-premium text-sm"
-            placeholder="john@example.com"
+            placeholder="your@email.com"
           />
         </div>
         <div>
-          <label htmlFor="budget" className="block text-sm font-medium text-[#002935] mb-2">
-            {labels.budget} <span className="text-red-500">*</span>
+          <label htmlFor="query" className="block text-sm font-medium text-[#002935] mb-2">
+            {labels.query}
           </label>
-          <input
-            type="text"
-            id="budget"
-            name="budget"
-            required
-            className="w-full px-4 py-3 rounded-lg bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] placeholder:text-[#5a6a82]/50 focus:outline-none focus:border-[#BA9832]/50 focus:ring-1 focus:ring-[#BA9832]/30 transition-premium text-sm"
-            placeholder="e.g. 50 Lakhs"
-          />
+          <select
+            id="query"
+            name="query"
+            className="w-full px-4 py-3 rounded-lg bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] focus:outline-none focus:border-[#BA9832]/50 focus:ring-1 focus:ring-[#BA9832]/30 transition-premium text-sm appearance-none"
+          >
+            <option value="">Select...</option>
+            {options.map((opt) => (
+              <option key={opt} value={opt}>{opt}</option>
+            ))}
+          </select>
         </div>
+      </div>
+
+      {/* Message */}
+      <div>
+        <label htmlFor="message" className="block text-sm font-medium text-[#002935] mb-2">
+          {labels.message}
+        </label>
+        <textarea
+          id="message"
+          name="message"
+          rows={4}
+          className="w-full px-4 py-3 rounded-lg bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] placeholder:text-[#5a6a82]/50 focus:outline-none focus:border-[#BA9832]/50 focus:ring-1 focus:ring-[#BA9832]/30 transition-premium text-sm resize-none"
+          placeholder="Tell us what you're looking for..."
+        />
       </div>
 
       <button

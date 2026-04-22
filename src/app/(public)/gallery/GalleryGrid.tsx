@@ -9,21 +9,67 @@ interface GalleryGridProps {
   videos: Array<{ id: string; platform: string; video_id: string; title: string }>
 }
 
+const categoryLabels: Record<string, string> = {
+  'site-views': 'Site Views',
+  'location-surroundings': 'Location & Surroundings',
+  'layout-map': 'Layout Map',
+  'development-progress': 'Development Progress',
+}
+
 export function GalleryGrid({ images, videos }: GalleryGridProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [activeImage, setActiveImage] = useState<string | null>(null)
+  const [activeCategory, setActiveCategory] = useState<string>('all')
 
   const openLightbox = (url: string) => {
     setActiveImage(url)
     setLightboxOpen(true)
   }
 
+  // Get unique categories from images
+  const categories = Array.from(new Set(images.map(img => img.category).filter(Boolean)))
+  const showTabs = categories.length > 0
+
+  // Filter images by category
+  const filteredImages = activeCategory === 'all'
+    ? images
+    : images.filter(img => img.category === activeCategory)
+
   return (
     <>
+      {/* Filter Tabs */}
+      {showTabs && (
+        <div className="flex flex-wrap items-center justify-center gap-2 mb-8">
+          <button
+            onClick={() => setActiveCategory('all')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-premium ${
+              activeCategory === 'all'
+                ? 'gradient-gold text-white shadow-md'
+                : 'bg-[#f8f9fb] text-[#5a6a82] border border-[#e8ecf2] hover:border-[#BA9832]/30'
+            }`}
+          >
+            All
+          </button>
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-premium ${
+                activeCategory === cat
+                  ? 'gradient-gold text-white shadow-md'
+                  : 'bg-[#f8f9fb] text-[#5a6a82] border border-[#e8ecf2] hover:border-[#BA9832]/30'
+              }`}
+            >
+              {categoryLabels[cat] || cat}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Image Grid */}
-      {images.length > 0 && (
+      {filteredImages.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-12">
-          {images.map((img) => (
+          {filteredImages.map((img) => (
             <button
               key={img.id}
               onClick={() => openLightbox(img.url)}
@@ -42,8 +88,21 @@ export function GalleryGrid({ images, videos }: GalleryGridProps) {
                   <p className="text-sm text-white font-medium">{img.alt_text}</p>
                 </div>
               )}
+              {img.category && (
+                <div className="absolute top-3 left-3">
+                  <span className="px-2 py-1 rounded-md bg-white/90 text-[10px] font-semibold text-[#002935] uppercase tracking-wider">
+                    {categoryLabels[img.category] || img.category}
+                  </span>
+                </div>
+              )}
             </button>
           ))}
+        </div>
+      )}
+
+      {filteredImages.length === 0 && activeCategory !== 'all' && (
+        <div className="text-center py-12 mb-12">
+          <p className="text-[#5a6a82]">No images in this category yet.</p>
         </div>
       )}
 

@@ -46,47 +46,80 @@ export async function sanityFetch<T>({
 export const homeQuery = `*[_type == "home"][0]{
   heroHeading,
   heroSubheading,
-  heroCta,
   heroImage,
-  featuredSectionHeading,
-  featuredProjects,
-  aboutTeaser,
-  ctaBannerHeading,
-  ctaBannerSubtext
+  heroPrimaryCta,
+  heroSecondaryCta,
+  trustBadges[]{ label },
+  whyOwnLandHeading,
+  whyOwnLandSubheading,
+  whyOwnLandCards[]{ icon, title, description },
+  featuredProjectName,
+  featuredProjectLocation,
+  featuredProjectDescription,
+  featuredProjectDetails[]{ icon, label, value },
+  featuredProjectFormHeadline,
+  vastuHeading,
+  vastuSubheading,
+  vastuCards[]{ icon, title, description },
+  faqHeading,
+  faqItems[]{ question, answer },
+  finalCtaHeading,
+  finalCtaSubtext,
+  finalCtaSupportingText
 }`
 
 export const aboutQuery = `*[_type == "about"][0]{
-  companyStory,
-  missionStatement,
-  teamMembers[]{
-    name,
-    role,
-    bio,
-    image
-  }
+  whoWeAreHeading,
+  whoWeAreBody,
+  visionHeading,
+  visionBody,
+  missionHeading,
+  missionBody,
+  missionCommitments[]{ title, description },
+  whyChooseHeading,
+  differentiators[]{ title, description },
+  legalHeading,
+  legalBody,
+  legalCommitments,
+  closingLine,
+  closingContact
 }`
 
 export const galleryQuery = `*[_type == "gallery"][0]{
   pageHeading,
-  sectionHeadings,
+  pageSubheading,
   images[]{
     alt,
+    category,
     asset->{ url }
   },
   youtubeVideos[]{
     title,
     url
-  }
+  },
+  devUpdateHeading,
+  devUpdateBody
 }`
 
 export const projectsQuery = `*[_type == "projects"][0]{
-  sectionHeading,
+  pageHeading,
+  pageSubheading,
   projectEntries[]{
     name,
+    slug,
+    location,
     description,
-    specs,
+    image,
+    masterLayoutImage,
+    plotSizes,
+    pricePerSqYd,
+    hmdaLpNumber,
+    reraNumber,
     statusText,
-    image
+    plotDetails[]{ plotSize, area, pricePerSqYd, totalPrice },
+    amenities[]{ icon, label },
+    locationHighlights[]{ icon, label },
+    approvals[]{ label, detail }
   }
 }`
 
@@ -114,16 +147,22 @@ export const blogPostQuery = `*[_type == "blog" && slug.current == $slug][0]{
 }`
 
 export const careersQuery = `*[_type == "careers"][0]{
-  introText,
-  cultureCopy,
-  benefitsCopy,
-  whyWorkCopy
+  pageHeading,
+  pageSubheading,
+  bodyText,
+  whatWeLookFor,
+  applyEmail,
+  footerNote
 }`
 
 export const contactQuery = `*[_type == "contact"][0]{
   pageHeading,
+  pageSubheading,
   formLabels,
-  thankYouMessage
+  queryOptions,
+  thankYouMessage,
+  whatsappLink,
+  googleMapsEmbed
 }`
 
 export const jobListingsQuery = `*[_type == "jobListing" && isActive == true] | order(postedAt desc){

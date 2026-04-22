@@ -124,8 +124,20 @@ export function Navbar() {
               ))}
             </div>
 
-            {/* CTA + Mobile Toggle */}
-            <div className="flex items-center gap-4">
+            {/* CTA + Call Now + Mobile Toggle */}
+            <div className="flex items-center gap-3">
+              <a
+                href="tel:+91XXXXXXXXXX"
+                id="nav-call"
+                className={cn(
+                  "hidden lg:inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold rounded-lg transition-premium",
+                  showGlass
+                    ? "text-[#002935] hover:bg-[#f3f5f8] border border-[#e8ecf2]"
+                    : "text-white hover:bg-white/10 border border-white/20"
+                )}
+              >
+                Call Now
+              </a>
               <Link
                 href={ctaLink}
                 id="nav-cta"
