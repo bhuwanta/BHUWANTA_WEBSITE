@@ -171,7 +171,7 @@ export default function MediaManagerPage() {
               <button 
                 type="submit" 
                 disabled={loading || !file}
-                className="w-full py-3.5 rounded-xl gradient-gold text-white font-semibold text-sm disabled:opacity-50 transition-all hover:scale-[1.01] shadow-lg shadow-[#BA9832]/20 flex items-center justify-center gap-2"
+                className="w-full py-3.5 rounded-xl gradient-gold text-white font-semibold text-sm disabled:opacity-50 transition-all hover:scale-[1.01] shadow-lg shadow-[#7D651F]/20 flex items-center justify-center gap-2"
               >
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <UploadCloud className="w-5 h-5" />}
                 {loading ? 'Uploading & Syncing...' : 'Upload to Sanity'}
@@ -217,7 +217,7 @@ export default function MediaManagerPage() {
               <button 
                 type="submit" 
                 disabled={loading || !videoUrl}
-                className="w-full py-3.5 rounded-xl gradient-gold text-white font-semibold text-sm disabled:opacity-50 transition-all hover:scale-[1.01] shadow-lg shadow-[#BA9832]/20 flex items-center justify-center gap-2"
+                className="w-full py-3.5 rounded-xl gradient-gold text-white font-semibold text-sm disabled:opacity-50 transition-all hover:scale-[1.01] shadow-lg shadow-[#7D651F]/20 flex items-center justify-center gap-2"
               >
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Video className="w-5 h-5" />}
                 {loading ? 'Attaching...' : 'Attach to Sanity'}

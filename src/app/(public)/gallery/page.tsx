@@ -80,7 +80,7 @@ export default async function GalleryPage() {
       <section className="pt-32 pb-16 section-padding relative bg-[#f8f9fb] luxury-bg-grid">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#003d4f]/3 rounded-full blur-[150px]" />
         <div className="max-w-4xl mx-auto text-center relative z-10">
-          <p className="text-sm font-semibold text-[#BA9832] mb-4 tracking-wider uppercase luxury-subheading">Real Photos</p>
+          <p className="text-sm font-semibold text-[#7D651F] mb-4 tracking-wider uppercase luxury-subheading">Real Photos</p>
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-[#002935] luxury-heading">
             {pageHeading}
           </h1>
@@ -110,8 +110,8 @@ export default async function GalleryPage() {
       <section className="section-padding bg-[#f8f9fb] luxury-bg-topography" id="dev-updates">
         <div className="max-w-3xl mx-auto text-center relative z-10">
           <div className="bg-white rounded-2xl p-8 sm:p-12 border border-[#e8ecf2]">
-            <div className="w-12 h-12 rounded-xl bg-[#BA9832]/10 flex items-center justify-center mx-auto mb-6">
-              <DynamicIcon name="HardHat" className="w-6 h-6 text-[#BA9832]" />
+            <div className="w-12 h-12 rounded-xl bg-[#7D651F]/10 flex items-center justify-center mx-auto mb-6">
+              <DynamicIcon name="HardHat" className="w-6 h-6 text-[#7D651F]" />
             </div>
             <h2 className="text-2xl font-bold text-[#002935] mb-4 luxury-heading">{devUpdateHeading}</h2>
             <p className="text-[#5a6a82] leading-relaxed">{devUpdateBody}</p>

@@ -7,6 +7,10 @@ import { FaqAccordion } from './FaqAccordion'
 import { ProjectRegistrationForm } from './ProjectRegistrationForm'
 import { BrochureRegistrationForm } from './BrochureRegistrationForm'
 import { DynamicIcon } from '@/components/ui/DynamicIcon'
+import { JourneySection } from '@/components/ui/JourneySection'
+import { ReviewsSection } from '@/components/ui/ReviewsSection'
+import { MapSection } from '@/components/ui/MapSection'
+import { YouTubeCarousel } from '@/components/ui/YouTubeCarousel'
 
 export async function generateMetadata(): Promise<Metadata> {
   return generatePageMetadata('home', 'HMDA Approved Plots in Hyderabad', 'Own HMDA-approved, Vastu-aligned plots in Hyderabad\'s fastest-growing corridors. Designed for homebuilders and smart investors. Book a free site visit today.')
@@ -20,53 +24,71 @@ const fallback = {
   heroSubheading: 'HMDA-approved plots in Hyderabad\'s fastest-growing corridors — designed for homebuilders and smart investors alike.',
   heroPrimaryCta: 'Book Free Site Visit',
   heroSecondaryCta: 'Call Now',
-  trustBadges: [
-    { label: 'HMDA Approved' },
-    { label: 'Registered Company' },
-    { label: 'Vastu-Certified Layouts' },
-    { label: 'Zero Hidden Charges' },
-  ],
-  whyOwnLandHeading: 'The Smartest Asset You\'ll Ever Own',
-  whyOwnLandSubheading: 'Land doesn\'t depreciate. It doesn\'t flood with maintenance bills. It waits for you — and grows while it waits.',
+
+  whyOwnLandHeading: 'Why Choose Bhuwanta?',
+  whyOwnLandSubheading: 'We don\'t just sell land. We provide a secure foundation for your family\'s future and your wealth.',
   whyOwnLandCards: [
-    { icon: 'TrendingUp', title: 'Appreciates Over Time', description: 'Land in Hyderabad\'s growth corridors has consistently outpaced fixed deposits, gold, and most equity investments. Buy early. Benefit for decades.' },
-    { icon: 'Home', title: 'Build When You\'re Ready', description: 'No EMI pressure on construction. Purchase your plot today and build your dream home on your own timeline — 1 year or 10.' },
-    { icon: 'Globe', title: 'Secure Your Roots', description: 'Own verified, HMDA-approved land back home. No maintenance headaches from abroad. Your asset stays safe, your title stays clear.' },
-    { icon: 'Key', title: '100% Yours — Forever', description: 'Unlike apartments, your land has no society fees, no builder disputes, no depreciation. It is simply, entirely yours.' },
+    { icon: 'ShieldCheck', title: 'Unquestionable Legality', description: 'No disputes. No doubts. Every plot we sell has a 100% clear title, complete legal verification, and HMDA approval.' },
+    { icon: 'Building2', title: 'Premium Infrastructure', description: 'Wide internal roads, underground cabling, dedicated water supply, and beautiful landscaping ready from day one.' },
+    { icon: 'TrendingUp', title: 'High Appreciation Zones', description: 'We exclusively acquire land in areas proven to yield the highest return on investment over the next decade.' },
+    { icon: 'Eye', title: 'Complete Transparency', description: 'No hidden fees, no last-minute surprises. What you see is exactly what you pay for and what you own.' },
   ],
-  featuredProjectName: '[PROJECT NAME]',
-  featuredProjectLocation: '[LOCATION], Hyderabad',
-  featuredProjectDescription: 'Bhuwanta\'s debut development — a carefully planned, Vastu-aligned layout in one of Hyderabad\'s fastest-growing zones. Every plot is HMDA-approved, clearly titled, and ready for construction.',
-  featuredProjectDetails: [
-    { icon: 'MapPin', label: 'Location', value: '[AREA], Hyderabad' },
-    { icon: 'Ruler', label: 'Plot Sizes', value: '150 sq yd – 300 sq yd' },
-    { icon: 'IndianRupee', label: 'Price', value: 'Starting ₹[PRICE] per sq yd' },
-    { icon: 'Landmark', label: 'Approval', value: 'HMDA Approved | LP No. [NUMBER]' },
-    { icon: 'CheckCircle', label: 'Status', value: 'Registrations Open' },
-  ],
-  featuredProjectFormHeadline: 'Be among the first to own a plot.',
-  vastuHeading: 'Every Plot. Vastu-Aligned. Prosperity-Ready.',
-  vastuSubheading: 'Our master layout is designed in consultation with certified Vastu experts — so your home starts on the right foundation, in every sense.',
+
+  vastuHeading: 'Rooted in Tradition. Designed for Prosperity.',
+  vastuSubheading: 'A home should bring peace. Our entire master layout is meticulously planned alongside leading Vastu experts to ensure positive energy flows through every plot.',
   vastuCards: [
-    { icon: 'Compass', title: 'Directional Alignment', description: 'Each plot is oriented to ensure correct solar and wind flow — maximising natural light, ventilation, and positive energy.' },
-    { icon: 'Home', title: 'Harmonious Living', description: 'The layout is planned so homes face auspicious directions, with wide roads and open spaces positioned for peaceful community living.' },
-    { icon: 'Sun', title: 'Scientific + Spiritual', description: 'Vastu isn\'t just tradition — it aligns with principles of space efficiency, natural light, and environmental harmony. We honour both.' },
-    { icon: 'Sprout', title: 'Prosperity-Driven Design', description: 'Certified by our Vastu consultant, the master plan is built to help every family that settles here thrive — not just live.' },
+    { icon: 'Compass', title: 'Auspicious Entrances', description: 'Every plot orientation is optimized for favorable facing directions to invite wealth and health.' },
+    { icon: 'Maximize', title: 'Perfect Proportions', description: 'Plot dimensions are cut to precise Vastu ratios, avoiding irregular shapes that disrupt harmony.' },
+    { icon: 'TreePine', title: 'Natural Elements', description: 'Parks, water bodies, and open spaces are strategically placed according to the five elements of nature.' },
+    { icon: 'Wind', title: 'Energy Flow', description: 'Wide streets and thoughtful spacing ensure uninterrupted natural light and cross-ventilation for every future home.' },
   ],
-  faqHeading: 'Legal, Vastu & Site Visits — Your Common Questions Answered',
+
+  journeyHeading: 'Your Journey to Ownership',
+  journeySubheading: 'We have simplified the process of buying land so you can secure your asset without the usual stress.',
+  journeySteps: [
+    { icon: 'CalendarDays', title: 'Schedule a Visit', description: 'Book a free guided tour of the property. We will walk you through the exact plot locations and boundaries.' },
+    { icon: 'FileText', title: 'Review the Documents', description: 'We hand you the complete legal file. Take your time, consult your lawyer, and verify our clear titles.' },
+    { icon: 'PenTool', title: 'Register Your Plot', description: 'Choose your payment plan. Once finalized, we handle the entire registration process smoothly and hand over your documents.' },
+  ],
+
+  reviewsHeading: 'What Our Buyers Say',
+  reviews: [
+    { name: 'Rahul R.', role: 'Tech Professional', rating: 5, content: 'I was nervous about buying land because of legal issues, but the team at Bhuwanta was completely transparent. They gave me all the HMDA documents on day one. Very happy with my investment.' },
+    { name: 'Priya S.', role: 'Business Owner', rating: 5, content: 'The layout development is top notch. The roads are wide, the Vastu compliance is genuine, and the location is exactly where Hyderabad is expanding next.' },
+    { name: 'Vikram Reddy', role: 'NRI Investor', rating: 5, content: 'Smooth registration process from start to finish. They handled all the paperwork and made sure I understood everything. Highly recommend them if you want peace of mind.' },
+  ],
+
+  mapFeatures: [
+    { icon: 'building', title: 'Major IT Hubs', distance: '15 Minutes Drive' },
+    { icon: 'navigation', title: 'Highway Access', distance: 'Direct Connectivity' },
+    { icon: 'map-pin', title: 'Schools & Hospitals', distance: 'Within 5km Radius' },
+  ],
+  mapLocationDescription: 'Explore our meticulously planned layout situated in the heart of Hyderabad\'s fastest-growing real estate corridor. Every plot is perfectly positioned for high appreciation and peaceful living.',
+
+  trustBadges: [
+    { label: 'HMDA Approved Layouts' },
+    { label: 'RERA Registered Developer' },
+    { label: '100% Clear Titles' },
+    { label: 'Verified Vastu Compliance' },
+  ],
+
+  youtubeVideos: [
+    { title: 'Bhuwanta Project Walkthrough', videoId: 'dQw4w9WgXcQ' },
+    { title: 'Site Development Progress', videoId: 'dQw4w9WgXcQ' },
+    { title: 'Customer Testimonial', videoId: 'dQw4w9WgXcQ' },
+  ],
+
+  faqHeading: 'Frequently Asked Questions',
   faqItems: [
-    { question: 'Is this project HMDA approved?', answer: 'Yes. Our project carries full HMDA approval with LP Number. We will provide copies of all approval documents before any booking is made.' },
-    { question: 'What documents will I receive at the time of purchase?', answer: 'You will receive the Sale Deed, Encumbrance Certificate, Link Documents, Layout Approval Copy, and RERA Registration Certificate — all verified and transparent.' },
-    { question: 'Can I visit the site before booking?', answer: 'Absolutely. We encourage every buyer to visit the site in person before making a decision. Contact us to schedule a free guided site visit at a time that suits you.' },
-    { question: 'Are there any hidden charges?', answer: 'None. The price you are quoted is the price you pay. All costs — registration, stamp duty, and applicable fees — are disclosed upfront before you commit.' },
-    { question: 'What payment options are available?', answer: 'We offer flexible payment plans tailored to your needs. Both full payment and structured instalment options are available. Contact us for a personalised plan.' },
-    { question: 'Can I avail a home loan to purchase this plot?', answer: 'Yes. Our plots are eligible for plot purchase loans from leading banks and NBFCs. We will assist you in connecting with the right lender and completing documentation.' },
-    { question: 'Is the layout Vastu-compliant?', answer: 'Yes. Our master layout has been designed in consultation with certified Vastu experts. Plot orientations, road directions, and open space placement all follow Vastu principles.' },
-    { question: 'When can I start construction on my plot?', answer: 'Immediately after registration. All plots are clear-title, HMDA-approved, and construction-ready from day one. No waiting periods, no builder dependencies.' },
+    { question: 'Are the plots legally clear and approved?', answer: 'Yes. Every single plot is fully approved by HMDA and comes with a 100% clear title and encumbrance certificate.' },
+    { question: 'Can I get a bank loan for this?', answer: 'Absolutely. Because our legal documentation is perfect, all leading banks provide fast loan approvals for our properties.' },
+    { question: 'When can I start building my house?', answer: 'You can start construction the very same day your registration is complete. The infrastructure is already in place.' },
+    { question: 'Are there any hidden maintenance charges?', answer: 'No. We believe in total pricing transparency. All costs are discussed openly before you make any commitment.' },
   ],
-  finalCtaHeading: 'Ready to Own Your Land in Hyderabad?',
-  finalCtaSubtext: 'Join the growing number of families and investors building their future with Bhuwanta. Take the first step — it costs nothing to visit.',
-  finalCtaSupportingText: '📞 [PHONE NUMBER]  |  ✉️ info@bhuwanta.com',
+
+  finalCtaHeading: 'Let\'s Secure Your Plot',
+  finalCtaSubtext: 'Plots in this premium layout are selling fast. Reach out to us today to check availability and schedule your visit.',
+  finalCtaSupportingText: '📞 +91 99999 99999  |  ✉️ info@bhuwanta.com',
 }
 
 export default async function HomePage() {
@@ -80,18 +102,18 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* ===== SECTION 1 — HERO ===== */}
+      {/* ===== SECTION 1 — HERO BANNER ===== */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden" id="hero">
         <div className="absolute inset-0 gradient-dark" />
         <div className="absolute inset-0 noise-overlay" />
-        <div className="absolute top-1/4 -left-32 w-96 h-96 rounded-full bg-[#BA9832]/10 blur-[120px]" />
-        <div className="absolute bottom-1/4 -right-32 w-96 h-96 rounded-full bg-[#BA9832]/5 blur-[120px]" />
+        <div className="absolute top-1/4 -left-32 w-96 h-96 rounded-full bg-[#7D651F]/10 blur-[120px]" />
+        <div className="absolute bottom-1/4 -right-32 w-96 h-96 rounded-full bg-[#7D651F]/5 blur-[120px]" />
         <div className="absolute inset-0" style={{
           backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)',
           backgroundSize: '80px 80px',
         }} />
 
-        <div className="relative z-10 max-w-5xl mx-auto px-4 text-center">
+        <div className="relative z-10 w-full max-w-5xl mx-auto px-4 text-center">
           <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold tracking-tight leading-[1.1] mb-6 sm:mb-8">
             <span className="text-white">Redefining</span>
             <br />
@@ -106,7 +128,7 @@ export default async function HomePage() {
             <Link
               href="/contact"
               id="hero-cta-primary"
-              className="group inline-flex items-center gap-2 px-8 py-4 text-sm font-semibold rounded-xl gradient-gold text-white transition-premium hover:scale-105 glow-gold"
+              className="w-full sm:w-auto group inline-flex items-center justify-center gap-2 px-8 py-4 text-sm font-semibold rounded-xl gradient-gold text-white transition-premium hover:scale-105 glow-gold"
             >
               Book a Free Site Visit
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -114,7 +136,7 @@ export default async function HomePage() {
             <a
               href="tel:+91XXXXXXXXXX"
               id="hero-cta-secondary"
-              className="inline-flex items-center gap-2 px-8 py-4 text-sm font-semibold rounded-xl border border-white/20 text-white hover:bg-white/10 transition-premium"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 text-sm font-semibold rounded-xl border border-white/20 text-white hover:bg-white/10 transition-premium"
             >
               Call Now
             </a>
@@ -129,146 +151,41 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ===== SECTION 2 — TRUST BAR ===== */}
+      {/* ===== SECTION 2 — HMDA TRUST MARQUEE ===== */}
       <section className="bg-white border-b border-[#e8ecf2] overflow-hidden py-5 sm:py-6" id="trust-bar">
-        <div className="animate-marquee gap-8 px-4 flex">
-          {/* Double array for infinite scrolling effect */}
+        <div className="animate-marquee gap-6 sm:gap-8 px-4 flex">
           {[...(data.trustBadges || fallback.trustBadges), ...(data.trustBadges || fallback.trustBadges), ...(data.trustBadges || fallback.trustBadges)].map((badge, i) => (
-            <div key={i} className="flex items-center justify-center gap-3 px-6 py-3 rounded-xl bg-[#f8f9fb] border border-[#e8ecf2] whitespace-nowrap">
-              <span className="text-[#BA9832]"><DynamicIcon name={['ShieldCheck', 'Building2', 'Compass', 'CheckCircle'][i % 4] || 'CheckCircle'} className="w-5 h-5" /></span>
-              <span className="text-sm font-semibold text-[#002935]">{badge.label}</span>
+            <div key={i} className="flex items-center justify-center gap-3 px-5 sm:px-6 py-3 rounded-xl bg-[#f8f9fb] border border-[#e8ecf2] whitespace-nowrap">
+              <span className="text-[#7D651F]"><DynamicIcon name={['ShieldCheck', 'Building2', 'Compass', 'CheckCircle'][i % 4] || 'CheckCircle'} className="w-5 h-5" /></span>
+              <span className="text-xs sm:text-sm font-semibold text-[#002935]">{badge.label}</span>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ===== SECTION 3 — FEATURED PROJECT TEASER ===== */}
-      <section className="section-padding relative bg-[#f8f9fb] luxury-bg-grid" id="featured-project">
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="text-center mb-12">
-            <p className="text-sm font-semibold text-[#BA9832] mb-3 tracking-wider uppercase luxury-subheading">Now Open</p>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#002935] mb-2 luxury-heading">
-              Our First Project — <span className="text-gradient">{data.featuredProjectName}</span>
-            </h2>
-            <p className="text-lg text-[#5a6a82]">
-              {data.featuredProjectLocation} | Registrations Now Open
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-stretch">
-            {/* Project Info */}
-            <div className="flex flex-col justify-center">
-              <p className="text-[#5a6a82] leading-relaxed mb-8 text-lg">
-                {data.featuredProjectDescription}
-              </p>
-
-              <div className="space-y-4 mb-8 lg:mb-0">
-                {(data.featuredProjectDetails || fallback.featuredProjectDetails).map((detail, i) => (
-                  <div key={i} className="flex items-start gap-3 bg-white rounded-xl p-4 border border-[#e8ecf2] shadow-sm hover:border-[#BA9832]/30 transition-premium">
-                    <span className="text-lg shrink-0 text-[#BA9832] mt-0.5">
-                      <DynamicIcon name={detail.icon} className="w-5 h-5" />
-                    </span>
-                    <div>
-                      <span className="text-xs font-semibold text-[#5a6a82] uppercase tracking-wider">{detail.label}</span>
-                      <p className="text-sm font-medium text-[#002935]">{detail.value}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Registration Form */}
-            <div className="bg-white rounded-2xl p-8 border border-[#e8ecf2] shadow-sm flex flex-col justify-center h-full">
-              <h3 className="text-xl font-bold text-[#002935] mb-2">Register Your Interest</h3>
-              <p className="text-sm text-[#5a6a82] mb-6">{data.featuredProjectFormHeadline}</p>
-              <ProjectRegistrationForm />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ===== SECTION 4 — VASTU-COMPLIANT LAYOUTS ===== */}
-      <section className="section-padding relative bg-white" id="vastu">
-        <div className="max-w-7xl mx-auto">
+      {/* ===== SECTION 3 — WHY CHOOSE BHUWANTA ===== */}
+      <section className="py-16 sm:py-20 lg:py-24 relative bg-[#f8f9fb] luxury-bg-topography" id="why-choose-us">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center mb-12 sm:mb-16">
-            <p className="text-sm font-semibold text-[#BA9832] mb-3 tracking-wider uppercase luxury-subheading">Vastu-Compliant</p>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#002935] mb-4 luxury-heading">
-              {data.vastuHeading}
+            <p className="text-xs sm:text-sm font-semibold text-[#7D651F] mb-3 tracking-wider uppercase luxury-subheading">The Smart Investment</p>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-[#002935] mb-4 luxury-heading">
+              Why Choose <span className="text-gradient">Bhuwanta</span>?
             </h2>
-            <p className="text-lg text-[#5a6a82] max-w-3xl mx-auto leading-relaxed">
-              {data.vastuSubheading}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {(data.vastuCards || fallback.vastuCards).map((card, i) => (
-              <div
-                key={i}
-                className="h-full glass-card bg-white rounded-2xl p-6 sm:p-8 border border-[#e8ecf2] group transition-premium hover:border-[#BA9832]/30 hover:shadow-lg flex flex-col justify-center text-center"
-              >
-                <span className="text-3xl mb-4 block text-[#BA9832] mx-auto">
-                  <DynamicIcon name={card.icon} className="w-8 h-8" />
-                </span>
-                <h3 className="text-lg font-semibold text-[#002935] mb-3">{card.title}</h3>
-                <p className="text-sm text-[#5a6a82] leading-relaxed">{card.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ===== PROMOTIONAL BANNER ===== */}
-      <section className="py-12 sm:py-16 relative bg-[#002935] overflow-hidden" id="promo-banner">
-        <div className="absolute inset-0 noise-overlay" />
-        <div className="absolute top-0 right-0 w-64 h-64 bg-[#BA9832]/20 rounded-full blur-[100px]" />
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#BA9832]/10 rounded-full blur-[100px]" />
-        <div className="max-w-7xl mx-auto px-4 relative z-10">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-8 bg-white/5 border border-white/10 rounded-2xl p-8 sm:p-12 backdrop-blur-sm">
-            <div className="flex-1 text-center md:text-left">
-              <span className="inline-block px-3 py-1 rounded-full bg-[#BA9832]/20 text-[#BA9832] text-xs font-bold tracking-wider uppercase mb-4">Limited Availability</span>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4 leading-tight">
-                Special Pre-Launch Offers Available Now
-              </h2>
-              <p className="text-white/80 text-lg">
-                Register early to secure premium corner plots and exclusive pricing.
-              </p>
-            </div>
-            <div className="shrink-0 w-full md:w-auto">
-              <Link
-                href="/contact"
-                className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 text-sm font-semibold rounded-xl gradient-gold text-white hover:scale-105 transition-premium glow-gold"
-              >
-                Claim Offer
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ===== SECTION 5 — WHY OWN LAND ===== */}
-      <section className="section-padding relative bg-[#f8f9fb] luxury-bg-topography" id="why-own-land">
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="text-center mb-12 sm:mb-16">
-            <p className="text-sm font-semibold text-[#BA9832] mb-3 tracking-wider uppercase luxury-subheading">The Smart Investment</p>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#002935] mb-4 luxury-heading">
-              {data.whyOwnLandHeading}
-            </h2>
-            <p className="text-lg text-[#5a6a82] max-w-3xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-lg text-[#5a6a82] max-w-3xl mx-auto leading-relaxed">
               {data.whyOwnLandSubheading}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {(data.whyOwnLandCards || fallback.whyOwnLandCards).map((card, i) => (
               <div
                 key={i}
-                className="h-full glass-card bg-white rounded-2xl p-6 sm:p-8 border border-[#e8ecf2] group transition-premium hover:border-[#BA9832]/30 hover:scale-[1.02] hover:shadow-lg flex flex-col justify-center text-center"
+                className="glass-card bg-white rounded-2xl p-6 sm:p-8 border border-[#e8ecf2] group transition-premium hover:border-[#7D651F]/30 hover:scale-[1.02] hover:shadow-lg flex flex-col items-center text-center"
               >
-                <span className="text-3xl mb-4 block text-[#BA9832] mx-auto">
+                <span className="text-3xl mb-4 block text-[#7D651F]">
                   <DynamicIcon name={card.icon} className="w-8 h-8" />
                 </span>
-                <h3 className="text-lg font-semibold text-[#002935] mb-3">{card.title}</h3>
+                <h3 className="text-base sm:text-lg font-semibold text-[#002935] mb-3">{card.title}</h3>
                 <p className="text-sm text-[#5a6a82] leading-relaxed">{card.description}</p>
               </div>
             ))}
@@ -276,107 +193,134 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ===== SECTION 6 — FAQ ===== */}
-      <section className="section-padding relative bg-white" id="faq">
-        <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-12">
-            <p className="text-sm font-semibold text-[#BA9832] mb-3 tracking-wider uppercase luxury-subheading">FAQ</p>
-            <h2 className="text-3xl sm:text-4xl font-bold text-[#002935] luxury-heading">
-              {data.faqHeading}
+      {/* ===== SECTION 4 — MAP SECTION ===== */}
+      <section className="py-16 sm:py-20 lg:py-24 relative bg-white luxury-bg-grid" id="map">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center mb-12 sm:mb-16">
+            <p className="text-xs sm:text-sm font-semibold text-[#7D651F] mb-3 tracking-wider uppercase luxury-subheading">Location</p>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-[#002935] mb-4 luxury-heading">
+              Prime Land. <span className="text-gradient">Strategic Location.</span>
+            </h2>
+          </div>
+
+          <MapSection
+            features={data.mapFeatures || fallback.mapFeatures}
+            location={data.mapLocationDescription || fallback.mapLocationDescription}
+          />
+        </div>
+      </section>
+
+      {/* ===== SECTION 5 — VASTU-COMPLIANT ===== */}
+      <section className="py-16 sm:py-20 lg:py-24 relative bg-[#f8f9fb]" id="vastu">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12 sm:mb-16">
+            <p className="text-xs sm:text-sm font-semibold text-[#7D651F] mb-3 tracking-wider uppercase luxury-subheading">Vastu-Compliant</p>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-[#002935] mb-4 luxury-heading">
+              Rooted in Tradition. <span className="text-gradient">Designed for Prosperity.</span>
+            </h2>
+            <p className="text-base sm:text-lg text-[#5a6a82] max-w-3xl mx-auto leading-relaxed">
+              {data.vastuSubheading}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {(data.vastuCards || fallback.vastuCards).map((card, i) => (
+              <div
+                key={i}
+                className="glass-card bg-white rounded-2xl p-6 sm:p-8 border border-[#e8ecf2] group transition-premium hover:border-[#7D651F]/30 hover:shadow-lg flex flex-col items-center text-center"
+              >
+                <span className="text-3xl mb-4 block text-[#7D651F]">
+                  <DynamicIcon name={card.icon} className="w-8 h-8" />
+                </span>
+                <h3 className="text-base sm:text-lg font-semibold text-[#002935] mb-3">{card.title}</h3>
+                <p className="text-sm text-[#5a6a82] leading-relaxed">{card.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== SECTION 6 — YOUR JOURNEY ===== */}
+      <section className="py-16 sm:py-20 lg:py-24 relative bg-white overflow-hidden" id="journey">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center mb-12 sm:mb-16">
+            <p className="text-xs sm:text-sm font-semibold text-[#7D651F] mb-3 tracking-wider uppercase luxury-subheading">Simple Process</p>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-[#002935] mb-4 luxury-heading">
+              Your Journey to <span className="text-gradient">Ownership</span>
+            </h2>
+            <p className="text-base sm:text-lg text-[#5a6a82] max-w-3xl mx-auto leading-relaxed">
+              {data.journeySubheading}
+            </p>
+          </div>
+
+          <JourneySection steps={data.journeySteps || fallback.journeySteps} />
+        </div>
+      </section>
+
+      {/* ===== SECTION 7 — CERTIFICATIONS MARQUEE ===== */}
+      <section className="bg-[#002935] overflow-hidden py-10 sm:py-14" id="certifications">
+        <div className="absolute inset-0 noise-overlay" />
+        <div className="text-center mb-8 sm:mb-10 relative z-10 px-4">
+          <p className="text-xs sm:text-sm font-semibold text-[#7D651F] mb-3 tracking-wider uppercase">Trusted & Certified</p>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white luxury-heading">
+            Backed by Every <span className="text-[#7D651F]">Approval That Matters</span>
+          </h2>
+        </div>
+        <div className="animate-marquee gap-6 sm:gap-8 px-4 flex relative z-10">
+          {[...(data.trustBadges || fallback.trustBadges), ...(data.trustBadges || fallback.trustBadges), ...(data.trustBadges || fallback.trustBadges)].map((badge, i) => (
+            <div key={i} className="flex items-center justify-center gap-3 px-5 sm:px-6 py-3 sm:py-4 rounded-xl bg-white/5 border border-white/10 whitespace-nowrap backdrop-blur-sm">
+              <span className="text-[#7D651F]"><DynamicIcon name={['ShieldCheck', 'Building2', 'Compass', 'CheckCircle'][i % 4] || 'CheckCircle'} className="w-5 h-5" /></span>
+              <span className="text-xs sm:text-sm font-semibold text-white">{badge.label}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ===== SECTION 8 — CUSTOMER REVIEWS ===== */}
+      <section className="py-16 sm:py-20 lg:py-24 relative bg-[#f8f9fb]" id="reviews">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-[#7D651F]/5 rounded-full blur-[100px]" />
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center mb-12 sm:mb-16">
+            <p className="text-xs sm:text-sm font-semibold text-[#7D651F] mb-3 tracking-wider uppercase luxury-subheading">Testimonials</p>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-[#002935] mb-4 luxury-heading">
+              What Our <span className="text-gradient">Buyers Say</span>
+            </h2>
+          </div>
+
+          <ReviewsSection reviews={data.reviews || fallback.reviews} />
+        </div>
+      </section>
+
+      {/* ===== SECTION 9 — YOUTUBE VIDEOS ===== */}
+      <section className="py-16 sm:py-20 lg:py-24 relative bg-white overflow-hidden" id="videos">
+        <div className="w-full relative z-10">
+          <div className="text-center mb-12 sm:mb-16 px-4">
+            <p className="text-xs sm:text-sm font-semibold text-[#7D651F] mb-3 tracking-wider uppercase luxury-subheading">Watch & Explore</p>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-[#002935] mb-4 luxury-heading">
+              See It <span className="text-gradient">for Yourself</span>
+            </h2>
+            <p className="text-base sm:text-lg text-[#5a6a82] max-w-2xl mx-auto leading-relaxed">
+              Take a virtual tour of our projects, watch development updates, and hear directly from our happy buyers.
+            </p>
+          </div>
+
+          <div className="max-w-7xl mx-auto">
+            <YouTubeCarousel videos={data.youtubeVideos || fallback.youtubeVideos} />
+          </div>
+        </div>
+      </section>
+
+      {/* ===== SECTION 10 — FAQ ===== */}
+      <section className="py-16 sm:py-20 lg:py-24 relative bg-[#f8f9fb]" id="faq">
+        <div className="w-full max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10 sm:mb-12">
+            <p className="text-xs sm:text-sm font-semibold text-[#7D651F] mb-3 tracking-wider uppercase luxury-subheading">FAQ</p>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#002935] luxury-heading">
+              Frequently Asked <span className="text-gradient">Questions</span>
             </h2>
           </div>
 
           <FaqAccordion items={data.faqItems || fallback.faqItems} />
-        </div>
-      </section>
-
-      {/* ===== SECTION 7 — REACH US ===== */}
-      <section className="section-padding bg-[#f8f9fb]" id="reach-us">
-        <div className="max-w-5xl mx-auto">
-          
-          {/* Reach Us Box */}
-          <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden gradient-primary p-8 sm:p-12 flex flex-col justify-center text-center">
-            <div className="absolute inset-0 noise-overlay" />
-            <div className="relative z-10">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4">
-                Reach Us
-              </h2>
-              <p className="text-lg text-white/80 mb-8 max-w-sm mx-auto">
-                {data.finalCtaSubtext}
-              </p>
-
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
-                <Link
-                  href="/contact"
-                  id="final-cta-site-visit"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-4 text-sm font-semibold rounded-xl gradient-gold text-white hover:scale-105 transition-premium glow-gold"
-                >
-                  Book a Free Site Visit
-                </Link>
-                <a
-                  href="https://wa.me/91XXXXXXXXXX"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  id="final-cta-whatsapp"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-4 text-sm font-semibold rounded-xl border border-white/20 text-white hover:bg-white/10 transition-premium"
-                >
-                  <MessageCircle className="w-4 h-4" />
-                  WhatsApp Us
-                </a>
-              </div>
-
-              <p className="text-sm text-white/60">
-                {data.finalCtaSupportingText}
-              </p>
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      {/* ===== SECTION 8 — DOWNLOAD BROCHURE ===== */}
-      <section className="py-16 sm:py-24 relative bg-white luxury-bg-topography overflow-hidden" id="download-brochure">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#BA9832]/5 rounded-full blur-[100px]" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-            
-            {/* Left Content */}
-            <div className="text-[#002935]">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 leading-tight luxury-heading">
-                Download the <br />
-                <span className="text-gradient">Master Brochure</span>
-              </h2>
-              <p className="text-lg text-[#5a6a82] mb-10 leading-relaxed max-w-lg">
-                Enter your details to instantly receive the complete project master plan, exact plot sizes, and detailed pricing guide.
-              </p>
-              
-              <div className="space-y-5">
-                {[
-                  'Complete Master Plan & Layouts',
-                  'Detailed Plot Availability',
-                  'Clear Pricing & Payment Schedules',
-                  'Vastu Compliance Details',
-                  'Exact Distances to Major Landmarks'
-                ].map((feature, i) => (
-                  <div key={i} className="flex items-center gap-4">
-                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#BA9832]/10 flex items-center justify-center border border-[#BA9832]/30">
-                      <DynamicIcon name="Check" className="w-3.5 h-3.5 text-[#BA9832]" />
-                    </div>
-                    <span className="text-[#002935] font-medium">{feature}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Right Form Card */}
-            <div className="bg-[#f8f9fb] border border-[#e8ecf2] rounded-2xl sm:rounded-3xl p-8 sm:p-10 shadow-lg relative">
-              <h3 className="text-2xl font-bold text-[#002935] mb-2 luxury-heading">Get Your Copy</h3>
-              <p className="text-[#5a6a82] mb-8 text-sm">We'll send the brochure directly to your inbox and WhatsApp.</p>
-              
-              <BrochureRegistrationForm />
-            </div>
-
-          </div>
         </div>
       </section>
     </>

@@ -94,7 +94,7 @@ export function Footer() {
   return (
     <footer className="relative bg-[#002935] border-t border-white/10 pt-2">
       {/* Decorative top border gradient */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#BA9832]/50 to-transparent" />
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#7D651F]/50 to-transparent" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-12">
@@ -102,27 +102,21 @@ export function Footer() {
           {/* Brand Column */}
           <div className="lg:col-span-5">
             <div className="mb-8 sm:mb-10 flex flex-col items-start">
-              <Link href="/" className="flex items-center group gap-3 sm:gap-4 mb-2">
-                <div className="relative h-12 w-auto transition-transform duration-500 scale-[1.3] sm:scale-[1.5] origin-left group-hover:scale-[1.35] sm:group-hover:scale-[1.55]">
+              <Link href="/" className="flex items-center group gap-3 sm:gap-4 mb-4">
+                <div className="relative h-16 sm:h-20 w-auto transition-transform duration-500 hover:scale-[1.05] origin-left">
                   <Image 
                     src={logoSrc || logoFallback} 
                     alt={siteName} 
-                    height={48}
-                    width={logoSrc ? 144 : undefined}
-                    className="h-12 w-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]"
+                    height={80}
+                    width={logoSrc ? 240 : undefined}
+                    className="h-16 sm:h-20 w-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]"
                   />
                 </div>
-                <span className="text-xl font-bold tracking-[0.2em] text-[#BA9832] pl-2 sm:pl-4 transition-colors duration-500">
-                  {siteName}
-                </span>
               </Link>
-              <p className="text-[11px] sm:text-xs font-medium tracking-[0.15em] text-[#BA9832] uppercase pl-1 sm:pl-2">
-                {tagline}
-              </p>
             </div>
             <div className="mb-6 flex flex-col gap-3">
               <div className="flex items-start gap-3">
-                <MapPin className="w-5 h-5 text-[#BA9832] mt-0.5 shrink-0" />
+                <MapPin className="w-5 h-5 text-[#7D651F] mt-0.5 shrink-0" />
                 <div className="text-sm text-white/70 leading-relaxed pr-2">
                   <strong className="block text-white mb-1 text-base tracking-wide">{addressLabel}</strong>
                   <p>{address}</p>
@@ -132,7 +126,7 @@ export function Footer() {
                 href={mapsUrl} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="w-fit ml-8 px-4 py-2.5 text-xs font-bold rounded-lg bg-[#BA9832]/10 text-[#BA9832] hover:bg-[#BA9832] hover:text-white transition-premium border border-[#BA9832]/20 shadow-none flex items-center gap-2 uppercase tracking-wider"
+                className="w-fit ml-8 px-4 py-2.5 text-xs font-bold rounded-lg bg-[#7D651F]/10 text-[#7D651F] hover:bg-[#7D651F] hover:text-white transition-premium border border-[#7D651F]/20 shadow-none flex items-center gap-2 uppercase tracking-wider"
               >
                 <MapPin className="w-3.5 h-3.5" />
                 Open in Google Maps
@@ -166,11 +160,11 @@ export function Footer() {
             </h3>
             <ul className="space-y-4">
               <li className="flex items-center gap-3 group">
-                <Phone className="w-4 h-4 text-[#BA9832] shrink-0" />
+                <Phone className="w-4 h-4 text-[#7D651F] shrink-0" />
                 <a href={`tel:${phone.replace(/\s/g, '')}`} className="text-sm text-white/70 group-hover:text-white transition-colors">{phone}</a>
               </li>
               <li className="flex items-center gap-3 group">
-                <Mail className="w-4 h-4 text-[#BA9832] shrink-0" />
+                <Mail className="w-4 h-4 text-[#7D651F] shrink-0" />
                 <a href={`mailto:${email}`} className="text-sm text-white/70 group-hover:text-white transition-colors">{email}</a>
               </li>
             </ul>
@@ -193,10 +187,10 @@ export function Footer() {
                   href={social.url || '#'}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3 text-sm text-white/70 hover:text-[#BA9832] group transition-premium"
+                  className="flex items-center gap-3 text-sm text-[#7D651F] hover:text-white group transition-premium"
                   aria-label={social.name}
                 >
-                  <div className="w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center group-hover:border-[#BA9832]/30 group-hover:bg-[#BA9832]/10 transition-premium">
+                  <div className="w-9 h-9 rounded-lg bg-[#7D651F]/10 border border-[#7D651F]/30 flex items-center justify-center group-hover:bg-white/10 group-hover:border-white/30 transition-premium">
                     <social.icon className="w-4 h-4 transition-transform group-hover:scale-110" />
                   </div>
                   <span className="font-medium">{social.name}</span>

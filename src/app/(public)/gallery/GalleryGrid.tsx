@@ -45,7 +45,7 @@ export function GalleryGrid({ images, videos }: GalleryGridProps) {
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-premium ${
               activeCategory === 'all'
                 ? 'gradient-gold text-white shadow-md'
-                : 'bg-[#f8f9fb] text-[#5a6a82] border border-[#e8ecf2] hover:border-[#BA9832]/30'
+                : 'bg-[#f8f9fb] text-[#5a6a82] border border-[#e8ecf2] hover:border-[#7D651F]/30'
             }`}
           >
             All
@@ -57,7 +57,7 @@ export function GalleryGrid({ images, videos }: GalleryGridProps) {
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-premium ${
                 activeCategory === cat
                   ? 'gradient-gold text-white shadow-md'
-                  : 'bg-[#f8f9fb] text-[#5a6a82] border border-[#e8ecf2] hover:border-[#BA9832]/30'
+                  : 'bg-[#f8f9fb] text-[#5a6a82] border border-[#e8ecf2] hover:border-[#7D651F]/30'
               }`}
             >
               {categoryLabels[cat] || cat}
@@ -73,7 +73,7 @@ export function GalleryGrid({ images, videos }: GalleryGridProps) {
             <button
               key={img.id}
               onClick={() => openLightbox(img.url)}
-              className="group relative aspect-[4/3] rounded-xl overflow-hidden border border-[#e8ecf2] transition-premium hover:scale-[1.02] hover:shadow-xl hover:border-[#BA9832]/30"
+              className="group relative aspect-[4/3] rounded-xl overflow-hidden border border-[#e8ecf2] transition-premium hover:scale-[1.02] hover:shadow-xl hover:border-[#7D651F]/30"
             >
               <Image
                 src={img.url}
@@ -134,7 +134,7 @@ export function GalleryGrid({ images, videos }: GalleryGridProps) {
                 </div>
                 {video.title && (
                   <div className="p-4 flex items-center gap-2">
-                    <Play className="w-4 h-4 text-[#BA9832]" />
+                    <Play className="w-4 h-4 text-[#7D651F]" />
                     <p className="text-sm font-medium text-[#002935]">{video.title}</p>
                   </div>
                 )}

@@ -69,37 +69,20 @@ export function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-12">
           {/* Logo */}
-          <Link href="/" className="flex items-center group gap-3 sm:gap-5" id="nav-logo">
-            <div className="relative h-10 w-auto transition-transform duration-500 scale-[1.25] sm:scale-[1.4] origin-left group-hover:scale-[1.3] sm:group-hover:scale-[1.45]">
+          <Link href="/" className="flex items-center" id="nav-logo">
+            <div className="relative h-12 sm:h-16 w-auto transition-transform duration-500 hover:scale-[1.05] origin-left">
               <Image 
                 src={logoSrc || logoFallback} 
                 alt={siteName} 
-                height={40}
-                width={logoSrc ? 120 : undefined}
+                height={64}
+                width={logoSrc ? 180 : undefined}
                 className={cn(
-                  "h-10 w-auto object-contain transition-all duration-500",
-                  !showGlass && "drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]" 
+                  "h-12 sm:h-16 w-auto object-contain transition-all duration-500",
+                  !showGlass && "drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]",
+                  showGlass && "brightness-0"
                 )}
                 priority
               />
-            </div>
-            <div className="flex flex-col items-center pt-0.5 pl-1 sm:pl-3">
-              <span 
-                className={cn(
-                  "text-lg sm:text-xl font-bold tracking-[0.15em] sm:tracking-[0.2em] transition-colors duration-500",
-                  showGlass ? "text-[#002935]" : "text-[#BA9832]"
-                )}
-              >
-                {siteName}
-              </span>
-              <span 
-                className={cn(
-                  "text-[7px] sm:text-[9px] font-medium tracking-[0.1em] uppercase transition-colors duration-500",
-                  showGlass ? "text-[#002935]/80" : "text-[#BA9832]/80"
-                )}
-              >
-                {tagline}
-              </span>
             </div>
           </Link>
 
@@ -113,10 +96,10 @@ export function Navbar() {
                   href={link.href}
                   id={`nav-${link.label.toLowerCase()}`}
                   className={cn(
-                    "px-4 py-2 text-sm font-medium transition-premium rounded-lg",
+                    "px-4 py-2 text-sm transition-premium rounded-lg",
                     showGlass 
-                      ? "text-[#5a6a82] hover:text-[#002935] hover:bg-[#f3f5f8]" 
-                      : "text-white/80 hover:text-white hover:bg-white/10"
+                      ? "text-[#002935] font-bold hover:text-[#7D651F] hover:bg-[#f3f5f8]" 
+                      : "text-white/80 font-medium hover:text-white hover:bg-white/10"
                   )}
                 >
                   {link.label}

@@ -69,7 +69,7 @@ export function ProjectRegistrationForm() {
           id="reg-name"
           name="name"
           required
-          className="w-full px-4 py-3 rounded-lg bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] placeholder:text-[#5a6a82]/50 focus:outline-none focus:border-[#BA9832]/50 focus:ring-1 focus:ring-[#BA9832]/30 transition-premium text-sm"
+          className="w-full px-4 py-3 rounded-lg bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] placeholder:text-[#5a6a82]/50 focus:outline-none focus:border-[#7D651F]/50 focus:ring-1 focus:ring-[#7D651F]/30 transition-premium text-sm"
           placeholder="Your full name"
         />
       </div>
@@ -83,7 +83,7 @@ export function ProjectRegistrationForm() {
           id="reg-phone"
           name="phone"
           required
-          className="w-full px-4 py-3 rounded-lg bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] placeholder:text-[#5a6a82]/50 focus:outline-none focus:border-[#BA9832]/50 focus:ring-1 focus:ring-[#BA9832]/30 transition-premium text-sm"
+          className="w-full px-4 py-3 rounded-lg bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] placeholder:text-[#5a6a82]/50 focus:outline-none focus:border-[#7D651F]/50 focus:ring-1 focus:ring-[#7D651F]/30 transition-premium text-sm"
           placeholder="+91 XXXXX XXXXX"
         />
       </div>
@@ -96,7 +96,7 @@ export function ProjectRegistrationForm() {
           type="email"
           id="reg-email"
           name="email"
-          className="w-full px-4 py-3 rounded-lg bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] placeholder:text-[#5a6a82]/50 focus:outline-none focus:border-[#BA9832]/50 focus:ring-1 focus:ring-[#BA9832]/30 transition-premium text-sm"
+          className="w-full px-4 py-3 rounded-lg bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] placeholder:text-[#5a6a82]/50 focus:outline-none focus:border-[#7D651F]/50 focus:ring-1 focus:ring-[#7D651F]/30 transition-premium text-sm"
           placeholder="your@email.com"
         />
       </div>

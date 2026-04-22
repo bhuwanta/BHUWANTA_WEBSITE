@@ -79,8 +79,7 @@ export function LeadPopup() {
             <X className="w-4 h-4" />
           </button>
 
-          <Image src={logoImg} alt="Bhuwanta" width={56} height={56} className="w-14 h-14 object-contain mb-3" />
-          <p className="text-[#BA9832] text-sm font-bold tracking-[0.2em] uppercase">BHUWANTA</p>
+          <Image src={logoImg} alt="Bhuwanta" width={96} height={96} className="w-24 h-24 object-contain mb-1 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
           <p className="text-white/50 text-[11px] mt-1 tracking-wide">Schedule a Site Visit</p>
         </div>
 

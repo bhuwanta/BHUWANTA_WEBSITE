@@ -23,7 +23,7 @@ async function sendDynamicAutoresponder(toName: string, toEmail: string) {
         <br/>
         <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e8ecf2;">
           <p style="color: #002935; font-size: 14px; margin: 0;">Best regards,</p>
-          <p style="color: #BA9832; font-weight: 600; font-size: 14px; margin: 4px 0 0 0;">${fromName}</p>
+          <p style="color: #7D651F; font-weight: 600; font-size: 14px; margin: 4px 0 0 0;">${fromName}</p>
         </div>
       </div>
     `

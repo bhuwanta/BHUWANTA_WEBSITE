@@ -15,7 +15,7 @@ export const revalidate = 120
 const statusColors: Record<string, string> = {
   'registrations-open': 'bg-emerald-50 text-emerald-700 border-emerald-200',
   upcoming: 'bg-[#003d4f]/10 text-[#003d4f] border-[#003d4f]/20',
-  'under-development': 'bg-[#BA9832]/10 text-[#7D651F] border-[#BA9832]/20',
+  'under-development': 'bg-[#7D651F]/10 text-[#7D651F] border-[#7D651F]/20',
   ready: 'bg-emerald-50 text-emerald-700 border-emerald-200',
   'sold-out': 'bg-red-50 text-red-700 border-red-200',
 }
@@ -126,7 +126,7 @@ export default async function ProjectsPage() {
       <section className="pt-32 pb-16 section-padding relative bg-[#f8f9fb] luxury-bg-grid">
         <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-[#003d4f]/3 rounded-full blur-[150px]" />
         <div className="max-w-4xl mx-auto text-center relative z-10">
-          <p className="text-sm font-semibold text-[#BA9832] mb-4 tracking-wider uppercase luxury-subheading">Our Portfolio</p>
+          <p className="text-sm font-semibold text-[#7D651F] mb-4 tracking-wider uppercase luxury-subheading">Our Portfolio</p>
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-[#002935] luxury-heading">
             {pageHeading}
           </h1>
@@ -163,7 +163,7 @@ export default async function ProjectsPage() {
                   </div>
                   <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">{project.name}</h2>
                   <p className="text-white/70 flex items-center gap-1.5">
-                    <MapPin className="w-4 h-4 text-[#BA9832]" />
+                    <MapPin className="w-4 h-4 text-[#7D651F]" />
                     {project.location}
                   </p>
                 </div>
@@ -224,8 +224,8 @@ export default async function ProjectsPage() {
                     <h3 className="text-lg font-bold text-[#002935] mb-4">Amenities</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {project.amenities.map((amenity, j) => (
-                        <div key={j} className="flex items-center gap-3 bg-[#f8f9fb] rounded-lg p-3 border border-[#e8ecf2] transition-premium hover:border-[#BA9832]/30 hover:shadow-sm">
-                          <span className="text-lg text-[#BA9832]">
+                        <div key={j} className="flex items-center gap-3 bg-[#f8f9fb] rounded-lg p-3 border border-[#e8ecf2] transition-premium hover:border-[#7D651F]/30 hover:shadow-sm">
+                          <span className="text-lg text-[#7D651F]">
                             <DynamicIcon name={amenity.icon} className="w-5 h-5" />
                           </span>
                           <span className="text-sm font-medium text-[#002935]">{amenity.label}</span>

@@ -52,7 +52,7 @@ export function BlogSubscribeForm() {
         onChange={(e) => setEmail(e.target.value)}
         required
         placeholder="Enter your email"
-        className="flex-1 px-4 py-3 rounded-lg bg-white border border-[#e8ecf2] text-[#002935] placeholder:text-[#5a6a82]/50 focus:outline-none focus:border-[#BA9832]/50 focus:ring-1 focus:ring-[#BA9832]/30 transition-premium text-sm"
+        className="flex-1 px-4 py-3 rounded-lg bg-white border border-[#e8ecf2] text-[#002935] placeholder:text-[#5a6a82]/50 focus:outline-none focus:border-[#7D651F]/50 focus:ring-1 focus:ring-[#7D651F]/30 transition-premium text-sm"
       />
       <button
         type="submit"

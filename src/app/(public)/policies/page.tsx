@@ -14,15 +14,15 @@ export default function PoliciesPage() {
       <div className="max-w-4xl mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-16">
-          <p className="text-sm font-semibold text-[#BA9832] mb-3 tracking-wider uppercase">Legal</p>
+          <p className="text-sm font-semibold text-[#7D651F] mb-3 tracking-wider uppercase">Legal</p>
           <h1 className="text-4xl sm:text-5xl font-bold text-[#002935] mb-4">Terms & Privacy</h1>
           <p className="text-sm text-[#5a6a82]">Last updated: {lastUpdated}</p>
         </div>
 
         {/* Quick Nav */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
-          <a href="#privacy" className="flex items-center gap-4 p-6 bg-white rounded-2xl border border-[#e8ecf2] hover:border-[#BA9832]/30 transition-premium group shadow-sm">
-            <div className="w-12 h-12 rounded-xl bg-[#BA9832]/10 flex items-center justify-center text-[#BA9832] group-hover:scale-110 transition-premium">
+          <a href="#privacy" className="flex items-center gap-4 p-6 bg-white rounded-2xl border border-[#e8ecf2] hover:border-[#7D651F]/30 transition-premium group shadow-sm">
+            <div className="w-12 h-12 rounded-xl bg-[#7D651F]/10 flex items-center justify-center text-[#7D651F] group-hover:scale-110 transition-premium">
               <Shield className="w-6 h-6" />
             </div>
             <div>
@@ -30,7 +30,7 @@ export default function PoliciesPage() {
               <p className="text-xs text-[#5a6a82]">How we protect your data</p>
             </div>
           </a>
-          <a href="#terms" className="flex items-center gap-4 p-6 bg-white rounded-2xl border border-[#e8ecf2] hover:border-[#BA9832]/30 transition-premium group shadow-sm">
+          <a href="#terms" className="flex items-center gap-4 p-6 bg-white rounded-2xl border border-[#e8ecf2] hover:border-[#7D651F]/30 transition-premium group shadow-sm">
             <div className="w-12 h-12 rounded-xl bg-[#002935]/5 flex items-center justify-center text-[#002935] group-hover:scale-110 transition-premium">
               <FileText className="w-6 h-6" />
             </div>
@@ -45,7 +45,7 @@ export default function PoliciesPage() {
           {/* Privacy Policy */}
           <section id="privacy" className="bg-white rounded-3xl p-8 md:p-12 border border-[#e8ecf2] shadow-sm">
             <div className="flex items-center gap-3 mb-8">
-              <Shield className="w-5 h-5 text-[#BA9832]" />
+              <Shield className="w-5 h-5 text-[#7D651F]" />
               <h2 className="text-2xl font-bold text-[#002935]">Privacy Policy</h2>
             </div>
 
@@ -116,7 +116,7 @@ export default function PoliciesPage() {
         {/* Footer Note */}
         <div className="mt-16 text-center">
           <p className="text-sm text-[#5a6a82]">
-            Have questions? <a href="/contact" className="text-[#BA9832] font-semibold hover:underline">Contact us</a>.
+            Have questions? <a href="/contact" className="text-[#7D651F] font-semibold hover:underline">Contact us</a>.
           </p>
         </div>
       </div>

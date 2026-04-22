@@ -94,7 +94,7 @@ export function ContactForm({ labels: rawLabels, queryOptions, thankYouMessage }
             id="name"
             name="name"
             required
-            className="w-full px-4 py-3 rounded-lg bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] placeholder:text-[#5a6a82]/50 focus:outline-none focus:border-[#BA9832]/50 focus:ring-1 focus:ring-[#BA9832]/30 transition-premium text-sm"
+            className="w-full px-4 py-3 rounded-lg bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] placeholder:text-[#5a6a82]/50 focus:outline-none focus:border-[#7D651F]/50 focus:ring-1 focus:ring-[#7D651F]/30 transition-premium text-sm"
             placeholder="Your full name"
           />
         </div>
@@ -107,7 +107,7 @@ export function ContactForm({ labels: rawLabels, queryOptions, thankYouMessage }
             id="phone"
             name="phone"
             required
-            className="w-full px-4 py-3 rounded-lg bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] placeholder:text-[#5a6a82]/50 focus:outline-none focus:border-[#BA9832]/50 focus:ring-1 focus:ring-[#BA9832]/30 transition-premium text-sm"
+            className="w-full px-4 py-3 rounded-lg bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] placeholder:text-[#5a6a82]/50 focus:outline-none focus:border-[#7D651F]/50 focus:ring-1 focus:ring-[#7D651F]/30 transition-premium text-sm"
             placeholder="+91 XXXXX XXXXX"
           />
         </div>
@@ -123,7 +123,7 @@ export function ContactForm({ labels: rawLabels, queryOptions, thankYouMessage }
             type="email"
             id="email"
             name="email"
-            className="w-full px-4 py-3 rounded-lg bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] placeholder:text-[#5a6a82]/50 focus:outline-none focus:border-[#BA9832]/50 focus:ring-1 focus:ring-[#BA9832]/30 transition-premium text-sm"
+            className="w-full px-4 py-3 rounded-lg bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] placeholder:text-[#5a6a82]/50 focus:outline-none focus:border-[#7D651F]/50 focus:ring-1 focus:ring-[#7D651F]/30 transition-premium text-sm"
             placeholder="your@email.com"
           />
         </div>
@@ -134,7 +134,7 @@ export function ContactForm({ labels: rawLabels, queryOptions, thankYouMessage }
           <select
             id="query"
             name="query"
-            className="w-full px-4 py-3 rounded-lg bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] focus:outline-none focus:border-[#BA9832]/50 focus:ring-1 focus:ring-[#BA9832]/30 transition-premium text-sm appearance-none"
+            className="w-full px-4 py-3 rounded-lg bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] focus:outline-none focus:border-[#7D651F]/50 focus:ring-1 focus:ring-[#7D651F]/30 transition-premium text-sm appearance-none"
           >
             <option value="">Select...</option>
             {options.map((opt) => (
@@ -153,7 +153,7 @@ export function ContactForm({ labels: rawLabels, queryOptions, thankYouMessage }
           id="message"
           name="message"
           rows={4}
-          className="w-full px-4 py-3 rounded-lg bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] placeholder:text-[#5a6a82]/50 focus:outline-none focus:border-[#BA9832]/50 focus:ring-1 focus:ring-[#BA9832]/30 transition-premium text-sm resize-none"
+          className="w-full px-4 py-3 rounded-lg bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] placeholder:text-[#5a6a82]/50 focus:outline-none focus:border-[#7D651F]/50 focus:ring-1 focus:ring-[#7D651F]/30 transition-premium text-sm resize-none"
           placeholder="Tell us what you're looking for..."
         />
       </div>

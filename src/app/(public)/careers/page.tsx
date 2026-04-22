@@ -45,7 +45,7 @@ export default async function CareersPage() {
       <section className="pt-32 pb-16 section-padding relative bg-[#f8f9fb]">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#003d4f]/3 rounded-full blur-[150px]" />
         <div className="max-w-4xl mx-auto text-center relative z-10">
-          <p className="text-sm font-semibold text-[#BA9832] mb-4 tracking-wider uppercase">Careers</p>
+          <p className="text-sm font-semibold text-[#7D651F] mb-4 tracking-wider uppercase">Careers</p>
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-[#002935]">
             {data.pageHeading}
           </h1>
@@ -68,8 +68,8 @@ export default async function CareersPage() {
           {/* What We Look For */}
           <div className="bg-[#f8f9fb] rounded-2xl p-8 sm:p-10 border border-[#e8ecf2] mb-12">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-xl bg-[#BA9832]/10 flex items-center justify-center">
-                <Heart className="w-5 h-5 text-[#BA9832]" />
+              <div className="w-10 h-10 rounded-xl bg-[#7D651F]/10 flex items-center justify-center">
+                <Heart className="w-5 h-5 text-[#7D651F]" />
               </div>
               <h2 className="text-xl font-bold text-[#002935]">What We Look For</h2>
             </div>
@@ -86,7 +86,7 @@ export default async function CareersPage() {
           {/* Apply CTA */}
           <div className="bg-[#002935] rounded-2xl p-8 sm:p-10 text-center">
             <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center mx-auto mb-6">
-              <Mail className="w-7 h-7 text-[#BA9832]" />
+              <Mail className="w-7 h-7 text-[#7D651F]" />
             </div>
             <h2 className="text-2xl font-bold text-white mb-3">To Apply</h2>
             <p className="text-white/70 mb-6 max-w-lg mx-auto">
