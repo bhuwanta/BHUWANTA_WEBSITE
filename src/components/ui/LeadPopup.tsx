@@ -87,6 +87,7 @@ export function LeadPopup() {
             height={120} 
             priority
             className="w-56 sm:w-72 h-auto max-h-24 object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.3)]" 
+            style={{ height: 'auto' }}
           />
         </div>
 

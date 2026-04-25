@@ -110,6 +110,7 @@ export function Footer() {
                     height={80}
                     width={logoSrc ? 240 : undefined}
                     className="h-16 sm:h-20 w-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]"
+                    style={{ width: 'auto' }}
                   />
                 </div>
               </Link>
