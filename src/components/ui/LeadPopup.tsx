@@ -50,108 +50,128 @@ export function LeadPopup() {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
       {/* Backdrop */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={() => setIsOpen(false)}
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
       />
 
-      {/* Compact Modal */}
+      {/* Modal Container */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 20 }}
-        transition={{ duration: 0.2 }}
-        className="relative w-full max-w-sm bg-white rounded-xl shadow-xl overflow-hidden"
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        transition={{ duration: 0.25, ease: 'easeOut' }}
+        className="relative w-full max-w-sm sm:max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col"
       >
-        {/* Header — Logo centered, company name in gold below */}
-        <div className="bg-[#002935] px-6 pt-5 pb-5 flex flex-col items-center text-center relative">
-          {/* Close button — visible on navy */}
+        {/* Header — Balanced vertical spacing, text removed */}
+        <div className="bg-[#002935] px-6 py-6 flex flex-col items-center justify-center text-center relative shrink-0">
+          {/* Close button */}
           <button
             onClick={() => setIsOpen(false)}
-            className="absolute top-3 right-3 p-1.5 text-white/50 hover:text-white rounded-full hover:bg-white/10 transition-colors z-10"
+            className="absolute top-4 right-4 p-1.5 text-white/60 hover:text-white bg-white/5 hover:bg-white/20 rounded-full transition-all z-10"
             aria-label="Close"
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
 
-          <Image src={logoImg} alt="Bhuwanta" width={96} height={96} className="w-24 h-24 object-contain mb-1 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
-          <p className="text-white/50 text-[11px] mt-1 tracking-wide">Schedule a Site Visit</p>
+          {/* Logo */}
+          <Image 
+            src={logoImg} 
+            alt="Bhuwanta Logo" 
+            width={320} 
+            height={120} 
+            priority
+            className="w-56 sm:w-72 h-auto max-h-24 object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.3)]" 
+          />
         </div>
 
-        {/* Form / Success */}
-        <div className="px-6 py-5">
+        {/* Form / Success States */}
+        <div className="px-6 py-6 sm:py-7">
           <AnimatePresence mode="wait">
             {!isSubmitted ? (
               <motion.form
                 key="form"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
                 onSubmit={handleSubmit}
-                className="space-y-3"
+                className="space-y-4"
               >
-                <input
-                  required
-                  type="text"
-                  placeholder="Full Name *"
-                  className="w-full px-3 py-2.5 bg-[#f8f9fb] border border-[#e8ecf2] rounded-lg text-sm text-[#002935] placeholder:text-[#002935]/30 focus:outline-none focus:border-[#002935]/30 transition-colors"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                />
+                <div className="space-y-3">
+                  <input
+                    required
+                    type="text"
+                    placeholder="Full Name *"
+                    className="w-full px-4 py-3 bg-[#f8f9fb] border border-[#e8ecf2] rounded-xl text-sm text-[#002935] placeholder:text-[#002935]/40 focus:outline-none focus:ring-2 focus:ring-[#002935]/20 focus:border-[#002935]/50 transition-all"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  />
 
-                <input
-                  required
-                  type="tel"
-                  placeholder="Phone Number *"
-                  className="w-full px-3 py-2.5 bg-[#f8f9fb] border border-[#e8ecf2] rounded-lg text-sm text-[#002935] placeholder:text-[#002935]/30 focus:outline-none focus:border-[#002935]/30 transition-colors"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                />
+                  <input
+                    required
+                    type="tel"
+                    placeholder="Phone Number *"
+                    className="w-full px-4 py-3 bg-[#f8f9fb] border border-[#e8ecf2] rounded-xl text-sm text-[#002935] placeholder:text-[#002935]/40 focus:outline-none focus:ring-2 focus:ring-[#002935]/20 focus:border-[#002935]/50 transition-all"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  />
 
-                <input
-                  required
-                  type="email"
-                  placeholder="Email *"
-                  className="w-full px-3 py-2.5 bg-[#f8f9fb] border border-[#e8ecf2] rounded-lg text-sm text-[#002935] placeholder:text-[#002935]/30 focus:outline-none focus:border-[#002935]/30 transition-colors"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                />
+                  <input
+                    required
+                    type="email"
+                    placeholder="Email Address *"
+                    className="w-full px-4 py-3 bg-[#f8f9fb] border border-[#e8ecf2] rounded-xl text-sm text-[#002935] placeholder:text-[#002935]/40 focus:outline-none focus:ring-2 focus:ring-[#002935]/20 focus:border-[#002935]/50 transition-all"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  />
 
-                <input
-                  required
-                  type="text"
-                  placeholder="Approx. Budget *"
-                  className="w-full px-3 py-2.5 bg-[#f8f9fb] border border-[#e8ecf2] rounded-lg text-sm text-[#002935] placeholder:text-[#002935]/30 focus:outline-none focus:border-[#002935]/30 transition-colors"
-                  value={formData.budget}
-                  onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
-                />
+                  <input
+                    required
+                    type="text"
+                    placeholder="Approx. Budget *"
+                    className="w-full px-4 py-3 bg-[#f8f9fb] border border-[#e8ecf2] rounded-xl text-sm text-[#002935] placeholder:text-[#002935]/40 focus:outline-none focus:ring-2 focus:ring-[#002935]/20 focus:border-[#002935]/50 transition-all"
+                    value={formData.budget}
+                    onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
+                  />
+                </div>
 
-                <button
-                  disabled={isSubmitting}
-                  className="w-full py-2.5 bg-[#002935] text-white text-sm font-medium rounded-lg hover:bg-[#003d4f] active:scale-[0.98] transition-all disabled:opacity-60"
-                >
-                  {isSubmitting ? 'Submitting...' : 'Book Visit'}
-                </button>
-
-                <p className="text-[10px] text-center text-[#002935]/30">
-                  Your information is kept confidential.
-                </p>
+                <div className="pt-2">
+                  <button
+                    disabled={isSubmitting}
+                    className="w-full py-3 sm:py-3.5 bg-[#002935] text-white text-sm sm:text-base font-semibold rounded-xl hover:bg-[#003d4f] hover:shadow-lg active:scale-[0.98] transition-all disabled:opacity-70 flex items-center justify-center"
+                  >
+                    {isSubmitting ? (
+                      <span className="flex items-center gap-2">
+                        <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Submitting...
+                      </span>
+                    ) : (
+                      'Book Visit'
+                    )}
+                  </button>
+                  <p className="text-[11px] text-center text-[#002935]/40 mt-3 font-medium">
+                    Your information is kept 100% confidential.
+                  </p>
+                </div>
               </motion.form>
             ) : (
               <motion.div
                 key="success"
-                initial={{ opacity: 0, scale: 0.95 }}
+                initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="text-center py-6"
+                className="text-center py-8 sm:py-10"
               >
-                <CheckCircle2 className="w-10 h-10 text-green-500 mx-auto mb-3" />
-                <p className="text-sm font-medium text-[#002935] mb-1">You&apos;re all set!</p>
-                <p className="text-xs text-[#002935]/50">We&apos;ll contact you shortly.</p>
+                <CheckCircle2 className="w-14 h-14 text-emerald-500 mx-auto mb-4" />
+                <h3 className="text-lg sm:text-xl font-bold text-[#002935] mb-2">You're all set!</h3>
+                <p className="text-sm text-[#002935]/60">Our team will be in touch with you shortly to confirm your visit.</p>
               </motion.div>
             )}
           </AnimatePresence>

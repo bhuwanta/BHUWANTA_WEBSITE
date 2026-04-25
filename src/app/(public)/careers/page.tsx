@@ -42,74 +42,14 @@ export default async function CareersPage() {
       <JsonLd data={breadcrumb} />
 
       {/* Hero */}
-      <section className="pt-32 pb-16 section-padding relative bg-[#f8f9fb]">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#003d4f]/3 rounded-full blur-[150px]" />
-        <div className="max-w-4xl mx-auto text-center relative z-10">
-          <p className="text-sm font-semibold text-[#7D651F] mb-4 tracking-wider uppercase">Careers</p>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-[#002935]">
-            {data.pageHeading}
-          </h1>
-          <p className="text-lg text-[#5a6a82] max-w-2xl mx-auto">
-            {data.pageSubheading}
-          </p>
-        </div>
-      </section>
+      <section className="pt-32 pb-20 sm:pt-40 sm:pb-32 section-padding relative overflow-hidden bg-[#002935] luxury-bg-grid-white">
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#7D651F]/10 rounded-full blur-[150px]" />
 
-      {/* Content */}
-      <section className="section-padding pt-0 bg-white">
-        <div className="max-w-3xl mx-auto">
-          {/* Body Text */}
-          <div className="mb-12">
-            <p className="text-[#5a6a82] leading-relaxed text-lg">
-              {data.bodyText}
-            </p>
-          </div>
-
-          {/* What We Look For */}
-          <div className="bg-[#f8f9fb] rounded-2xl p-8 sm:p-10 border border-[#e8ecf2] mb-12">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-xl bg-[#7D651F]/10 flex items-center justify-center">
-                <Heart className="w-5 h-5 text-[#7D651F]" />
-              </div>
-              <h2 className="text-xl font-bold text-[#002935]">What We Look For</h2>
-            </div>
-            <div className="space-y-3">
-              {(data.whatWeLookFor || fallback.whatWeLookFor).map((item, i) => (
-                <div key={i} className="flex items-center gap-3 bg-white rounded-xl p-4 border border-[#e8ecf2]">
-                  <CheckCircle className="w-5 h-5 text-emerald-500 shrink-0" />
-                  <span className="text-[#002935] font-medium">{item}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Apply CTA */}
-          <div className="bg-[#002935] rounded-2xl p-8 sm:p-10 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center mx-auto mb-6">
-              <Mail className="w-7 h-7 text-[#7D651F]" />
-            </div>
-            <h2 className="text-2xl font-bold text-white mb-3">To Apply</h2>
-            <p className="text-white/70 mb-6 max-w-lg mx-auto">
-              Send your resume and a short note about yourself to:
-            </p>
-            <a
-              href={`mailto:${data.applyEmail}?subject=Career Opportunity`}
-              className="inline-flex items-center gap-2 px-8 py-4 text-sm font-semibold rounded-xl gradient-gold text-white hover:scale-105 transition-premium glow-gold"
-            >
-              <Mail className="w-4 h-4" />
-              {data.applyEmail}
-            </a>
-            <p className="text-white/50 text-sm mt-4">
-              Subject line: Career Opportunity — [Your Name]
-            </p>
-          </div>
-
-          {/* Footer Note */}
-          {data.footerNote && (
-            <div className="text-center mt-8">
-              <p className="text-sm text-[#5a6a82] italic">{data.footerNote}</p>
-            </div>
-          )}
+        <div className="max-w-5xl mx-auto text-center relative z-10">
+          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[#7D651F] text-xs font-semibold tracking-widest uppercase mb-6 mt-4">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#7D651F] shadow-[0_0_8px_#7D651F] animate-pulse" />
+            Careers
+          </span>
         </div>
       </section>
     </>

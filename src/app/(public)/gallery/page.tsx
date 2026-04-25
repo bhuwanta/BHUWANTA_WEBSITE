@@ -77,62 +77,14 @@ export default async function GalleryPage() {
       <JsonLd data={gallerySchema ? [breadcrumb, gallerySchema] : [breadcrumb]} />
 
       {/* Hero */}
-      <section className="pt-32 pb-16 section-padding relative bg-[#f8f9fb] luxury-bg-grid">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#003d4f]/3 rounded-full blur-[150px]" />
-        <div className="max-w-4xl mx-auto text-center relative z-10">
-          <p className="text-sm font-semibold text-[#7D651F] mb-4 tracking-wider uppercase luxury-subheading">Real Photos</p>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-[#002935] luxury-heading">
-            {pageHeading}
-          </h1>
-          <p className="text-lg text-[#5a6a82] max-w-2xl mx-auto">
-            {pageSubheading}
-          </p>
-        </div>
-      </section>
+      <section className="pt-32 pb-20 sm:pt-40 sm:pb-32 section-padding relative overflow-hidden bg-[#002935] luxury-bg-grid-white">
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#7D651F]/10 rounded-full blur-[150px]" />
 
-      {/* Gallery Grid with Filter Tabs */}
-      <section className="section-padding pt-0 bg-white">
-        <div className="max-w-7xl mx-auto">
-          {images.length === 0 && videos.length === 0 ? (
-            <div className="text-center py-20">
-              <div className="bg-white rounded-2xl p-12 max-w-md mx-auto border border-[#e8ecf2] shadow-sm">
-                <p className="text-[#5a6a82] mb-2">No media available yet.</p>
-                <p className="text-sm text-[#5a6a82]/60">Photos and videos will appear here as our projects develop. Add media via Sanity Studio.</p>
-              </div>
-            </div>
-          ) : (
-            <GalleryGrid images={images} videos={videos} />
-          )}
-        </div>
-      </section>
-
-      {/* Development Updates */}
-      <section className="section-padding bg-[#f8f9fb] luxury-bg-topography" id="dev-updates">
-        <div className="max-w-3xl mx-auto text-center relative z-10">
-          <div className="bg-white rounded-2xl p-8 sm:p-12 border border-[#e8ecf2]">
-            <div className="w-12 h-12 rounded-xl bg-[#7D651F]/10 flex items-center justify-center mx-auto mb-6">
-              <DynamicIcon name="HardHat" className="w-6 h-6 text-[#7D651F]" />
-            </div>
-            <h2 className="text-2xl font-bold text-[#002935] mb-4 luxury-heading">{devUpdateHeading}</h2>
-            <p className="text-[#5a6a82] leading-relaxed">{devUpdateBody}</p>
-          </div>
-        </div>
-      </section>
-
-      {/* Bottom CTA */}
-      <section className="section-padding bg-white luxury-bg-topography" id="gallery-cta">
-        <div className="max-w-3xl mx-auto text-center relative z-10">
-          <h2 className="text-3xl sm:text-4xl font-bold text-[#002935] mb-4 luxury-heading">Want to See It in Person?</h2>
-          <p className="text-lg text-[#5a6a82] mb-8 max-w-xl mx-auto">
-            A photo only shows so much. Come walk the land yourself — we&apos;ll arrange a free guided site visit at a time that works for you.
-          </p>
-          <Link
-            href="/contact"
-            className="inline-flex items-center gap-2 px-8 py-4 text-sm font-semibold rounded-xl gradient-gold text-white hover:scale-105 transition-premium glow-gold"
-          >
-            Book a Site Visit
-            <ArrowRight className="w-4 h-4" />
-          </Link>
+        <div className="max-w-5xl mx-auto text-center relative z-10">
+          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[#7D651F] text-xs font-semibold tracking-widest uppercase mb-6 mt-4">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#7D651F] shadow-[0_0_8px_#7D651F] animate-pulse" />
+            Gallery
+          </span>
         </div>
       </section>
     </>

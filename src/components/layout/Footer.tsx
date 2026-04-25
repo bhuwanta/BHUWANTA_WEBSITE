@@ -187,13 +187,15 @@ export function Footer() {
                   href={social.url || '#'}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3 text-sm text-[#7D651F] hover:text-white group transition-premium"
+                  className="flex items-center gap-3 text-sm group transition-premium"
                   aria-label={social.name}
                 >
                   <div className="w-9 h-9 rounded-lg bg-[#7D651F]/10 border border-[#7D651F]/30 flex items-center justify-center group-hover:bg-white/10 group-hover:border-white/30 transition-premium">
-                    <social.icon className="w-4 h-4 transition-transform group-hover:scale-110" />
+                    <social.icon className="w-4 h-4 text-[#7D651F] transition-all duration-300 group-hover:scale-110 group-hover:text-white" />
                   </div>
-                  <span className="font-medium">{social.name}</span>
+                  <span className="text-white/70 group-hover:text-white transition-colors">
+                    {social.name}
+                  </span>
                 </a>
               ))}
             </div>

@@ -39,73 +39,14 @@ export default async function BlogPage() {
       <JsonLd data={breadcrumb} />
 
       {/* Hero */}
-      <section className="pt-32 pb-16 section-padding relative bg-[#f8f9fb] luxury-bg-grid">
-        <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-[#003d4f]/3 rounded-full blur-[150px]" />
-        <div className="max-w-4xl mx-auto text-center relative z-10">
-          <p className="text-sm font-semibold text-[#7D651F] mb-4 tracking-wider uppercase luxury-subheading">Insights & Advice</p>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-[#002935] luxury-heading">
-            Insights on Land, Investment &{' '}
-            <span className="text-gradient">Living Well</span>
-          </h1>
-          <p className="text-lg text-[#5a6a82] max-w-2xl mx-auto">
-            Practical advice on buying land, understanding approvals, Vastu principles, and building wealth through real estate.
-          </p>
-        </div>
-      </section>
+      <section className="pt-32 pb-20 sm:pt-40 sm:pb-32 section-padding relative overflow-hidden bg-[#002935] luxury-bg-grid-white">
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#7D651F]/10 rounded-full blur-[150px]" />
 
-      {/* Blog Content */}
-      <section className="section-padding pt-0 bg-white">
-        <div className="max-w-7xl mx-auto">
-          {posts.length === 0 ? (
-            <div className="max-w-md mx-auto text-center py-16 relative z-10">
-              <div className="w-16 h-16 rounded-2xl bg-[#7D651F]/10 flex items-center justify-center mx-auto mb-6">
-                <BookOpen className="w-8 h-8 text-[#7D651F]" />
-              </div>
-              <h2 className="text-2xl font-bold text-[#002935] mb-3 luxury-heading">Stay Tuned</h2>
-              <p className="text-[#5a6a82]">
-                We're preparing insightful articles for you. Check back soon!
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {posts.map((post) => (
-                <Link
-                  key={post.slug.current}
-                  href={`/blog/${post.slug.current}`}
-                  className="bg-white rounded-2xl overflow-hidden group transition-premium border border-[#e8ecf2] hover:border-[#7D651F]/30 hover:shadow-xl hover:scale-[1.02]"
-                >
-                  <div className="aspect-[16/9] bg-gradient-to-br from-[#002935] to-[#003d4f] relative">
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-4xl font-bold text-white/10">{post.title.charAt(0)}</span>
-                    </div>
-                  </div>
-                  <div className="p-6">
-                    <div className="flex items-center gap-3 text-xs text-[#5a6a82] mb-3">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5" />
-                        {formatDate(post.publishDate)}
-                      </span>
-                      {post.tags?.[0] && (
-                        <span className="flex items-center gap-1">
-                          <Tag className="w-3.5 h-3.5" />
-                          {post.tags[0]}
-                        </span>
-                      )}
-                    </div>
-                    <h2 className="text-lg font-semibold text-[#002935] mb-2 group-hover:text-[#003d4f] transition-premium">
-                      {post.title}
-                    </h2>
-                    {post.excerpt && (
-                      <p className="text-sm text-[#5a6a82] line-clamp-2 mb-4">{post.excerpt}</p>
-                    )}
-                    <span className="inline-flex items-center gap-1 text-sm font-semibold text-[#7D651F]">
-                      Read More <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                    </span>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
+        <div className="max-w-5xl mx-auto text-center relative z-10">
+          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[#7D651F] text-xs font-semibold tracking-widest uppercase mb-6 mt-4">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#7D651F] shadow-[0_0_8px_#7D651F] animate-pulse" />
+            Blogs
+          </span>
         </div>
       </section>
     </>

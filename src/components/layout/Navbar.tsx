@@ -115,8 +115,8 @@ export function Navbar() {
                 className={cn(
                   "hidden lg:inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold rounded-lg transition-premium",
                   showGlass
-                    ? "text-[#002935] hover:bg-[#f3f5f8] border border-[#e8ecf2]"
-                    : "text-white hover:bg-white/10 border border-white/20"
+                    ? "bg-black text-white hover:bg-black/80"
+                    : "bg-white text-black hover:bg-white/90"
                 )}
               >
                 Call Now
