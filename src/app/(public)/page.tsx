@@ -88,7 +88,7 @@ const fallback = {
 
   finalCtaHeading: 'Let\'s Secure Your Plot',
   finalCtaSubtext: 'Plots in this premium layout are selling fast. Reach out to us today to check availability and schedule your visit.',
-  finalCtaSupportingText: '📞 +91 99999 99999  |  ✉️ info@bhuwanta.com',
+  finalCtaSupportingText: '📞 +91 96665 04405  |  ✉️ info@bhuwanta.com',
 }
 
 export default async function HomePage() {
@@ -106,8 +106,8 @@ export default async function HomePage() {
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden" id="hero">
         <div className="absolute inset-0 gradient-dark" />
         <div className="absolute inset-0 noise-overlay" />
-        <div className="absolute top-1/4 -left-32 w-96 h-96 rounded-full bg-[#7D651F]/10 blur-[120px]" />
-        <div className="absolute bottom-1/4 -right-32 w-96 h-96 rounded-full bg-[#7D651F]/5 blur-[120px]" />
+        <div className="absolute top-1/4 -left-32 w-96 h-96 rounded-full bg-[#B69A4E]/10 blur-[120px]" />
+        <div className="absolute bottom-1/4 -right-32 w-96 h-96 rounded-full bg-[#B69A4E]/5 blur-[120px]" />
         <div className="absolute inset-0" style={{
           backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)',
           backgroundSize: '80px 80px',
@@ -134,7 +134,7 @@ export default async function HomePage() {
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
             <a
-              href="tel:+91XXXXXXXXXX"
+              href="tel:+919666504405"
               id="hero-cta-secondary"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 text-sm font-semibold rounded-xl bg-white text-[#002935] hover:bg-white/90 transition-premium shadow-lg"
             >

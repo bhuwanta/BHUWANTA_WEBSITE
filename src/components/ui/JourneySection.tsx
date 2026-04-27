@@ -43,7 +43,7 @@ export const JourneySection: React.FC<JourneySectionProps> = ({ steps }) => {
           {/* Horizontal Line */}
           <div className="absolute top-[2.25rem] left-0 right-0 h-0.5 bg-[#e8ecf2]" />
           <div
-            className="absolute top-[2.25rem] left-0 h-0.5 bg-gradient-to-r from-[#7D651F] to-[#F7D27D] transition-all duration-1000 ease-out"
+            className="absolute top-[2.25rem] left-0 h-0.5 bg-gradient-to-r from-[#B69A4E] to-[#B69A4E] transition-all duration-1000 ease-out"
             style={{ width: `${Math.min(100, ((activeStep + 1) / steps.length) * 100)}%` }}
           />
 
@@ -64,7 +64,7 @@ export const JourneySection: React.FC<JourneySectionProps> = ({ steps }) => {
                     <div
                       className={`w-[4.5rem] h-[4.5rem] rounded-2xl flex items-center justify-center transition-all duration-500 border-2 ${
                         isVisible
-                          ? 'bg-[#7D651F] border-[#7D651F] shadow-xl shadow-[#7D651F]/25 scale-110'
+                          ? 'bg-[#B69A4E] border-[#B69A4E] shadow-xl shadow-[#B69A4E]/25 scale-110'
                           : 'bg-white border-[#e8ecf2]'
                       }`}
                     >
@@ -90,7 +90,7 @@ export const JourneySection: React.FC<JourneySectionProps> = ({ steps }) => {
                   {/* Content Card */}
                   <div
                     className={`bg-white rounded-2xl p-6 lg:p-8 border shadow-sm transition-all duration-500 mx-2 ${
-                      isVisible ? 'border-[#7D651F]/20 shadow-md' : 'border-[#e8ecf2]'
+                      isVisible ? 'border-[#B69A4E]/20 shadow-md' : 'border-[#e8ecf2]'
                     }`}
                   >
                     <h3
@@ -116,7 +116,7 @@ export const JourneySection: React.FC<JourneySectionProps> = ({ steps }) => {
         {/* Vertical Line */}
         <div className="absolute left-6 top-6 bottom-6 w-px bg-[#e8ecf2]" />
         <div
-          className="absolute left-6 top-6 w-px bg-gradient-to-b from-[#7D651F] to-[#F7D27D] transition-all duration-1000 ease-out"
+          className="absolute left-6 top-6 w-px bg-gradient-to-b from-[#B69A4E] to-[#B69A4E] transition-all duration-1000 ease-out"
           style={{ height: `${Math.min(100, ((activeStep) / (steps.length - 1)) * 100)}%` }}
         />
 
@@ -137,7 +137,7 @@ export const JourneySection: React.FC<JourneySectionProps> = ({ steps }) => {
                   <div
                     className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-500 border-2 ${
                       isVisible
-                        ? 'bg-[#7D651F] border-[#7D651F] shadow-lg shadow-[#7D651F]/20'
+                        ? 'bg-[#B69A4E] border-[#B69A4E] shadow-lg shadow-[#B69A4E]/20'
                         : 'bg-white border-[#e8ecf2]'
                     }`}
                   >

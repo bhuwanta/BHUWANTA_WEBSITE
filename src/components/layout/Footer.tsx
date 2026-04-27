@@ -80,21 +80,21 @@ export function Footer() {
   const address = settings.footerAddress || 'Floor #4, Flat No. #406, Alluri Trade Center, Near KPHB Metro (Pillar #761), Hyderabad, Telangana - 500072'
   const addressLabel = settings.footerAddressLabel || 'Headquarters'
   const mapsUrl = settings.googleMapsUrl || 'https://maps.app.goo.gl/USjC2iYeGiXbZ5U16'
-  const phone = settings.footerPhone || '+91 XXXXX XXXXX'
+  const phone = (settings.footerPhone && settings.footerPhone !== '+91 XXXXX XXXXX') ? settings.footerPhone : '+91 96665 04405'
   const email = settings.footerEmail || 'info@bhuwanta.com'
   const copyright = settings.copyrightText || 'Bhuwanta. All rights reserved.'
 
   const socialItems = [
-    { name: 'LinkedIn', icon: LinkedinIcon, url: settings.socialLinks?.linkedin },
-    { name: 'Facebook', icon: FacebookIcon, url: settings.socialLinks?.facebook },
-    { name: 'Instagram', icon: InstagramIcon, url: settings.socialLinks?.instagram },
-    { name: 'YouTube', icon: YoutubeIcon, url: settings.socialLinks?.youtube },
+    { name: 'LinkedIn', icon: LinkedinIcon, url: settings.socialLinks?.linkedin || 'https://www.linkedin.com/in/bhuwanta-developer-043591405/' },
+    { name: 'Facebook', icon: FacebookIcon, url: settings.socialLinks?.facebook || 'https://www.facebook.com/bhuwantadevelopers' },
+    { name: 'Instagram', icon: InstagramIcon, url: settings.socialLinks?.instagram || 'https://www.instagram.com/bhuwantadevelopers/' },
+    { name: 'YouTube', icon: YoutubeIcon, url: settings.socialLinks?.youtube || 'https://www.youtube.com/@BhuwantaDevelopers' },
   ].filter(s => s.url)
 
   return (
     <footer className="relative bg-[#002935] border-t border-white/10 pt-2">
       {/* Decorative top border gradient */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#7D651F]/50 to-transparent" />
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#B69A4E]/50 to-transparent" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-12">
@@ -107,8 +107,8 @@ export function Footer() {
                   <Image 
                     src={logoSrc || logoFallback} 
                     alt={siteName} 
+                    width={240}
                     height={80}
-                    width={logoSrc ? 240 : undefined}
                     className="h-16 sm:h-20 w-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]"
                     style={{ width: 'auto' }}
                   />
@@ -117,7 +117,7 @@ export function Footer() {
             </div>
             <div className="mb-6 flex flex-col gap-3">
               <div className="flex items-start gap-3">
-                <MapPin className="w-5 h-5 text-[#7D651F] mt-0.5 shrink-0" />
+                <MapPin className="w-5 h-5 text-[#B69A4E] mt-0.5 shrink-0" />
                 <div className="text-sm text-white/70 leading-relaxed pr-2">
                   <strong className="block text-white mb-1 text-base tracking-wide">{addressLabel}</strong>
                   <p>{address}</p>
@@ -127,7 +127,7 @@ export function Footer() {
                 href={mapsUrl} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="w-fit ml-8 px-4 py-2.5 text-xs font-bold rounded-lg bg-[#7D651F]/10 text-[#7D651F] hover:bg-[#7D651F] hover:text-white transition-premium border border-[#7D651F]/20 shadow-none flex items-center gap-2 uppercase tracking-wider"
+                className="w-fit ml-8 px-4 py-2.5 text-xs font-bold rounded-lg bg-[#B69A4E]/10 text-[#B69A4E] hover:bg-[#B69A4E] hover:text-white transition-premium border border-[#B69A4E]/20 shadow-none flex items-center gap-2 uppercase tracking-wider"
               >
                 <MapPin className="w-3.5 h-3.5" />
                 Open in Google Maps
@@ -161,11 +161,11 @@ export function Footer() {
             </h3>
             <ul className="space-y-4">
               <li className="flex items-center gap-3 group">
-                <Phone className="w-4 h-4 text-[#7D651F] shrink-0" />
+                <Phone className="w-4 h-4 text-[#B69A4E] shrink-0" />
                 <a href={`tel:${phone.replace(/\s/g, '')}`} className="text-sm text-white/70 group-hover:text-white transition-colors">{phone}</a>
               </li>
               <li className="flex items-center gap-3 group">
-                <Mail className="w-4 h-4 text-[#7D651F] shrink-0" />
+                <Mail className="w-4 h-4 text-[#B69A4E] shrink-0" />
                 <a href={`mailto:${email}`} className="text-sm text-white/70 group-hover:text-white transition-colors">{email}</a>
               </li>
             </ul>
@@ -191,8 +191,8 @@ export function Footer() {
                   className="flex items-center gap-3 text-sm group transition-premium"
                   aria-label={social.name}
                 >
-                  <div className="w-9 h-9 rounded-lg bg-[#7D651F]/10 border border-[#7D651F]/30 flex items-center justify-center group-hover:bg-white/10 group-hover:border-white/30 transition-premium">
-                    <social.icon className="w-4 h-4 text-[#7D651F] transition-all duration-300 group-hover:scale-110 group-hover:text-white" />
+                  <div className="w-9 h-9 rounded-lg bg-[#B69A4E]/10 border border-[#B69A4E]/30 flex items-center justify-center group-hover:bg-white/10 group-hover:border-white/30 transition-premium">
+                    <social.icon className="w-4 h-4 text-[#B69A4E] transition-all duration-300 group-hover:scale-110 group-hover:text-white" />
                   </div>
                   <span className="text-white/70 group-hover:text-white transition-colors">
                     {social.name}

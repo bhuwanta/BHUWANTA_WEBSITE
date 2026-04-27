@@ -176,7 +176,7 @@ export const YouTubeCarousel: React.FC<YouTubeCarouselProps> = ({ videos }) => {
                       onClick={() => handlePlay(i)}
                       className="absolute inset-0 flex items-center justify-center z-10"
                     >
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#7D651F] flex items-center justify-center shadow-xl hover:scale-110 hover:bg-[#F7D27D] transition-all duration-300">
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#B69A4E] flex items-center justify-center shadow-xl hover:scale-110 hover:bg-[#B69A4E] transition-all duration-300">
                         <Play className="w-7 h-7 sm:w-8 sm:h-8 text-white ml-1" fill="white" />
                       </div>
                     </button>
@@ -199,7 +199,7 @@ export const YouTubeCarousel: React.FC<YouTubeCarouselProps> = ({ videos }) => {
           <div
             key={i}
             className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
-              playingIndex === i ? 'bg-[#7D651F] w-4' : 'bg-[#002935]/20'
+              playingIndex === i ? 'bg-[#B69A4E] w-4' : 'bg-[#002935]/20'
             }`}
           />
         ))}

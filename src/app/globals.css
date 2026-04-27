@@ -19,11 +19,11 @@
   --color-sidebar-accent: #00303f;
   --color-sidebar-foreground: #8899b0;
   --color-sidebar-primary-foreground: #f8f9fb;
-  --color-sidebar-primary: #7D651F;
+  --color-sidebar-primary: #B69A4E;
   --color-sidebar-background: #002935;
 
   /* Charts */
-  --color-chart-5: #7D651F;
+  --color-chart-5: #B69A4E;
   --color-chart-4: #003d4f;
   --color-chart-3: #006680;
   --color-chart-2: #338fa5;
@@ -69,7 +69,7 @@
 }
 
 .gradient-gold {
-  background: linear-gradient(180deg, #F7D27D 0%, #7D651F 100%);
+  background: linear-gradient(180deg, #B69A4E 0%, #B69A4E 100%);
 }
 
 .gradient-dark {
@@ -95,7 +95,7 @@
 
 /* Text gradients */
 .text-gradient {
-  background: linear-gradient(180deg, #F7D27D 0%, #7D651F 100%);
+  background: linear-gradient(180deg, #B69A4E 0%, #B69A4E 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -165,7 +165,7 @@
   left: 0;
   width: 0;
   height: 2px;
-  background: linear-gradient(90deg, #7D651F 0%, #003d4f 100%);
+  background: linear-gradient(90deg, #B69A4E 0%, #003d4f 100%);
   transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -284,5 +284,5 @@
 /* Divider line */
 .divider-gold {
   height: 1px;
-  background: linear-gradient(90deg, transparent, #7D651F, transparent);
+  background: linear-gradient(90deg, transparent, #B69A4E, transparent);
 }

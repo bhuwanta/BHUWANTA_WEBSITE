@@ -5,6 +5,7 @@ import { generatePageMetadata } from '@/lib/seo'
 import { sanityFetch, projectsQuery, urlFor } from '@/lib/sanity'
 import { JsonLd, buildBreadcrumbSchema, buildRealEstateListingSchema } from '@/components/seo/JsonLd'
 import { DynamicIcon } from '@/components/ui/DynamicIcon'
+import { PageBanner } from '../../../components/ui/PageBanner'
 
 export async function generateMetadata(): Promise<Metadata> {
   return generatePageMetadata('projects', 'Our Projects', 'Explore Bhuwanta\'s HMDA-approved, Vastu-aligned plot developments in Hyderabad\'s high-growth corridors.')
@@ -15,7 +16,7 @@ export const revalidate = 120
 const statusColors: Record<string, string> = {
   'registrations-open': 'bg-emerald-50 text-emerald-700 border-emerald-200',
   upcoming: 'bg-[#003d4f]/10 text-[#003d4f] border-[#003d4f]/20',
-  'under-development': 'bg-[#7D651F]/10 text-[#7D651F] border-[#7D651F]/20',
+  'under-development': 'bg-[#B69A4E]/10 text-[#B69A4E] border-[#B69A4E]/20',
   ready: 'bg-emerald-50 text-emerald-700 border-emerald-200',
   'sold-out': 'bg-red-50 text-red-700 border-red-200',
 }
@@ -122,17 +123,9 @@ export default async function ProjectsPage() {
     <>
       <JsonLd data={[breadcrumb, ...listingSchemas]} />
 
-      {/* Hero */}
-      <section className="pt-32 pb-20 sm:pt-40 sm:pb-32 section-padding relative overflow-hidden bg-[#002935] luxury-bg-grid-white">
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#7D651F]/10 rounded-full blur-[150px]" />
-
-        <div className="max-w-5xl mx-auto text-center relative z-10">
-          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[#7D651F] text-xs font-semibold tracking-widest uppercase mb-6 mt-4">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#7D651F] shadow-[0_0_8px_#7D651F] animate-pulse" />
-            Projects
-          </span>
-        </div>
-      </section>
+      <PageBanner 
+        title="Our Portfolio" 
+      />
     </>
   )
 }

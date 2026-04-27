@@ -46,7 +46,7 @@ export default async function ContactPage() {
       <section className="pt-32 pb-16 section-padding relative bg-[#f8f9fb]">
         <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-[#003d4f]/3 rounded-full blur-[150px]" />
         <div className="max-w-4xl mx-auto text-center relative z-10">
-          <p className="text-sm font-semibold text-[#7D651F] mb-4 tracking-wider uppercase">Reach Out</p>
+          <p className="text-sm font-semibold text-[#B69A4E] mb-4 tracking-wider uppercase">Reach Out</p>
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-[#002935]">
             {data.pageHeading?.split(' ').slice(0, -1).join(' ') || "Let's"}{' '}
             <span className="text-gradient">{data.pageHeading?.split(' ').slice(-1)[0] || 'Talk'}</span>
@@ -64,13 +64,13 @@ export default async function ContactPage() {
             {/* Contact Info */}
             <div className="lg:col-span-2 space-y-6">
               {[
-                { icon: Phone, label: 'Call Us', value: '[PHONE NUMBER]', href: 'tel:+91XXXXXXXXXX' },
+                { icon: Phone, label: 'Call Us', value: '+91 96665 04405', href: 'tel:+919666504405' },
                 { icon: Mail, label: 'Email Us', value: 'info@bhuwanta.com', href: 'mailto:info@bhuwanta.com' },
-                { icon: MessageCircle, label: 'WhatsApp', value: 'Chat with us', href: data.whatsappLink || 'https://wa.me/91XXXXXXXXXX' },
+                { icon: MessageCircle, label: 'WhatsApp', value: 'Chat with us', href: data.whatsappLink || 'https://wa.me/919666504405' },
                 { icon: MapPin, label: 'Visit Us', value: '[OFFICE ADDRESS],\nHyderabad, Telangana', href: undefined },
                 { icon: Clock, label: 'Working Hours', value: 'Mon – Sat: 9:00 AM – 7:00 PM\nSunday: By Appointment', href: undefined },
               ].map((item) => (
-                <div key={item.label} className="glass-card rounded-xl p-5 flex items-start gap-4 transition-premium hover:border-[#7D651F]/30 hover:shadow-md">
+                <div key={item.label} className="glass-card rounded-xl p-5 flex items-start gap-4 transition-premium hover:border-[#B69A4E]/30 hover:shadow-md">
                   <div className="w-10 h-10 rounded-lg gradient-primary flex items-center justify-center shrink-0">
                     <item.icon className="w-5 h-5 text-white" />
                   </div>
@@ -81,7 +81,7 @@ export default async function ContactPage() {
                         href={item.href}
                         target={item.href.startsWith('http') ? '_blank' : undefined}
                         rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                        className="text-sm text-[#5a6a82] hover:text-[#7D651F] transition-colors whitespace-pre-line"
+                        className="text-sm text-[#5a6a82] hover:text-[#B69A4E] transition-colors whitespace-pre-line"
                       >
                         {item.value}
                       </a>

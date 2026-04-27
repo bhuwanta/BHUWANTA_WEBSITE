@@ -25,7 +25,7 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({ reviews }) => {
             {[...Array(5)].map((_, starIndex) => (
               <Star 
                 key={starIndex} 
-                className={`w-4 h-4 ${starIndex < review.rating ? 'text-[#7D651F] fill-[#7D651F]' : 'text-[#e8ecf2]'}`} 
+                className={`w-4 h-4 ${starIndex < review.rating ? 'text-[#B69A4E] fill-[#B69A4E]' : 'text-[#e8ecf2]'}`} 
               />
             ))}
           </div>

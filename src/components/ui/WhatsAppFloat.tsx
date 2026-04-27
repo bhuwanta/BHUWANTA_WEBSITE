@@ -2,9 +2,9 @@
 
 import { Phone } from 'lucide-react'
 
-const WHATSAPP_NUMBER = '919999999999' // Replace with your actual number
-const PHONE_NUMBER = '+919999999999'   // Replace with your actual number
-const DEFAULT_MESSAGE = 'Hi Bhuwanta, I would like to know more about your properties.'
+const WHATSAPP_NUMBER = '919666504405' // Replace with your actual number
+const PHONE_NUMBER = '+919666504405'   // Replace with your actual number
+const DEFAULT_MESSAGE = 'Hi Bhuwanta, I would like to know more about your projects.'
 
 function WhatsAppIcon({ className }: { className?: string }) {
   return (

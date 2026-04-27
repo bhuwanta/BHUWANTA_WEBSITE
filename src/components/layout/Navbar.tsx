@@ -74,8 +74,8 @@ export function Navbar() {
               <Image 
                 src={logoSrc || logoFallback} 
                 alt={siteName} 
+                width={180}
                 height={64}
-                width={logoSrc ? 180 : undefined}
                 className={cn(
                   "h-12 sm:h-16 w-auto object-contain transition-all duration-500",
                   !showGlass && "drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]",
@@ -99,7 +99,7 @@ export function Navbar() {
                   className={cn(
                     "px-4 py-2 text-sm transition-premium rounded-lg",
                     showGlass 
-                      ? "text-[#002935] font-bold hover:text-[#7D651F] hover:bg-[#f3f5f8]" 
+                      ? "text-[#002935] font-bold hover:text-[#B69A4E] hover:bg-[#f3f5f8]" 
                       : "text-white/80 font-medium hover:text-white hover:bg-white/10"
                   )}
                 >
@@ -111,7 +111,7 @@ export function Navbar() {
             {/* CTA + Call Now + Mobile Toggle */}
             <div className="flex items-center gap-3">
               <a
-                href="tel:+91XXXXXXXXXX"
+                href="tel:+919666504405"
                 id="nav-call"
                 className={cn(
                   "hidden lg:inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold rounded-lg transition-premium",

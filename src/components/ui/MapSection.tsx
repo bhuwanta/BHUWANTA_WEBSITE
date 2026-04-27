@@ -50,7 +50,7 @@ export const MapSection: React.FC<MapSectionProps> = ({ features, location }) =>
           <div className="space-y-4">
             {features.map((feature, i) => (
               <div key={i} className="flex items-center gap-4 p-4 bg-white rounded-xl border border-[#e8ecf2] shadow-sm">
-                <div className="w-10 h-10 rounded-lg bg-[#7D651F]/10 flex items-center justify-center text-[#7D651F]">
+                <div className="w-10 h-10 rounded-lg bg-[#B69A4E]/10 flex items-center justify-center text-[#B69A4E]">
                   {getIcon(feature.icon)}
                 </div>
                 <div>
@@ -62,7 +62,7 @@ export const MapSection: React.FC<MapSectionProps> = ({ features, location }) =>
           </div>
         </div>
         
-        <div className="bg-[#7D651F] rounded-2xl p-6 text-white text-center">
+        <div className="bg-[#B69A4E] rounded-2xl p-6 text-white text-center">
           <p className="text-xs font-bold uppercase tracking-widest mb-1 opacity-80">Site Visit</p>
           <p className="text-sm font-medium">Free transport available for site visits.</p>
         </div>

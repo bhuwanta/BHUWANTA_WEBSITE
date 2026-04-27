@@ -18,7 +18,7 @@ export function FaqAccordion({ items }: FaqAccordionProps) {
           <div
             key={i}
             className={`bg-white rounded-xl border transition-all duration-300 ${
-              isOpen ? 'border-[#7D651F]/30 shadow-md' : 'border-[#e8ecf2] hover:border-[#7D651F]/20'
+              isOpen ? 'border-[#B69A4E]/30 shadow-md' : 'border-[#e8ecf2] hover:border-[#B69A4E]/20'
             }`}
           >
             <button
@@ -30,7 +30,7 @@ export function FaqAccordion({ items }: FaqAccordionProps) {
                 {item.question}
               </span>
               <ChevronDown
-                className={`w-5 h-5 text-[#7D651F] shrink-0 transition-transform duration-300 ${
+                className={`w-5 h-5 text-[#B69A4E] shrink-0 transition-transform duration-300 ${
                   isOpen ? 'rotate-180' : ''
                 }`}
               />

@@ -5,6 +5,8 @@ import { sanityFetch, aboutQuery } from '@/lib/sanity'
 import { JsonLd, buildBreadcrumbSchema } from '@/components/seo/JsonLd'
 import Link from 'next/link'
 
+import { PageBanner } from '../../../components/ui/PageBanner'
+
 export async function generateMetadata(): Promise<Metadata> {
   return generatePageMetadata('about', 'About Us', 'Learn about Bhuwanta — a Hyderabad-based land development company built on transparency, legal clarity, and Vastu-aligned plot communities.')
 }
@@ -60,17 +62,9 @@ export default async function AboutPage() {
     <>
       <JsonLd data={breadcrumb} />
 
-      {/* 1. Who We Are */}
-      <section className="pt-32 pb-20 sm:pt-40 sm:pb-32 section-padding relative overflow-hidden bg-[#002935] luxury-bg-grid-white">
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#7D651F]/10 rounded-full blur-[150px]" />
-
-        <div className="max-w-5xl mx-auto text-center relative z-10">
-          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[#7D651F] text-xs font-semibold tracking-widest uppercase mb-6 mt-4">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#7D651F] shadow-[0_0_8px_#7D651F] animate-pulse" />
-            Company Overview
-          </span>
-        </div>
-      </section>
+      <PageBanner 
+        title="Discover Bhuwanta" 
+      />
     </>
   )
 }
