@@ -13,6 +13,10 @@ interface MapSectionProps {
 }
 
 export const MapSection: React.FC<MapSectionProps> = ({ features, location }) => {
+  if (!features || !Array.isArray(features) || features.length === 0) {
+    return null
+  }
+
   const getIcon = (name: string) => {
     switch (name.toLowerCase()) {
       case 'building': return <Building2 className="w-5 h-5" />

@@ -55,7 +55,7 @@ export function BrochureRegistrationForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4" id="project-registration-form">
+    <form onSubmit={handleSubmit} className="space-y-4" id="brochure-registration-form">
       {error && (
         <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-600">
           {error}
@@ -63,12 +63,12 @@ export function BrochureRegistrationForm() {
       )}
 
       <div>
-        <label htmlFor="reg-name" className="block text-sm font-medium text-[#002935] mb-1.5">
+        <label htmlFor="brochure-name" className="block text-sm font-medium text-[#002935] mb-1.5">
           Name <span className="text-red-500">*</span>
         </label>
         <input
           type="text"
-          id="reg-name"
+          id="brochure-name"
           name="name"
           required
           className="w-full px-4 py-3 rounded-lg bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] placeholder:text-[#5a6a82]/50 focus:outline-none focus:border-[#7D651F]/50 focus:ring-1 focus:ring-[#7D651F]/30 transition-premium text-sm"
@@ -77,12 +77,12 @@ export function BrochureRegistrationForm() {
       </div>
 
       <div>
-        <label htmlFor="reg-phone" className="block text-sm font-medium text-[#002935] mb-1.5">
+        <label htmlFor="brochure-phone" className="block text-sm font-medium text-[#002935] mb-1.5">
           Phone <span className="text-red-500">*</span>
         </label>
         <input
           type="tel"
-          id="reg-phone"
+          id="brochure-phone"
           name="phone"
           required
           className="w-full px-4 py-3 rounded-lg bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] placeholder:text-[#5a6a82]/50 focus:outline-none focus:border-[#7D651F]/50 focus:ring-1 focus:ring-[#7D651F]/30 transition-premium text-sm"
@@ -91,12 +91,12 @@ export function BrochureRegistrationForm() {
       </div>
 
       <div>
-        <label htmlFor="reg-email" className="block text-sm font-medium text-[#002935] mb-1.5">
+        <label htmlFor="brochure-email" className="block text-sm font-medium text-[#002935] mb-1.5">
           Email
         </label>
         <input
           type="email"
-          id="reg-email"
+          id="brochure-email"
           name="email"
           className="w-full px-4 py-3 rounded-lg bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] placeholder:text-[#5a6a82]/50 focus:outline-none focus:border-[#7D651F]/50 focus:ring-1 focus:ring-[#7D651F]/30 transition-premium text-sm"
           placeholder="your@email.com"

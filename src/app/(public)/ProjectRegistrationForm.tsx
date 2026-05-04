@@ -18,8 +18,10 @@ export function ProjectRegistrationForm() {
       name: formData.get('name') as string,
       email: formData.get('email') as string,
       phone: formData.get('phone') as string,
+      location: formData.get('location') as string,
+      message: formData.get('message') as string,
       budget: 'Project Interest',
-      sourcePage: 'Home - Project Teaser',
+      sourcePage: 'Home - Site Visit Form',
     }
 
     try {
@@ -53,7 +55,7 @@ export function ProjectRegistrationForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4" id="project-registration-form">
+    <form onSubmit={handleSubmit} className="space-y-4" id="enquiry-registration-form">
       {error && (
         <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-600">
           {error}
@@ -61,12 +63,12 @@ export function ProjectRegistrationForm() {
       )}
 
       <div>
-        <label htmlFor="reg-name" className="block text-sm font-medium text-[#002935] mb-1.5">
+        <label htmlFor="enquiry-name" className="block text-sm font-medium text-[#002935] mb-1.5">
           Name <span className="text-red-500">*</span>
         </label>
         <input
           type="text"
-          id="reg-name"
+          id="enquiry-name"
           name="name"
           required
           className="w-full px-4 py-3 rounded-lg bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] placeholder:text-[#5a6a82]/50 focus:outline-none focus:border-[#7D651F]/50 focus:ring-1 focus:ring-[#7D651F]/30 transition-premium text-sm"
@@ -75,12 +77,12 @@ export function ProjectRegistrationForm() {
       </div>
 
       <div>
-        <label htmlFor="reg-phone" className="block text-sm font-medium text-[#002935] mb-1.5">
+        <label htmlFor="enquiry-phone" className="block text-sm font-medium text-[#002935] mb-1.5">
           Phone <span className="text-red-500">*</span>
         </label>
         <input
           type="tel"
-          id="reg-phone"
+          id="enquiry-phone"
           name="phone"
           required
           className="w-full px-4 py-3 rounded-lg bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] placeholder:text-[#5a6a82]/50 focus:outline-none focus:border-[#7D651F]/50 focus:ring-1 focus:ring-[#7D651F]/30 transition-premium text-sm"
@@ -89,16 +91,47 @@ export function ProjectRegistrationForm() {
       </div>
 
       <div>
-        <label htmlFor="reg-email" className="block text-sm font-medium text-[#002935] mb-1.5">
+        <label htmlFor="enquiry-email" className="block text-sm font-medium text-[#002935] mb-1.5">
           Email
         </label>
         <input
           type="email"
-          id="reg-email"
+          id="enquiry-email"
           name="email"
           className="w-full px-4 py-3 rounded-lg bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] placeholder:text-[#5a6a82]/50 focus:outline-none focus:border-[#7D651F]/50 focus:ring-1 focus:ring-[#7D651F]/30 transition-premium text-sm"
           placeholder="your@email.com"
         />
+      </div>
+
+      <div>
+        <label htmlFor="enquiry-location" className="block text-sm font-medium text-[#002935] mb-1.5">
+          Preferred Location
+        </label>
+        <select
+          id="enquiry-location"
+          name="location"
+          className="w-full px-4 py-3 rounded-lg bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] focus:outline-none focus:border-[#7D651F]/50 focus:ring-1 focus:ring-[#7D651F]/30 transition-premium text-sm appearance-none"
+        >
+          <option value="">Select a location (Optional)</option>
+          <option value="hyderabad-south">Hyderabad South</option>
+          <option value="hyderabad-west">Hyderabad West</option>
+          <option value="hyderabad-east">Hyderabad East</option>
+          <option value="hyderabad-north">Hyderabad North</option>
+          <option value="other">Other / Not Sure</option>
+        </select>
+      </div>
+
+      <div>
+        <label htmlFor="enquiry-message" className="block text-sm font-medium text-[#002935] mb-1.5">
+          Message
+        </label>
+        <textarea
+          id="enquiry-message"
+          name="message"
+          rows={3}
+          className="w-full px-4 py-3 rounded-lg bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] placeholder:text-[#5a6a82]/50 focus:outline-none focus:border-[#7D651F]/50 focus:ring-1 focus:ring-[#7D651F]/30 transition-premium text-sm resize-none"
+          placeholder="Any specific requirements or questions?"
+        ></textarea>
       </div>
 
       <button

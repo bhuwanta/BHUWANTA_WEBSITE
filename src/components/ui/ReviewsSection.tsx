@@ -13,6 +13,10 @@ interface ReviewsSectionProps {
 }
 
 export const ReviewsSection: React.FC<ReviewsSectionProps> = ({ reviews }) => {
+  if (!reviews || !Array.isArray(reviews) || reviews.length === 0) {
+    return null
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
       {reviews.map((review, i) => (

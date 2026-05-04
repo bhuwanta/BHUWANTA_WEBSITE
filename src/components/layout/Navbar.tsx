@@ -14,8 +14,9 @@ const defaultNavLinks = [
   { href: '/about', label: 'About' },
   { href: '/projects', label: 'Projects' },
   { href: '/gallery', label: 'Gallery' },
-  { href: '/blog', label: 'Blog' },
   { href: '/careers', label: 'Careers' },
+  { href: '/blog', label: 'Blog' },
+  { href: '/contact', label: 'Contact' },
 ]
 
 interface SiteSettings {

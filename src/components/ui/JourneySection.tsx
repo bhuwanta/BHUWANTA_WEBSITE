@@ -17,6 +17,10 @@ export const JourneySection: React.FC<JourneySectionProps> = ({ steps }) => {
   const sectionRef = useRef<HTMLDivElement>(null)
   const [activeStep, setActiveStep] = useState(-1)
 
+  if (!steps || !Array.isArray(steps) || steps.length === 0) {
+    return null
+  }
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {

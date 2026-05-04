@@ -1,16 +1,15 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
-import { ArrowRight, Phone, MessageCircle, ChevronDown } from 'lucide-react'
+import Image from 'next/image'
+import { ArrowRight, FileText, MapPin, Eye, Compass, Building2, Search, CalendarDays, ShieldCheck, HeartHandshake, PenTool, Award, CheckCircle2, Navigation, MessageCircle, Phone } from 'lucide-react'
 import { generatePageMetadata } from '@/lib/seo'
 import { sanityFetch, homeQuery } from '@/lib/sanity'
-import { FaqAccordion } from './FaqAccordion'
 import { ProjectRegistrationForm } from './ProjectRegistrationForm'
 import { BrochureRegistrationForm } from './BrochureRegistrationForm'
 import { DynamicIcon } from '@/components/ui/DynamicIcon'
 import { JourneySection } from '@/components/ui/JourneySection'
 import { ReviewsSection } from '@/components/ui/ReviewsSection'
 import { MapSection } from '@/components/ui/MapSection'
-import { YouTubeCarousel } from '@/components/ui/YouTubeCarousel'
 
 export async function generateMetadata(): Promise<Metadata> {
   return generatePageMetadata('home', 'HMDA Approved Plots in Hyderabad', 'Own HMDA-approved, Vastu-aligned plots in Hyderabad\'s fastest-growing corridors. Designed for homebuilders and smart investors. Book a free site visit today.')
@@ -20,75 +19,70 @@ export const revalidate = 60
 
 // Fallback content
 const fallback = {
-  heroHeading: 'Redefining | Luxury Living.',
-  heroSubheading: 'HMDA-approved plots in Hyderabad\'s fastest-growing corridors — designed for homebuilders and smart investors alike.',
+  heroHeading: 'Own Your Land with Confidence',
+  heroSubheading: 'Premium HMDA-approved plots in Hyderabad designed for smart investment and future-ready living.',
+  heroTagline: 'Land Today. Landmark Tomorrow.',
   heroPrimaryCta: 'Book Free Site Visit',
   heroSecondaryCta: 'Call Now',
 
-  whyOwnLandHeading: 'Why Choose Bhuwanta?',
-  whyOwnLandSubheading: 'We don\'t just sell land. We provide a secure foundation for your family\'s future and your wealth.',
-  whyOwnLandCards: [
-    { icon: 'ShieldCheck', title: 'Unquestionable Legality', description: 'No disputes. No doubts. Every plot we sell has a 100% clear title, complete legal verification, and HMDA approval.' },
-    { icon: 'Building2', title: 'Premium Infrastructure', description: 'Wide internal roads, underground cabling, dedicated water supply, and beautiful landscaping ready from day one.' },
-    { icon: 'TrendingUp', title: 'High Appreciation Zones', description: 'We exclusively acquire land in areas proven to yield the highest return on investment over the next decade.' },
-    { icon: 'Eye', title: 'Complete Transparency', description: 'No hidden fees, no last-minute surprises. What you see is exactly what you pay for and what you own.' },
+  whyChooseHeading: 'Why Choose BHUWANTA?',
+  whyChooseContent: 'At BHUWANTA, we go beyond selling plots we deliver trust, transparency, and long-term value. Our developments are carefully planned to ensure secure investments and future growth.',
+  whyChoosePoints: [
+    { icon: 'Award', title: 'HMDA-approved layouts', description: 'Every plot is fully approved and legally verified.' },
+    { icon: 'FileText', title: 'Clear legal documentation', description: '100% clear titles with zero encumbrances.' },
+    { icon: 'MapPin', title: 'Prime growth locations', description: 'Strategically chosen for high appreciation.' },
+    { icon: 'Eye', title: 'Transparent pricing', description: 'No hidden charges. What you see is what you pay.' },
+    { icon: 'Compass', title: 'Vastu-compliant planning', description: 'Designed according to strict Vastu principles.' },
+    { icon: 'Building2', title: 'Ready-for-construction', description: 'Start building your dream home from day one.' },
   ],
 
-  vastuHeading: 'Rooted in Tradition. Designed for Prosperity.',
-  vastuSubheading: 'A home should bring peace. Our entire master layout is meticulously planned alongside leading Vastu experts to ensure positive energy flows through every plot.',
-  vastuCards: [
-    { icon: 'Compass', title: 'Auspicious Entrances', description: 'Every plot orientation is optimized for favorable facing directions to invite wealth and health.' },
-    { icon: 'Maximize', title: 'Perfect Proportions', description: 'Plot dimensions are cut to precise Vastu ratios, avoiding irregular shapes that disrupt harmony.' },
-    { icon: 'TreePine', title: 'Natural Elements', description: 'Parks, water bodies, and open spaces are strategically placed according to the five elements of nature.' },
-    { icon: 'Wind', title: 'Energy Flow', description: 'Wide streets and thoughtful spacing ensure uninterrupted natural light and cross-ventilation for every future home.' },
-  ],
+  projectsHeading: 'Explore Our Premium Open Plot Projects',
+  projectsContent: 'Discover strategically located HMDA-approved plots in Hyderabad’s fastest growing corridors. Each project is designed to offer excellent connectivity, infrastructure, and long-term appreciation.',
+  projectsCta: 'View All Projects',
 
-  journeyHeading: 'Your Journey to Ownership',
-  journeySubheading: 'We have simplified the process of buying land so you can secure your asset without the usual stress.',
+  journeyHeading: 'Your Journey to Owning a Plot with BHUWANTA',
   journeySteps: [
-    { icon: 'CalendarDays', title: 'Schedule a Visit', description: 'Book a free guided tour of the property. We will walk you through the exact plot locations and boundaries.' },
-    { icon: 'FileText', title: 'Review the Documents', description: 'We hand you the complete legal file. Take your time, consult your lawyer, and verify our clear titles.' },
-    { icon: 'PenTool', title: 'Register Your Plot', description: 'Choose your payment plan. Once finalized, we handle the entire registration process smoothly and hand over your documents.' },
+    { icon: 'Search', title: '1. Explore Projects', description: 'Browse our available plots and choose your preferred location.' },
+    { icon: 'CalendarDays', title: '2. Schedule a Site Visit', description: 'Visit the site and experience the layout and surroundings.' },
+    { icon: 'ShieldCheck', title: '3. Verify Documents', description: 'Review all legal approvals and documentation with full transparency.' },
+    { icon: 'HeartHandshake', title: '4. Book Your Plot', description: 'Select your plot and proceed with booking.' },
+    { icon: 'PenTool', title: '5. Registration & Ownership', description: 'Complete registration and become a proud land owner.' },
   ],
 
-  reviewsHeading: 'What Our Buyers Say',
+  reviewsHeading: 'What Our Customers Say',
+  reviewsContent: 'Our customers trust us for delivering legally secure, well-planned, and value driven land investments.',
   reviews: [
-    { name: 'Rahul R.', role: 'Tech Professional', rating: 5, content: 'I was nervous about buying land because of legal issues, but the team at Bhuwanta was completely transparent. They gave me all the HMDA documents on day one. Very happy with my investment.' },
-    { name: 'Priya S.', role: 'Business Owner', rating: 5, content: 'The layout development is top notch. The roads are wide, the Vastu compliance is genuine, and the location is exactly where Hyderabad is expanding next.' },
-    { name: 'Vikram Reddy', role: 'NRI Investor', rating: 5, content: 'Smooth registration process from start to finish. They handled all the paperwork and made sure I understood everything. Highly recommend them if you want peace of mind.' },
+    { name: 'Ramesh G.', role: 'Investor', rating: 5, content: 'Very professional team. They showed all the HMDA documents clearly. The plot location is excellent for investment.' },
+    { name: 'Srinivas R.', role: 'Homebuilder', rating: 5, content: 'Booked a plot for my future home. The layout development is already complete and ready for construction.' },
+    { name: 'Kavita M.', role: 'IT Professional', rating: 5, content: 'Transparent pricing with no hidden charges. The entire registration process was smooth and hassle-free.' },
   ],
 
+  brochureHeading: 'Download Project Brochure',
+  brochureContent: 'Get complete details about our projects, including layout plans, pricing, amenities, and location insights.',
+
+  mapHeading: 'Project Locations & Connectivity',
+  mapContent: 'Explore the exact locations of our projects with easy access to highways, schools, hospitals, and key infrastructure.',
   mapFeatures: [
     { icon: 'building', title: 'Major IT Hubs', distance: '15 Minutes Drive' },
     { icon: 'navigation', title: 'Highway Access', distance: 'Direct Connectivity' },
     { icon: 'map-pin', title: 'Schools & Hospitals', distance: 'Within 5km Radius' },
   ],
-  mapLocationDescription: 'Explore our meticulously planned layout situated in the heart of Hyderabad\'s fastest-growing real estate corridor. Every plot is perfectly positioned for high appreciation and peaceful living.',
+  mapLocationDescription: 'Explore our meticulously planned layout situated in the heart of Hyderabad\'s fastest-growing real estate corridor.',
 
-  trustBadges: [
-    { label: 'HMDA Approved Layouts' },
-    { label: 'RERA Registered Developer' },
-    { label: '100% Clear Titles' },
-    { label: 'Verified Vastu Compliance' },
+  certificationsHeading: 'Our Certifications & Approvals',
+  certificationsContent: 'We ensure every project meets the highest standards of legality and compliance.',
+  certifications: [
+    { label: 'HMDA Approved', icon: 'Award' },
+    { label: 'RERA Certified', icon: 'ShieldCheck' },
+    { label: 'Clear Title', icon: 'FileText' },
+    { label: 'Verified Documentation', icon: 'CheckCircle2' },
   ],
 
-  youtubeVideos: [
-    { title: 'Bhuwanta Project Walkthrough', videoId: 'dQw4w9WgXcQ' },
-    { title: 'Site Development Progress', videoId: 'dQw4w9WgXcQ' },
-    { title: 'Customer Testimonial', videoId: 'dQw4w9WgXcQ' },
-  ],
-
-  faqHeading: 'Frequently Asked Questions',
-  faqItems: [
-    { question: 'Are the plots legally clear and approved?', answer: 'Yes. Every single plot is fully approved by HMDA and comes with a 100% clear title and encumbrance certificate.' },
-    { question: 'Can I get a bank loan for this?', answer: 'Absolutely. Because our legal documentation is perfect, all leading banks provide fast loan approvals for our properties.' },
-    { question: 'When can I start building my house?', answer: 'You can start construction the very same day your registration is complete. The infrastructure is already in place.' },
-    { question: 'Are there any hidden maintenance charges?', answer: 'No. We believe in total pricing transparency. All costs are discussed openly before you make any commitment.' },
-  ],
-
-  finalCtaHeading: 'Let\'s Secure Your Plot',
-  finalCtaSubtext: 'Plots in this premium layout are selling fast. Reach out to us today to check availability and schedule your visit.',
-  finalCtaSupportingText: '📞 +91 99999 99999  |  ✉️ info@bhuwanta.com',
+  enquiryHeading: 'Book Your Free Site Visit Today',
+  enquiryContent: 'Interested in owning a plot? Fill in your details and our team will assist you with site visits, pricing, and documentation.',
+  
+  finalCtaHeading: 'Start Your Land Investment Journey Today',
+  finalCtaContent: 'Secure your future with a trusted land investment. Book a site visit and explore the best plots in Hyderabad.',
 }
 
 export default async function HomePage() {
@@ -104,23 +98,24 @@ export default async function HomePage() {
     <>
       {/* ===== SECTION 1 — HERO BANNER ===== */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden" id="hero">
-        <div className="absolute inset-0 gradient-dark" />
-        <div className="absolute inset-0 noise-overlay" />
-        <div className="absolute top-1/4 -left-32 w-96 h-96 rounded-full bg-[#7D651F]/10 blur-[120px]" />
-        <div className="absolute bottom-1/4 -right-32 w-96 h-96 rounded-full bg-[#7D651F]/5 blur-[120px]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0f1d33] to-[#1e3a5f]" />
+        <div className="absolute inset-0 noise-overlay opacity-30" />
+        <div className="absolute top-1/4 -left-32 w-96 h-96 rounded-full bg-[#c4a55a]/10 blur-[120px]" />
+        <div className="absolute bottom-1/4 -right-32 w-96 h-96 rounded-full bg-[#c4a55a]/10 blur-[120px]" />
         <div className="absolute inset-0" style={{
           backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)',
           backgroundSize: '80px 80px',
         }} />
 
-        <div className="relative z-10 w-full max-w-5xl mx-auto px-4 text-center">
-          <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold tracking-tight leading-[1.1] mb-6 sm:mb-8">
-            <span className="text-white">Redefining</span>
-            <br />
-            <span className="text-gradient">Luxury Living.</span>
+        <div className="relative z-10 w-full max-w-5xl mx-auto px-4 text-center mt-20">
+          <p className="text-[#c4a55a] font-bold tracking-widest uppercase text-sm mb-6 animate-fade-in-up">
+            {data.heroTagline}
+          </p>
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] mb-6 sm:mb-8 text-white">
+            {data.heroHeading}
           </h1>
 
-          <p className="text-base sm:text-lg md:text-xl text-white/70 max-w-2xl mx-auto mb-8 sm:mb-12 leading-relaxed px-2">
+          <p className="text-base sm:text-lg md:text-xl text-white/80 max-w-2xl mx-auto mb-8 sm:mb-12 leading-relaxed px-2">
             {data.heroSubheading}
           </p>
 
@@ -128,17 +123,18 @@ export default async function HomePage() {
             <Link
               href="/contact"
               id="hero-cta-primary"
-              className="w-full sm:w-auto group inline-flex items-center justify-center gap-2 px-8 py-4 text-sm font-semibold rounded-xl gradient-gold text-white transition-premium hover:scale-105 glow-gold"
+              className="w-full sm:w-auto group inline-flex items-center justify-center gap-2 px-8 py-4 text-sm font-semibold rounded-xl gradient-gold text-white transition-premium hover:scale-105 shadow-lg shadow-[#c4a55a]/20"
             >
-              Book a Free Site Visit
+              {data.heroPrimaryCta}
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
             <a
               href="tel:+91XXXXXXXXXX"
               id="hero-cta-secondary"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 text-sm font-semibold rounded-xl bg-white text-[#002935] hover:bg-white/90 transition-premium shadow-lg"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 text-sm font-semibold rounded-xl bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm border border-white/20 transition-premium shadow-lg"
             >
-              Call Now
+              <Phone className="w-4 h-4" />
+              {data.heroSecondaryCta}
             </a>
           </div>
         </div>
@@ -148,6 +144,233 @@ export default async function HomePage() {
             <div className="w-1 h-2 rounded-full bg-white/80" />
           </div>
           <span className="text-[10px] uppercase tracking-widest text-white/60 font-medium">Scroll</span>
+        </div>
+      </section>
+
+      {/* ===== SECTION 2 — WHY CHOOSE BHUWANTA ===== */}
+      <section className="py-24 bg-white relative overflow-hidden" id="why-choose-us">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-[#0f1d33] mb-4">
+              {data.whyChooseHeading}
+            </h2>
+            <p className="text-lg text-[#5a6a82] leading-relaxed">
+              {data.whyChooseContent}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+            {data.whyChoosePoints.map((point, i) => (
+              <div 
+                key={i}
+                className="group p-8 rounded-2xl bg-[#f7f8fa] border border-[#e8ecf2] transition-all duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-xl hover:shadow-[#0f1d33]/5 hover:border-[#c4a55a]/30"
+              >
+                <div className="w-12 h-12 rounded-xl bg-[#c4a55a]/10 flex items-center justify-center mb-6 group-hover:bg-[#c4a55a] transition-colors duration-500">
+                  <DynamicIcon name={point.icon} className="w-6 h-6 text-[#c4a55a] group-hover:text-white transition-colors duration-500" />
+                </div>
+                <h3 className="text-xl font-bold text-[#0f1d33] mb-3">{point.title}</h3>
+                {point.description && (
+                  <p className="text-[#5a6a82] leading-relaxed text-sm">
+                    {point.description}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== SECTION 3 — OUR PROJECTS ===== */}
+      <section className="py-24 bg-[#f7f8fa]" id="projects">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+            <div className="max-w-2xl">
+              <h2 className="text-3xl md:text-4xl font-bold text-[#0f1d33] mb-4">
+                {data.projectsHeading}
+              </h2>
+              <p className="text-lg text-[#5a6a82]">
+                {data.projectsContent}
+              </p>
+            </div>
+            <Link 
+              href="/projects"
+              className="inline-flex items-center gap-2 font-semibold text-[#1e3a5f] hover:text-[#c4a55a] transition-colors"
+            >
+              {data.projectsCta} <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+
+          {/* Simple Mockup Grid for Projects */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3].map((item) => (
+              <Link href="/projects" key={item} className="group block bg-white rounded-2xl overflow-hidden border border-[#e8ecf2] shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-1">
+                <div className="aspect-[4/3] bg-[#e8ecf2] relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-10" />
+                  <div className="absolute bottom-4 left-4 z-20">
+                    <span className="px-3 py-1 bg-emerald-500 text-white text-xs font-bold rounded-full">HMDA Approved</span>
+                  </div>
+                  {/* Placeholder for project image */}
+                  <div className="absolute inset-0 bg-[#0f1d33]/5 group-hover:scale-105 transition-transform duration-700" />
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl font-bold text-[#0f1d33] mb-2 group-hover:text-[#1e3a5f] transition-colors">Premium Layout Phase {item}</h3>
+                  <div className="flex items-center gap-2 text-sm text-[#5a6a82] mb-4">
+                    <MapPin className="w-4 h-4" /> Hyderabad West Corridor
+                  </div>
+                  <div className="pt-4 border-t border-[#e8ecf2] flex items-center justify-between text-sm font-semibold text-[#1e3a5f]">
+                    <span>View Details</span>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== SECTION 4 — YOUR JOURNEY ===== */}
+      <section className="py-24 bg-white" id="journey">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-[#0f1d33] mb-4">
+              {data.journeyHeading}
+            </h2>
+          </div>
+          
+          <JourneySection steps={data.journeySteps} />
+        </div>
+      </section>
+
+      {/* ===== SECTION 5 — CUSTOMER REVIEWS ===== */}
+      <section className="py-24 bg-[#0f1d33] relative overflow-hidden" id="reviews">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-[#c4a55a]/10 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#1e3a5f]/50 rounded-full blur-[100px] pointer-events-none" />
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              {data.reviewsHeading}
+            </h2>
+            <p className="text-lg text-white/70">
+              {data.reviewsContent}
+            </p>
+          </div>
+          
+          <ReviewsSection reviews={data.reviews} />
+        </div>
+      </section>
+
+      {/* ===== SECTION 6 — BROCHURE DOWNLOAD ===== */}
+      <section className="py-24 bg-white" id="brochure">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-[#f7f8fa] rounded-3xl p-8 lg:p-12 border border-[#e8ecf2] shadow-sm">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              <div>
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#1e3a5f]/10 text-[#1e3a5f] font-semibold text-sm mb-6">
+                  <FileText className="w-4 h-4" /> E-Brochure Available
+                </div>
+                <h2 className="text-3xl md:text-4xl font-bold text-[#0f1d33] mb-6">
+                  {data.brochureHeading}
+                </h2>
+                <p className="text-lg text-[#5a6a82] mb-8 leading-relaxed">
+                  {data.brochureContent}
+                </p>
+                
+                <ul className="space-y-4 mb-8">
+                  {['Detailed Master Plan & Layout', 'Exact Pricing & Payment Plans', 'Location Map & Connectivity', 'Project Amenities Overview'].map((item, i) => (
+                    <li key={i} className="flex items-center gap-3 text-[#0f1d33] font-medium">
+                      <CheckCircle2 className="w-5 h-5 text-[#c4a55a]" /> {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              
+              <div className="bg-white p-8 rounded-2xl shadow-lg border border-[#e8ecf2]">
+                <BrochureRegistrationForm />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== SECTION 7 — MAP & CONNECTIVITY ===== */}
+      <section className="py-24 bg-[#f7f8fa]" id="location">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-[#0f1d33] mb-4">
+              {data.mapHeading}
+            </h2>
+            <p className="text-lg text-[#5a6a82]">
+              {data.mapContent}
+            </p>
+          </div>
+          
+          <MapSection features={data.mapFeatures} location={data.mapLocationDescription} />
+        </div>
+      </section>
+
+      {/* ===== SECTION 8 — CERTIFICATIONS ===== */}
+      <section className="py-16 bg-white border-y border-[#e8ecf2]" id="certifications">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-2xl font-bold text-[#0f1d33] mb-2">{data.certificationsHeading}</h2>
+          <p className="text-[#5a6a82] mb-10">{data.certificationsContent}</p>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {data.certifications.map((cert, i) => (
+              <div key={i} className="flex flex-col items-center justify-center p-6 rounded-2xl bg-[#f7f8fa] border border-[#e8ecf2] hover:shadow-md transition-all">
+                <DynamicIcon name={cert.icon} className="w-10 h-10 text-[#c4a55a] mb-4" />
+                <h4 className="font-bold text-[#0f1d33] text-center">{cert.label}</h4>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== SECTION 9 — ENQUIRY FORM ===== */}
+      <section className="py-24 bg-[#f7f8fa]" id="enquiry">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-3xl p-8 lg:p-12 shadow-xl shadow-[#0f1d33]/5 border border-[#e8ecf2]">
+            <div className="text-center mb-10">
+              <h2 className="text-3xl md:text-4xl font-bold text-[#0f1d33] mb-4">
+                {data.enquiryHeading}
+              </h2>
+              <p className="text-[#5a6a82]">
+                {data.enquiryContent}
+              </p>
+            </div>
+            
+            <ProjectRegistrationForm />
+          </div>
+        </div>
+      </section>
+
+      {/* ===== SECTION 10 — FINAL CTA ===== */}
+      <section className="py-24 relative overflow-hidden bg-[#0f1d33]" id="final-cta">
+        <div className="absolute inset-0 noise-overlay opacity-30" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0a1220] to-transparent" />
+        
+        <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+            {data.finalCtaHeading}
+          </h2>
+          <p className="text-xl text-white/80 mb-10 leading-relaxed max-w-2xl mx-auto">
+            {data.finalCtaContent}
+          </p>
+          
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link
+              href="/contact"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-bold rounded-xl gradient-gold text-white transition-premium hover:scale-105 shadow-lg shadow-[#c4a55a]/20"
+            >
+              Book Site Visit
+            </Link>
+            <a
+              href="tel:+91XXXXXXXXXX"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-bold rounded-xl bg-white text-[#0f1d33] hover:bg-[#f7f8fa] transition-premium shadow-lg"
+            >
+              Call Now
+            </a>
+          </div>
         </div>
       </section>
     </>
