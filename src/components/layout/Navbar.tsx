@@ -82,6 +82,7 @@ export function Navbar() {
                   !showGlass && "drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]",
                   showGlass && "brightness-0"
                 )}
+                style={{ width: 'auto' }}
                 priority
               />
             </div>
