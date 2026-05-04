@@ -32,6 +32,7 @@ const YoutubeIcon = (props: any) => (
 )
 
 const defaultFooterLinks = [
+  { href: '/', label: 'Home' },
   { href: '/about', label: 'About Us' },
   { href: '/projects', label: 'Projects' },
   { href: '/gallery', label: 'Gallery' },
