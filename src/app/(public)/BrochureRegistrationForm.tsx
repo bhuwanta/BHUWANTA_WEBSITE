@@ -3,10 +3,15 @@
 import { useState } from 'react'
 import { Send, CheckCircle2, Loader2, FileDown } from 'lucide-react'
 
-export function BrochureRegistrationForm() {
+interface BrochureRegistrationFormProps {
+  projects?: { name: string; brochureFile?: { asset: { url: string } } }[];
+}
+
+export function BrochureRegistrationForm({ projects = [] }: BrochureRegistrationFormProps) {
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [selectedBrochureUrl, setSelectedBrochureUrl] = useState<string | null>(null)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -14,11 +19,17 @@ export function BrochureRegistrationForm() {
     setError(null)
 
     const formData = new FormData(e.currentTarget)
+    
+    // Find the selected project to set the brochure URL
+    const projectName = formData.get('project') as string
+    const project = projects.find(p => p.name === projectName)
+    const brochureUrl = project?.brochureFile?.asset?.url || '/brochure.pdf'
+    
     const body = {
       name: formData.get('name') as string,
       email: formData.get('email') as string,
       phone: formData.get('phone') as string,
-      budget: 'Brochure Download',
+      budget: `Brochure Download: ${projectName || 'General'}`,
       sourcePage: 'Home - Brochure Download',
     }
 
@@ -34,6 +45,7 @@ export function BrochureRegistrationForm() {
         throw new Error(data.error || 'Failed to submit')
       }
 
+      setSelectedBrochureUrl(brochureUrl)
       setSubmitted(true)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
@@ -47,7 +59,7 @@ export function BrochureRegistrationForm() {
       <div className="text-center py-8">
         <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto mb-3" />
         <h4 className="text-lg font-semibold text-[#002935] mb-4">Request Received!</h4>
-        <a href="/brochure.pdf" download className="inline-flex items-center gap-2 px-6 py-3.5 text-sm font-semibold rounded-lg gradient-gold text-white transition-premium hover:scale-[1.02] glow-gold">
+        <a href={selectedBrochureUrl || '/brochure.pdf'} download target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-6 py-3.5 text-sm font-semibold rounded-lg gradient-gold text-white transition-premium hover:scale-[1.02] glow-gold">
           <FileDown className="w-4 h-4" /> Download Brochure
         </a>
       </div>
@@ -59,6 +71,25 @@ export function BrochureRegistrationForm() {
       {error && (
         <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-600">
           {error}
+        </div>
+      )}
+
+      {projects.length > 0 && (
+        <div>
+          <label htmlFor="brochure-project" className="block text-sm font-medium text-[#002935] mb-1.5">
+            Select Project <span className="text-red-500">*</span>
+          </label>
+          <select
+            id="brochure-project"
+            name="project"
+            required
+            className="w-full px-4 py-3 rounded-lg bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] focus:outline-none focus:border-[#7D651F]/50 focus:ring-1 focus:ring-[#7D651F]/30 transition-premium text-sm appearance-none"
+          >
+            <option value="">Choose a project...</option>
+            {projects.map((project, i) => (
+              <option key={i} value={project.name}>{project.name}</option>
+            ))}
+          </select>
         </div>
       )}
 
@@ -118,3 +149,4 @@ export function BrochureRegistrationForm() {
     </form>
   )
 }
+

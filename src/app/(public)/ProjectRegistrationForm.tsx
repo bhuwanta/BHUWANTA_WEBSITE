@@ -86,7 +86,7 @@ export function ProjectRegistrationForm() {
           name="phone"
           required
           className="w-full px-4 py-3 rounded-lg bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] placeholder:text-[#5a6a82]/50 focus:outline-none focus:border-[#7D651F]/50 focus:ring-1 focus:ring-[#7D651F]/30 transition-premium text-sm"
-          placeholder="+91 XXXXX XXXXX"
+          placeholder="+91 96665 04405"
         />
       </div>
 

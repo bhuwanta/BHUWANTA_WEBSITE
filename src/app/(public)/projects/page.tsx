@@ -131,6 +131,49 @@ export default async function ProjectsPage() {
             <span className="w-1.5 h-1.5 rounded-full bg-[#7D651F] shadow-[0_0_8px_#7D651F] animate-pulse" />
             Projects
           </span>
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 tracking-tight">
+            {pageHeading}
+          </h1>
+          <p className="text-lg md:text-xl text-white/80 max-w-2xl mx-auto leading-relaxed">
+            {pageSubheading}
+          </p>
+        </div>
+      </section>
+
+      <section className="py-24 bg-[#f7f8fa]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {projects.map((project, idx) => (
+              <Link href={`/projects/${project.slug?.current || '#'}`} key={idx} className="group block bg-white rounded-2xl overflow-hidden border border-[#e8ecf2] shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-1">
+                <div className="aspect-[4/3] bg-[#e8ecf2] relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-10" />
+                  <div className="absolute bottom-4 left-4 z-20">
+                    <span className="px-3 py-1 bg-emerald-500 text-white text-xs font-bold rounded-full">{project.statusText === 'registrations-open' ? 'Registrations Open' : 'HMDA Approved'}</span>
+                  </div>
+                  {project.image?.asset && (
+                    <img
+                      src={urlFor(project.image).url()}
+                      alt={project.name || 'Project Image'}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    />
+                  )}
+                  {!project.image?.asset && (
+                    <div className="absolute inset-0 bg-[#0f1d33]/5 group-hover:scale-105 transition-transform duration-700" />
+                  )}
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl font-bold text-[#0f1d33] mb-2 group-hover:text-[#1e3a5f] transition-colors">{project.name}</h3>
+                  <div className="flex items-center gap-2 text-sm text-[#5a6a82] mb-4">
+                    <MapPin className="w-4 h-4" /> {project.location || 'Hyderabad'}
+                  </div>
+                  <div className="pt-4 border-t border-[#e8ecf2] flex items-center justify-between text-sm font-semibold text-[#1e3a5f]">
+                    <span>View Details</span>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
     </>

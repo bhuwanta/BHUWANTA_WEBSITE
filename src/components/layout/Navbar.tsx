@@ -67,7 +67,7 @@ export function Navbar() {
           : 'bg-transparent py-6'
       )}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[96%] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-12">
           {/* Logo */}
           <Link href="/" className="flex items-center" id="nav-logo">
@@ -79,7 +79,7 @@ export function Navbar() {
                 width={logoSrc ? 180 : undefined}
                 className={cn(
                   "h-12 sm:h-16 w-auto object-contain transition-all duration-500",
-                  !showGlass && "drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]",
+                  !showGlass && "drop-shadow-[0_4px_12px_rgba(0,0,0,0.6)]",
                   showGlass && "brightness-0"
                 )}
                 style={{ width: 'auto' }}
@@ -101,7 +101,7 @@ export function Navbar() {
                     "px-4 py-2 text-sm transition-premium rounded-lg",
                     showGlass 
                       ? "text-[#002935] font-bold hover:text-[#7D651F] hover:bg-[#f3f5f8]" 
-                      : "text-white/80 font-medium hover:text-white hover:bg-white/10"
+                      : "text-white font-medium hover:text-white hover:bg-white/10 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
                   )}
                 >
                   {link.label}
@@ -112,7 +112,7 @@ export function Navbar() {
             {/* CTA + Call Now + Mobile Toggle */}
             <div className="flex items-center gap-3">
               <a
-                href="tel:+91XXXXXXXXXX"
+                href="tel:+919666504405"
                 id="nav-call"
                 className={cn(
                   "hidden lg:inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold rounded-lg transition-premium",
@@ -135,7 +135,7 @@ export function Navbar() {
               <button
                 className={cn(
                   "md:hidden p-2 transition-colors",
-                  showGlass ? "text-[#002935]" : "text-white"
+                  showGlass ? "text-[#002935]" : "text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
                 )}
                 onClick={() => setIsOpen(!isOpen)}
                 aria-label="Toggle menu"

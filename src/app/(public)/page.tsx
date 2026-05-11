@@ -3,7 +3,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowRight, FileText, MapPin, Eye, Compass, Building2, Search, CalendarDays, ShieldCheck, HeartHandshake, PenTool, Award, CheckCircle2, Navigation, MessageCircle, Phone } from 'lucide-react'
 import { generatePageMetadata } from '@/lib/seo'
-import { sanityFetch, homeQuery } from '@/lib/sanity'
+import { sanityFetch, homeQuery, projectsQuery, urlFor } from '@/lib/sanity'
 import { ProjectRegistrationForm } from './ProjectRegistrationForm'
 import { BrochureRegistrationForm } from './BrochureRegistrationForm'
 import { DynamicIcon } from '@/components/ui/DynamicIcon'
@@ -28,7 +28,7 @@ const fallback = {
   whyChooseHeading: 'Why Choose BHUWANTA?',
   whyChooseContent: 'At BHUWANTA, we go beyond selling plots we deliver trust, transparency, and long-term value. Our developments are carefully planned to ensure secure investments and future growth.',
   whyChoosePoints: [
-    { icon: 'Award', title: 'HMDA-approved layouts', description: 'Every plot is fully approved and legally verified.' },
+    { icon: 'Award', title: 'HMDA & DTCP Approved Projects', description: 'Every plot is fully approved and legally verified.' },
     { icon: 'FileText', title: 'Clear legal documentation', description: '100% clear titles with zero encumbrances.' },
     { icon: 'MapPin', title: 'Prime growth locations', description: 'Strategically chosen for high appreciation.' },
     { icon: 'Eye', title: 'Transparent pricing', description: 'No hidden charges. What you see is what you pay.' },
@@ -80,42 +80,51 @@ const fallback = {
 
   enquiryHeading: 'Book Your Free Site Visit Today',
   enquiryContent: 'Interested in owning a plot? Fill in your details and our team will assist you with site visits, pricing, and documentation.',
-  
+
   finalCtaHeading: 'Start Your Land Investment Journey Today',
   finalCtaContent: 'Secure your future with a trusted land investment. Book a site visit and explore the best plots in Hyderabad.',
 }
 
 export default async function HomePage() {
   let data = fallback
+  let projects: any[] = []
   try {
     const sanityData = await sanityFetch<typeof fallback>({ query: homeQuery, tags: ['home'] })
     if (sanityData) data = { ...fallback, ...sanityData }
-  } catch {
-    // Use fallback
+
+    const projectsData = await sanityFetch<{ projectEntries?: any[] }>({ query: projectsQuery, tags: ['projects'] })
+    if (projectsData?.projectEntries) {
+      projects = projectsData.projectEntries
+    }
+  } catch (error) {
+    console.error("Error fetching sanity data on home page:", error)
   }
 
   return (
     <>
       {/* ===== SECTION 1 — HERO BANNER ===== */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden" id="hero">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0f1d33] to-[#1e3a5f]" />
+        <Image
+          src="/img-4.jpg"
+          alt="Bhuwanta Background"
+          fill
+          priority
+          className="object-cover object-center"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0f1d33]/70 via-[#1e3a5f]/30 to-[#1e3a5f]/80" />
         <div className="absolute inset-0 noise-overlay opacity-30" />
         <div className="absolute top-1/4 -left-32 w-96 h-96 rounded-full bg-[#c4a55a]/10 blur-[120px]" />
         <div className="absolute bottom-1/4 -right-32 w-96 h-96 rounded-full bg-[#c4a55a]/10 blur-[120px]" />
-        <div className="absolute inset-0" style={{
-          backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)',
-          backgroundSize: '80px 80px',
-        }} />
 
         <div className="relative z-10 w-full max-w-5xl mx-auto px-4 text-center mt-20">
-          <p className="text-[#c4a55a] font-bold tracking-widest uppercase text-sm mb-6 animate-fade-in-up">
+          <p className="text-[#c4a55a] font-bold tracking-widest uppercase text-sm mb-6 animate-fade-in-up drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
             {data.heroTagline}
           </p>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] mb-6 sm:mb-8 text-white">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] mb-6 sm:mb-8 text-white drop-shadow-[0_4px_8px_rgba(0,0,0,0.6)]">
             {data.heroHeading}
           </h1>
 
-          <p className="text-base sm:text-lg md:text-xl text-white/80 max-w-2xl mx-auto mb-8 sm:mb-12 leading-relaxed px-2">
+          <p className="text-base sm:text-lg md:text-xl text-white/90 max-w-2xl mx-auto mb-8 sm:mb-12 leading-relaxed px-2 drop-shadow-[0_2px_6px_rgba(0,0,0,0.6)]">
             {data.heroSubheading}
           </p>
 
@@ -129,7 +138,7 @@ export default async function HomePage() {
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
             <a
-              href="tel:+91XXXXXXXXXX"
+              href="tel:+919666504405"
               id="hero-cta-secondary"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 text-sm font-semibold rounded-xl bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm border border-white/20 transition-premium shadow-lg"
             >
@@ -161,7 +170,7 @@ export default async function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
             {data.whyChoosePoints.map((point, i) => (
-              <div 
+              <div
                 key={i}
                 className="group p-8 rounded-2xl bg-[#f7f8fa] border border-[#e8ecf2] transition-all duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-xl hover:shadow-[#0f1d33]/5 hover:border-[#c4a55a]/30"
               >
@@ -192,7 +201,7 @@ export default async function HomePage() {
                 {data.projectsContent}
               </p>
             </div>
-            <Link 
+            <Link
               href="/projects"
               className="inline-flex items-center gap-2 font-semibold text-[#1e3a5f] hover:text-[#c4a55a] transition-colors"
             >
@@ -202,7 +211,37 @@ export default async function HomePage() {
 
           {/* Simple Mockup Grid for Projects */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[1, 2, 3].map((item) => (
+            {projects.length > 0 ? projects.map((project, idx) => (
+              <Link href={`/projects/${project.slug?.current || '#'}`} key={idx} className="group block bg-white rounded-2xl overflow-hidden border border-[#e8ecf2] shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-1">
+                <div className="aspect-[4/3] bg-[#e8ecf2] relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-10" />
+                  <div className="absolute bottom-4 left-4 z-20">
+                    <span className="px-3 py-1 bg-emerald-500 text-white text-xs font-bold rounded-full">{project.statusText === 'registrations-open' ? 'Registrations Open' : 'HMDA Approved'}</span>
+                  </div>
+                  {project.image?.asset && (
+                    <Image
+                      src={urlFor(project.image).url()}
+                      alt={project.name || 'Project Image'}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-700"
+                    />
+                  )}
+                  {!project.image?.asset && (
+                    <div className="absolute inset-0 bg-[#0f1d33]/5 group-hover:scale-105 transition-transform duration-700" />
+                  )}
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl font-bold text-[#0f1d33] mb-2 group-hover:text-[#1e3a5f] transition-colors">{project.name}</h3>
+                  <div className="flex items-center gap-2 text-sm text-[#5a6a82] mb-4">
+                    <MapPin className="w-4 h-4" /> {project.location || 'Hyderabad'}
+                  </div>
+                  <div className="pt-4 border-t border-[#e8ecf2] flex items-center justify-between text-sm font-semibold text-[#1e3a5f]">
+                    <span>View Details</span>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </div>
+              </Link>
+            )) : [1, 2, 3].map((item) => (
               <Link href="/projects" key={item} className="group block bg-white rounded-2xl overflow-hidden border border-[#e8ecf2] shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-1">
                 <div className="aspect-[4/3] bg-[#e8ecf2] relative overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-10" />
@@ -236,7 +275,7 @@ export default async function HomePage() {
               {data.journeyHeading}
             </h2>
           </div>
-          
+
           <JourneySection steps={data.journeySteps} />
         </div>
       </section>
@@ -245,7 +284,7 @@ export default async function HomePage() {
       <section className="py-24 bg-[#0f1d33] relative overflow-hidden" id="reviews">
         <div className="absolute top-0 right-0 w-96 h-96 bg-[#c4a55a]/10 rounded-full blur-[100px] pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#1e3a5f]/50 rounded-full blur-[100px] pointer-events-none" />
-        
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
@@ -255,7 +294,7 @@ export default async function HomePage() {
               {data.reviewsContent}
             </p>
           </div>
-          
+
           <ReviewsSection reviews={data.reviews} />
         </div>
       </section>
@@ -275,7 +314,7 @@ export default async function HomePage() {
                 <p className="text-lg text-[#5a6a82] mb-8 leading-relaxed">
                   {data.brochureContent}
                 </p>
-                
+
                 <ul className="space-y-4 mb-8">
                   {['Detailed Master Plan & Layout', 'Exact Pricing & Payment Plans', 'Location Map & Connectivity', 'Project Amenities Overview'].map((item, i) => (
                     <li key={i} className="flex items-center gap-3 text-[#0f1d33] font-medium">
@@ -284,9 +323,9 @@ export default async function HomePage() {
                   ))}
                 </ul>
               </div>
-              
+
               <div className="bg-white p-8 rounded-2xl shadow-lg border border-[#e8ecf2]">
-                <BrochureRegistrationForm />
+                <BrochureRegistrationForm projects={projects} />
               </div>
             </div>
           </div>
@@ -304,7 +343,7 @@ export default async function HomePage() {
               {data.mapContent}
             </p>
           </div>
-          
+
           <MapSection features={data.mapFeatures} location={data.mapLocationDescription} />
         </div>
       </section>
@@ -314,7 +353,7 @@ export default async function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-2xl font-bold text-[#0f1d33] mb-2">{data.certificationsHeading}</h2>
           <p className="text-[#5a6a82] mb-10">{data.certificationsContent}</p>
-          
+
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {data.certifications.map((cert, i) => (
               <div key={i} className="flex flex-col items-center justify-center p-6 rounded-2xl bg-[#f7f8fa] border border-[#e8ecf2] hover:shadow-md transition-all">
@@ -338,7 +377,7 @@ export default async function HomePage() {
                 {data.enquiryContent}
               </p>
             </div>
-            
+
             <ProjectRegistrationForm />
           </div>
         </div>
@@ -348,7 +387,7 @@ export default async function HomePage() {
       <section className="py-24 relative overflow-hidden bg-[#0f1d33]" id="final-cta">
         <div className="absolute inset-0 noise-overlay opacity-30" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0a1220] to-transparent" />
-        
+
         <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
             {data.finalCtaHeading}
@@ -356,7 +395,7 @@ export default async function HomePage() {
           <p className="text-xl text-white/80 mb-10 leading-relaxed max-w-2xl mx-auto">
             {data.finalCtaContent}
           </p>
-          
+
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               href="/contact"
@@ -365,7 +404,7 @@ export default async function HomePage() {
               Book Site Visit
             </Link>
             <a
-              href="tel:+91XXXXXXXXXX"
+              href="tel:+919666504405"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-bold rounded-xl bg-white text-[#0f1d33] hover:bg-[#f7f8fa] transition-premium shadow-lg"
             >
               Call Now

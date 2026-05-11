@@ -64,9 +64,9 @@ export default async function ContactPage() {
             {/* Contact Info */}
             <div className="lg:col-span-2 space-y-6">
               {[
-                { icon: Phone, label: 'Call Us', value: '[PHONE NUMBER]', href: 'tel:+91XXXXXXXXXX' },
-                { icon: Mail, label: 'Email Us', value: 'info@bhuwanta.com', href: 'mailto:info@bhuwanta.com' },
-                { icon: MessageCircle, label: 'WhatsApp', value: 'Chat with us', href: data.whatsappLink || 'https://wa.me/91XXXXXXXXXX' },
+                { icon: Phone, label: 'Call Us', value: '+91 9666504405', href: 'tel:+919666504405' },
+                { icon: Mail, label: 'Email Us', value: 'bhuwantadevelopers@gmail.com', href: 'mailto:bhuwantadevelopers@gmail.com' },
+                { icon: MessageCircle, label: 'WhatsApp', value: 'Chat with us', href: data.whatsappLink || 'https://wa.me/919666504405' },
                 { icon: MapPin, label: 'Visit Us', value: '[OFFICE ADDRESS],\nHyderabad, Telangana', href: undefined },
                 { icon: Clock, label: 'Working Hours', value: 'Mon – Sat: 9:00 AM – 7:00 PM\nSunday: By Appointment', href: undefined },
               ].map((item) => (

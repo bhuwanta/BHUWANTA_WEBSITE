@@ -60,6 +60,7 @@ export const homeQuery = `*[_type == "home"][0]{
   journeySubheading,
   journeySteps[]{ icon, title, description },
   reviewsHeading,
+  reviewsContent,
   reviews[]{ name, role, rating, content },
   mapFeatures[]{ icon, title, distance },
   mapLocationDescription,
@@ -114,6 +115,17 @@ export const projectsQuery = `*[_type == "projects"][0]{
     description,
     image,
     masterLayoutImage,
+    brochureFile{
+      asset->{
+        url,
+        originalFilename
+      }
+    },
+    videoFile{
+      asset->{
+        url
+      }
+    },
     plotSizes,
     pricePerSqYd,
     hmdaLpNumber,
