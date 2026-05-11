@@ -10,6 +10,7 @@ export const homeSchema = defineType({
     { name: 'whyOwnLand', title: 'Why Own Land' },
     { name: 'featuredProject', title: 'Featured Project Teaser' },
     { name: 'vastu', title: 'Vastu Section' },
+    { name: 'reviews', title: 'Customer Reviews' },
     { name: 'faq', title: 'FAQ' },
     { name: 'finalCta', title: 'Final CTA' },
   ],
@@ -179,6 +180,40 @@ export const homeSchema = defineType({
           ],
           preview: {
             select: { title: 'title', subtitle: 'icon' },
+          },
+        },
+      ],
+    }),
+
+    // ===== CUSTOMER REVIEWS =====
+    defineField({
+      name: 'reviewsHeading',
+      type: 'string',
+      title: 'Reviews Section Heading',
+      group: 'reviews',
+    }),
+    defineField({
+      name: 'reviewsContent',
+      type: 'text',
+      title: 'Reviews Section Description',
+      group: 'reviews',
+    }),
+    defineField({
+      name: 'reviews',
+      type: 'array',
+      title: 'Customer Reviews',
+      group: 'reviews',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            defineField({ name: 'name', type: 'string', title: 'Customer Name' }),
+            defineField({ name: 'role', type: 'string', title: 'Role / Designation' }),
+            defineField({ name: 'rating', type: 'number', title: 'Rating (1-5)', validation: Rule => Rule.min(1).max(5) }),
+            defineField({ name: 'content', type: 'text', title: 'Review Content' }),
+          ],
+          preview: {
+            select: { title: 'name', subtitle: 'role' },
           },
         },
       ],
