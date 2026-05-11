@@ -9,25 +9,25 @@ import logoFallback from '@/images/logo.png'
 
 const LinkedinIcon = (props: any) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-    <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/>
+    <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" /><rect width="4" height="12" x="2" y="9" /><circle cx="4" cy="4" r="2" />
   </svg>
 )
 
 const FacebookIcon = (props: any) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
   </svg>
 )
 
 const InstagramIcon = (props: any) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-    <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
+    <rect width="20" height="20" x="2" y="2" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
   </svg>
 )
 
 const YoutubeIcon = (props: any) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-    <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.42a2.78 2.78 0 0 0-1.94 2C1 8.11 1 12 1 12s0 3.89.46 5.58a1.9 1.9 0 0 0 1.32 1.35c1.7.47 8.22.47 8.22.47s6.52 0 8.22-.47a1.9 1.9 0 0 0 1.32-1.35c.46-1.69.46-5.58.46-5.58s0-3.89-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/>
+    <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.42a2.78 2.78 0 0 0-1.94 2C1 8.11 1 12 1 12s0 3.89.46 5.58a1.9 1.9 0 0 0 1.32 1.35c1.7.47 8.22.47 8.22.47s6.52 0 8.22-.47a1.9 1.9 0 0 0 1.32-1.35c.46-1.69.46-5.58.46-5.58s0-3.89-.46-5.58z" /><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" />
   </svg>
 )
 
@@ -71,7 +71,7 @@ export function Footer() {
       footerPhone, footerEmail, copyrightText, socialLinks
     }`).then((data: FooterSettings) => {
       if (data) setSettings(data)
-    }).catch(() => {})
+    }).catch(() => { })
   }, [])
 
   const siteName = settings.siteName || 'BHUWANTA'
@@ -81,8 +81,8 @@ export function Footer() {
   const address = settings.footerAddress || 'Floor #4, Flat No. #406, Alluri Trade Center, Near KPHB Metro (Pillar #761), Hyderabad, Telangana - 500072'
   const addressLabel = settings.footerAddressLabel || 'Headquarters'
   const mapsUrl = settings.googleMapsUrl || 'https://maps.app.goo.gl/USjC2iYeGiXbZ5U16'
-  const phone = settings.footerPhone || '+91 XXXXX XXXXX'
-  const email = settings.footerEmail || 'info@bhuwanta.com'
+  const phone = '+91 9666504405'
+  const email = 'bhuwantadevelopers@gmail.com'
   const copyright = settings.copyrightText || 'Bhuwanta. All rights reserved.'
 
   const socialItems = [
@@ -99,15 +99,15 @@ export function Footer() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-12">
-          
+
           {/* Brand Column */}
           <div className="lg:col-span-5">
             <div className="mb-8 sm:mb-10 flex flex-col items-start">
               <Link href="/" className="flex items-center group gap-3 sm:gap-4 mb-4">
                 <div className="relative h-16 sm:h-20 w-auto transition-transform duration-500 hover:scale-[1.05] origin-left">
-                  <Image 
-                    src={logoSrc || logoFallback} 
-                    alt={siteName} 
+                  <Image
+                    src={logoSrc || logoFallback}
+                    alt={siteName}
                     height={80}
                     width={logoSrc ? 240 : undefined}
                     className="h-16 sm:h-20 w-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]"
@@ -124,9 +124,9 @@ export function Footer() {
                   <p>{address}</p>
                 </div>
               </div>
-              <a 
-                href={mapsUrl} 
-                target="_blank" 
+              <a
+                href={mapsUrl}
+                target="_blank"
                 rel="noopener noreferrer"
                 className="w-fit ml-8 px-4 py-2.5 text-xs font-bold rounded-lg bg-[#7D651F]/10 text-[#7D651F] hover:bg-[#7D651F] hover:text-white transition-premium border border-[#7D651F]/20 shadow-none flex items-center gap-2 uppercase tracking-wider"
               >
