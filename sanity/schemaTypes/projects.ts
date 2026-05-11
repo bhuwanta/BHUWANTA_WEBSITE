@@ -36,6 +36,8 @@ export const projectsSchema = defineType({
             defineField({ name: 'description', type: 'text', title: 'Description', rows: 4 }),
             defineField({ name: 'image', type: 'image', title: 'Project Image', options: { hotspot: true } }),
             defineField({ name: 'masterLayoutImage', type: 'image', title: 'Master Layout Image', options: { hotspot: true } }),
+            defineField({ name: 'brochureFile', type: 'file', title: 'Project Brochure (PDF)' }),
+            defineField({ name: 'videoFile', type: 'file', title: 'Project Video (MP4)' }),
             defineField({ name: 'plotSizes', type: 'string', title: 'Plot Sizes', description: 'e.g. "150 sq yd – 300 sq yd"' }),
             defineField({ name: 'pricePerSqYd', type: 'string', title: 'Price per sq yd', description: 'e.g. "Starting ₹15,000 per sq yd"' }),
             defineField({ name: 'hmdaLpNumber', type: 'string', title: 'HMDA LP Number' }),
