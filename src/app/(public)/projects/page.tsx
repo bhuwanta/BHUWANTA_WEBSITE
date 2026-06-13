@@ -42,7 +42,7 @@ interface ProjectEntry {
   images?: string[]
   projectHighlights?: string[]
   brochureUrl?: string
-  description?: string
+  description: string
 }
 
 export default async function ProjectsPage() {
@@ -61,7 +61,7 @@ export default async function ProjectsPage() {
     })
     
     if (sanityCategories) categories = sanityCategories
-    if (sanityData?.projectEntries) projects = sanityData.projectEntries
+    if (sanityData?.projectEntries) projects = sanityData.projectEntries.map((p: any) => ({ ...p, description: p.description || '' }))
     if (sanityData?.pageHeading) pageHeading = sanityData.pageHeading
   } catch { /* fallback */ }
 
@@ -88,7 +88,7 @@ export default async function ProjectsPage() {
   const listingSchemas = projects.map((p) =>
     buildRealEstateListingSchema({
       name: p.name,
-      description: p.description,
+      description: p.description || '',
       url: `${siteUrl}/projects`,
     })
   )

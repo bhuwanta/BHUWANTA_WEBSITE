@@ -26,7 +26,7 @@ export async function sendContactNotification(lead: {
   const { data, error } = await resend.emails.send({
     from: FROM_EMAIL,
     to: ADMIN_EMAIL,
-    reply_to: lead.email,
+    replyTo: lead.email,
     subject: `New Lead: ${lead.name} — ${lead.project || 'General Inquiry'}`,
     html: `
       <h2>New Contact Form Submission</h2>
