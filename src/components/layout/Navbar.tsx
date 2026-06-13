@@ -11,11 +11,12 @@ import logoFallback from '@/images/logo.png'
 
 const defaultNavLinks = [
   { href: '/', label: 'Home' },
-  { href: '/about', label: 'About' },
+  { href: '/about', label: 'About Us' },
   { href: '/projects', label: 'Projects' },
   { href: '/gallery', label: 'Gallery' },
-  { href: '/blog', label: 'Blog' },
-  { href: '/careers', label: 'Careers' },
+  { href: '/blog', label: 'Blogs' },
+  { href: '/forms', label: 'Forms' },
+  { href: '/contact', label: 'Enquire Now' },
 ]
 
 interface SiteSettings {
@@ -34,11 +35,16 @@ export function Navbar() {
   const [settings, setSettings] = useState<SiteSettings>({})
 
   const isHome = pathname === '/'
-  const showGlass = scrolled || !isHome
+  const showGlass = scrolled
+  const isDarkContent = showGlass || !isHome
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20)
-    window.addEventListener('scroll', handleScroll)
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20)
+    }
+    // Check initial scroll position
+    handleScroll()
+    window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
@@ -54,14 +60,14 @@ export function Navbar() {
   const siteName = settings.siteName || 'BHUWANTA'
   const tagline = settings.tagline || 'Land Today. Landmark Tomorrow.'
   const ctaText = settings.ctaButtonText || 'Book Site Visit'
-  const ctaLink = settings.ctaButtonLink || '/contact'
+  const ctaLink = '/#book-visit' // Hardcoded to always scroll to the Schedule a Tour section
   const logoSrc = settings.logo ? urlFor(settings.logo).height(80).url() : null
 
   return (
     <nav
       className={cn(
         'fixed top-0 left-0 right-0 z-50 transition-all duration-500',
-        showGlass
+        isDarkContent
           ? 'bg-white/80 backdrop-blur-xl border-b border-[#e8ecf2] shadow-sm py-4'
           : 'bg-transparent py-6'
       )}
@@ -78,8 +84,8 @@ export function Navbar() {
                 height={64}
                 className={cn(
                   "h-12 sm:h-16 w-auto object-contain transition-all duration-500",
-                  !showGlass && "drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]",
-                  showGlass && "brightness-0"
+                  !isDarkContent && "drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]",
+                  isDarkContent && "brightness-0"
                 )}
                 style={{ width: 'auto' }}
                 priority
@@ -98,7 +104,7 @@ export function Navbar() {
                   id={`nav-${link.label.toLowerCase()}`}
                   className={cn(
                     "px-4 py-2 text-sm transition-premium rounded-lg",
-                    showGlass 
+                    isDarkContent 
                       ? "text-[#002935] font-bold hover:text-[#B69A4E] hover:bg-[#f3f5f8]" 
                       : "text-white/80 font-medium hover:text-white hover:bg-white/10"
                   )}
@@ -110,21 +116,16 @@ export function Navbar() {
 
             {/* CTA + Call Now + Mobile Toggle */}
             <div className="flex items-center gap-3">
-              <a
-                href="tel:+919666504405"
-                id="nav-call"
-                className={cn(
-                  "hidden lg:inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold rounded-lg transition-premium",
-                  showGlass
-                    ? "bg-black text-white hover:bg-black/80"
-                    : "bg-white text-black hover:bg-white/90"
-                )}
-              >
-                Call Now
-              </a>
+
               <Link
                 href={ctaLink}
                 id="nav-cta"
+                onClick={(e) => {
+                  if (isHome) {
+                    e.preventDefault();
+                    document.getElementById('book-visit')?.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
                 className="hidden sm:inline-flex px-5 py-2.5 text-sm font-semibold rounded-lg transition-premium hover:scale-105 glow-gold gradient-gold text-white"
               >
                 {ctaText}
@@ -134,7 +135,7 @@ export function Navbar() {
               <button
                 className={cn(
                   "md:hidden p-2 transition-colors",
-                  showGlass ? "text-[#002935]" : "text-white"
+                  isDarkContent ? "text-[#002935]" : "text-white"
                 )}
                 onClick={() => setIsOpen(!isOpen)}
                 aria-label="Toggle menu"
@@ -167,7 +168,13 @@ export function Navbar() {
           ))}
           <Link
             href={ctaLink}
-            onClick={() => setIsOpen(false)}
+            onClick={(e) => {
+              setIsOpen(false);
+              if (isHome) {
+                e.preventDefault();
+                document.getElementById('book-visit')?.scrollIntoView({ behavior: 'smooth' });
+              }
+            }}
             className="block px-4 py-3 text-sm font-semibold text-center rounded-lg gradient-gold text-white mt-3"
           >
             {ctaText}

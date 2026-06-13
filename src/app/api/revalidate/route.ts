@@ -49,7 +49,6 @@ export async function POST(request: NextRequest) {
         break
       case 'contact':
         safeRevalidateTag('contact')
-        revalidatePath('/contact')
         break
       default:
         // Revalidate all public pages

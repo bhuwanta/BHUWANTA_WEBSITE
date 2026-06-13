@@ -1,0 +1,217 @@
+'use client'
+
+import { useState } from 'react'
+
+export function ContactForm({ projectNames = [] }: { projectNames?: string[] }) {
+  const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState(false)
+  const [error, setError] = useState('')
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    project: 'Not Sure',
+    enquiryType: 'Site Visit',
+    message: '',
+    agree: false,
+  })
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target
+    const checked = (e.target as HTMLInputElement).checked
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }))
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+    setSuccess(false)
+
+    if (!formData.agree) {
+      setError('You must agree to the Terms & Conditions.')
+      setLoading(false)
+      return
+    }
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          project: formData.project,
+          enquiryType: formData.enquiryType,
+          message: formData.message,
+          sourcePage: 'Website - Home - Contact Section',
+        })
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to send message.')
+      }
+
+      setSuccess(true)
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        project: 'Not Sure',
+        enquiryType: 'Site Visit',
+        message: '',
+        agree: false,
+      })
+    } catch (err: any) {
+      setError(err.message || 'Something went wrong. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <h3 className="text-2xl font-bold text-[#0f1d33] mb-2">Send Us a Message</h3>
+      
+      {success && (
+        <div className="bg-emerald-50 text-emerald-600 p-4 rounded-lg text-sm font-medium mb-6">
+          Message sent successfully! We will get back to you soon.
+        </div>
+      )}
+      
+      {error && (
+        <div className="bg-red-50 text-red-600 p-4 rounded-lg text-sm font-medium mb-6">
+          {error}
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label htmlFor="name" className="block text-sm font-medium text-[#0f1d33] mb-1">Full Name</label>
+          <input 
+            type="text" 
+            id="name" 
+            name="name" 
+            value={formData.name}
+            onChange={handleChange}
+            required 
+            className="w-full bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-3 py-2.5 text-[#0f1d33] text-sm focus:outline-none focus:ring-2 focus:ring-[#c4a55a] focus:border-transparent"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium text-[#0f1d33] mb-1">Email ID</label>
+          <input 
+            type="email" 
+            id="email" 
+            name="email" 
+            value={formData.email}
+            onChange={handleChange}
+            required 
+            className="w-full bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-3 py-2.5 text-[#0f1d33] text-sm focus:outline-none focus:ring-2 focus:ring-[#c4a55a] focus:border-transparent"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="phone" className="block text-sm font-medium text-[#0f1d33] mb-1">Mobile Number</label>
+          <input 
+            type="tel" 
+            id="phone" 
+            name="phone" 
+            value={formData.phone}
+            onChange={handleChange}
+            required 
+            className="w-full bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-3 py-2.5 text-[#0f1d33] text-sm focus:outline-none focus:ring-2 focus:ring-[#c4a55a] focus:border-transparent"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="project" className="block text-sm font-medium text-[#0f1d33] mb-1">Project Interested In</label>
+          <div className="relative">
+            <select 
+              id="project" 
+              name="project" 
+              value={formData.project}
+              onChange={handleChange}
+              className="w-full appearance-none bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg pl-3 pr-10 py-2.5 text-[#0f1d33] text-sm focus:outline-none focus:ring-2 focus:ring-[#c4a55a] focus:border-transparent"
+            >
+              <option value="Not Sure">Not Sure</option>
+              {projectNames.map((name, idx) => (
+                <option key={idx} value={name}>{name}</option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#5a6a82]">
+              <svg className="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div className="sm:col-span-2">
+          <label htmlFor="enquiryType" className="block text-sm font-medium text-[#0f1d33] mb-1">Select Enquiry Type</label>
+          <div className="relative">
+            <select 
+              id="enquiryType" 
+              name="enquiryType" 
+              value={formData.enquiryType}
+              onChange={handleChange}
+              className="w-full appearance-none bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg pl-3 pr-10 py-2.5 text-[#0f1d33] text-sm focus:outline-none focus:ring-2 focus:ring-[#c4a55a] focus:border-transparent"
+            >
+              <option value="Site Visit">Site Visit</option>
+              <option value="General Inquiry">General Inquiry</option>
+              <option value="Pricing Details">Pricing Details</option>
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#5a6a82]">
+              <svg className="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div className="sm:col-span-2">
+          <label htmlFor="message" className="block text-sm font-medium text-[#0f1d33] mb-1">Your Message</label>
+          <textarea 
+            id="message" 
+            name="message" 
+            rows={2} 
+            value={formData.message}
+            onChange={handleChange}
+            required
+            className="w-full bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-3 py-2.5 text-[#0f1d33] text-sm focus:outline-none focus:ring-2 focus:ring-[#c4a55a] focus:border-transparent resize-none"
+          ></textarea>
+        </div>
+      </div>
+
+      <div className="flex items-start gap-2 pt-1">
+        <input 
+          type="checkbox" 
+          id="agree" 
+          name="agree" 
+          checked={formData.agree}
+          onChange={handleChange}
+          required
+          className="mt-1 w-4 h-4 rounded border-[#e8ecf2] text-[#1e3a5f] focus:ring-[#c4a55a]"
+        />
+        <label htmlFor="agree" className="text-xs text-[#5a6a82] leading-tight">
+          By submitting, I agree to the Terms & Conditions and Privacy Policy.
+        </label>
+      </div>
+
+      <button 
+        type="submit" 
+        disabled={loading}
+        className="w-full bg-gradient-to-r from-[#c4a55a] to-[#d4b872] text-white font-semibold rounded-lg shadow-lg shadow-[#c4a55a]/20 py-3 px-4 flex justify-center items-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-70 disabled:cursor-not-allowed"
+      >
+        {loading ? 'Sending...' : 'Send Message →'}
+      </button>
+    </form>
+  )
+}

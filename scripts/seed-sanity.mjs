@@ -35,7 +35,6 @@ async function seed() {
       { _key: 'nav3', label: 'Projects', href: '/projects' },
       { _key: 'nav4', label: 'Gallery', href: '/gallery' },
       { _key: 'nav5', label: 'Blog', href: '/blog' },
-      { _key: 'nav6', label: 'Careers', href: '/careers' },
     ],
     footerAddress: 'Floor #4, Flat No. #406, Alluri Trade Center, Near KPHB Metro (Pillar #761), Hyderabad, Telangana - 500072',
     footerAddressLabel: 'Headquarters',
@@ -59,13 +58,11 @@ async function seed() {
   await client.createOrReplace({
     _id: 'home',
     _type: 'home',
-    heroHeading: 'Redefining Luxury Living',
+    heroHeadingLine1: 'Redefining',
+    heroHeadingLine2: 'Luxury Living',
     heroSubheading: 'Discover exceptional properties crafted with precision, designed for those who demand the extraordinary in every detail of their home.',
-    heroCta: 'Explore Projects',
-    featuredSectionHeading: 'Featured Projects',
-    aboutTeaser: 'With decades of experience in premium real estate, Bhuwanta delivers unparalleled quality and design that transforms spaces into extraordinary living experiences.',
-    ctaBannerHeading: 'Ready to Find Your Dream Property?',
-    ctaBannerSubtext: 'Our expert team is here to guide you through every step of your journey.',
+    heroPrimaryCta: 'Explore Projects',
+    featuredProjectsHeading: 'Featured Projects',
   })
   console.log('   ✅ Home Page created\n')
 
@@ -74,36 +71,10 @@ async function seed() {
   await client.createOrReplace({
     _id: 'about',
     _type: 'about',
-    companyStory: [
-      {
-        _type: 'block',
-        _key: 'story1',
-        style: 'normal',
-        children: [
-          {
-            _type: 'span',
-            _key: 'span1',
-            text: 'Bhuwanta was founded with a vision to transform the real estate landscape in Hyderabad. With over 15 years of experience, we have established ourselves as one of the most trusted names in premium real estate development. Our commitment to quality, transparency, and innovation has earned us the trust of over 5,000 happy families.',
-          },
-        ],
-        markDefs: [],
-      },
-    ],
-    missionStatement: [
-      {
-        _type: 'block',
-        _key: 'mission1',
-        style: 'normal',
-        children: [
-          {
-            _type: 'span',
-            _key: 'mspan1',
-            text: 'To deliver exceptional real estate experiences through innovative design, sustainable development, and unwavering commitment to customer satisfaction. We believe in building not just structures, but communities and legacies that stand the test of time.',
-          },
-        ],
-        markDefs: [],
-      },
-    ],
+    whoWeAreHeading: 'Who We Are',
+    whoWeAreBody: 'Bhuwanta was founded with a vision to transform the real estate landscape in Hyderabad. With over 15 years of experience, we have established ourselves as one of the most trusted names in premium real estate development. Our commitment to quality, transparency, and innovation has earned us the trust of over 5,000 happy families.',
+    missionHeading: 'Our Mission',
+    missionBody: 'To deliver exceptional real estate experiences through innovative design, sustainable development, and unwavering commitment to customer satisfaction. We believe in building not just structures, but communities and legacies that stand the test of time.',
   })
   console.log('   ✅ About Page created\n')
 
@@ -112,7 +83,7 @@ async function seed() {
   await client.createOrReplace({
     _id: 'projects',
     _type: 'projects',
-    sectionHeading: 'Our Projects',
+    pageHeading: 'Our Projects',
   })
   console.log('   ✅ Projects Page created\n')
 

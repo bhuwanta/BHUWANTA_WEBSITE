@@ -11,7 +11,9 @@ export async function sendContactNotification(lead: {
   name: string
   email: string
   phone?: string
-  budget?: string
+  project?: string
+  enquiryType?: string
+  message?: string
   sourcePage?: string
 }) {
   if (!resend) {
@@ -21,21 +23,30 @@ export async function sendContactNotification(lead: {
 
   const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'info@bhuwanta.com'
 
-  return resend.emails.send({
+  const { data, error } = await resend.emails.send({
     from: FROM_EMAIL,
     to: ADMIN_EMAIL,
-    subject: `New Lead: ${lead.name} — ₹${lead.budget || 'Not specified'}`,
+    reply_to: lead.email,
+    subject: `New Lead: ${lead.name} — ${lead.project || 'General Inquiry'}`,
     html: `
       <h2>New Contact Form Submission</h2>
       <table style="border-collapse: collapse; width: 100%;">
         <tr><td style="padding: 8px; font-weight: bold;">Name:</td><td style="padding: 8px;">${lead.name}</td></tr>
-        <tr><td style="padding: 8px; font-weight: bold;">Email:</td><td style="padding: 8px;">${lead.email}</td></tr>
+        <tr><td style="padding: 8px; font-weight: bold;">Email:</td><td style="padding: 8px;"><a href="mailto:${lead.email}">${lead.email}</a></td></tr>
         ${lead.phone ? `<tr><td style="padding: 8px; font-weight: bold;">Phone:</td><td style="padding: 8px;">${lead.phone}</td></tr>` : ''}
-        <tr><td style="padding: 8px; font-weight: bold;">Budget:</td><td style="padding: 8px;">${lead.budget || 'Not specified'}</td></tr>
+        <tr><td style="padding: 8px; font-weight: bold;">Project:</td><td style="padding: 8px;">${lead.project || 'Not Sure'}</td></tr>
+        <tr><td style="padding: 8px; font-weight: bold;">Type:</td><td style="padding: 8px;">${lead.enquiryType || 'Site Visit'}</td></tr>
+        <tr><td style="padding: 8px; font-weight: bold;">Message:</td><td style="padding: 8px; white-space: pre-wrap;">${lead.message || 'No message provided'}</td></tr>
         <tr><td style="padding: 8px; font-weight: bold;">Source:</td><td style="padding: 8px;">${lead.sourcePage || 'Website'}</td></tr>
       </table>
     `,
   })
+
+  if (error) {
+    console.error('Resend Admin Notification Error:', error)
+  }
+
+  return data
 }
 
 // Send acknowledgement email to the lead

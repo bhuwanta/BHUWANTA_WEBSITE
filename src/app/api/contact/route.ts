@@ -17,13 +17,13 @@ async function sendDynamicAutoresponder(toName: string, toEmail: string) {
     // Construct highly professional HTML
     const html = `
       <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        ${logoUrl ? `<img src="${logoUrl}" alt="${fromName}" style="max-height: 50px; margin-bottom: 24px;" />` : ''}
+        <img src="${logoUrl || 'https://bhuwanta.com/logo.png'}" alt="${fromName}" style="max-height: 50px; margin-bottom: 24px;" />
         <h2 style="color: #002935; font-size: 20px; font-weight: 600; margin-bottom: 16px;">Hello ${toName},</h2>
         <div style="color: #5a6a82; line-height: 1.6; font-size: 15px; white-space: pre-wrap;">${messageBody}</div>
         <br/>
         <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e8ecf2;">
           <p style="color: #002935; font-size: 14px; margin: 0;">Best regards,</p>
-          <p style="color: #B69A4E; font-weight: 600; font-size: 14px; margin: 4px 0 0 0;">${fromName}</p>
+          <p style="color: #B69A4E; font-weight: 600; font-size: 14px; margin: 4px 0 0 0;">${fromName || 'Bhuwanta Team'}</p>
         </div>
       </div>
     `
@@ -44,13 +44,17 @@ async function sendDynamicAutoresponder(toName: string, toEmail: string) {
     }
 
     // Send the email
-    await resend.emails.send({
+    const { error } = await resend.emails.send({
       from: `${fromName || 'Bhuwanta'} <${fromEmail || 'info@bhuwanta.com'}>`,
       to: toEmail,
       subject: subjectLine || 'Thank you for contacting us',
       html,
       attachments: attachments.length > 0 ? attachments : undefined
     })
+
+    if (error) {
+      console.error('Resend Autoresponder Error:', error)
+    }
   } catch (err) {
     console.error('Failed to send dynamic autoresponder:', err)
   }
@@ -71,12 +75,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, email, phone, budget, sourcePage } = body
+    const { name, email, phone, project, enquiryType, message, sourcePage } = body
+
+    // Create a summarized budget string for CRM (Sanity/Supabase) backwards compatibility
+    const budget = `Project: ${project} | Type: ${enquiryType} | Message: ${message}`
 
     // Validation
-    if (!name || !email || !phone || !budget) {
+    if (!name || !email || !phone) {
       return NextResponse.json(
-        { error: 'Name, email, phone, and budget are required.' },
+        { error: 'Name, email, and phone are required.' },
         { status: 400 }
       )
     }
@@ -125,7 +132,7 @@ export async function POST(request: NextRequest) {
     // Send emails (non-blocking, don't fail the request)
     try {
       await Promise.all([
-        sendContactNotification({ name, email, phone, budget, sourcePage }),
+        sendContactNotification({ name, email, phone, project, enquiryType, message, sourcePage }),
         sendDynamicAutoresponder(name, email), // Call our new Sanity-driven function
       ])
     } catch (emailError) {

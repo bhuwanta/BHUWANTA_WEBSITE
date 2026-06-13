@@ -2,8 +2,8 @@
 
 import { Phone } from 'lucide-react'
 
-const WHATSAPP_NUMBER = '919666504405' // Replace with your actual number
-const PHONE_NUMBER = '+919666504405'   // Replace with your actual number
+const WHATSAPP_NUMBER = '910000000000' // Replace with your actual number
+const PHONE_NUMBER = '+910000000000'   // Replace with your actual number
 const DEFAULT_MESSAGE = 'Hi Bhuwanta, I would like to know more about your projects.'
 
 function WhatsAppIcon({ className }: { className?: string }) {
@@ -19,15 +19,6 @@ export function WhatsAppFloat() {
 
   return (
     <div className="fixed bottom-4 right-4 sm:bottom-8 sm:right-6 z-40 flex flex-col items-end gap-2 sm:gap-3">
-      {/* Call Button */}
-      <a
-        href={`tel:${PHONE_NUMBER}`}
-        aria-label="Call us"
-        className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#002935] flex items-center justify-center shadow-lg shadow-[#002935]/25 hover:scale-110 hover:shadow-xl transition-all duration-300"
-      >
-        <Phone className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-      </a>
-
       {/* WhatsApp Button */}
       <a
         href={whatsappUrl}

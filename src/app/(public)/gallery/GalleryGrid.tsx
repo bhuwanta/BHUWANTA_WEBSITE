@@ -1,172 +1,189 @@
 'use client'
 
 import { useState } from 'react'
-import Image from 'next/image'
-import { X, Play } from 'lucide-react'
+import { Play, Image as ImageIcon, Film, X } from 'lucide-react'
+
+interface ProjectGallery {
+  name: string
+  images: string[]
+  videoUrl: string | null
+  youtubeId: string | null
+}
 
 interface GalleryGridProps {
-  images: Array<{ id: string; url: string; alt_text: string; category: string }>
-  videos: Array<{ id: string; platform: string; video_id: string; title: string }>
+  projects: ProjectGallery[]
 }
 
-const categoryLabels: Record<string, string> = {
-  'site-views': 'Site Views',
-  'location-surroundings': 'Location & Surroundings',
-  'layout-map': 'Layout Map',
-  'development-progress': 'Development Progress',
-}
+export function GalleryGrid({ projects = [] }: GalleryGridProps) {
+  const [activeTab, setActiveTab] = useState<'photos' | 'videos'>('photos')
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null)
 
-export function GalleryGrid({ images, videos }: GalleryGridProps) {
-  const [lightboxOpen, setLightboxOpen] = useState(false)
-  const [activeImage, setActiveImage] = useState<string | null>(null)
-  const [activeCategory, setActiveCategory] = useState<string>('all')
-
-  const openLightbox = (url: string) => {
-    setActiveImage(url)
-    setLightboxOpen(true)
-  }
-
-  // Get unique categories from images
-  const categories = Array.from(new Set(images.map(img => img.category).filter(Boolean)))
-  const showTabs = categories.length > 0
-
-  // Filter images by category
-  const filteredImages = activeCategory === 'all'
-    ? images
-    : images.filter(img => img.category === activeCategory)
+  // Filter projects that have images
+  const projectsWithImages = projects.filter((p) => p.images.length > 0)
+  // Filter projects that have videos
+  const projectsWithVideos = projects.filter((p) => p.youtubeId || p.videoUrl)
 
   return (
-    <>
-      {/* Filter Tabs */}
-      {showTabs && (
-        <div className="flex flex-wrap items-center justify-center gap-2 mb-8">
-          <button
-            onClick={() => setActiveCategory('all')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-premium ${
-              activeCategory === 'all'
-                ? 'gradient-gold text-white shadow-md'
-                : 'bg-[#f8f9fb] text-[#5a6a82] border border-[#e8ecf2] hover:border-[#B69A4E]/30'
-            }`}
-          >
-            All
-          </button>
-          {categories.map((cat) => (
+    <div className="py-16 bg-[#f7f8fa]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* Main Toggle */}
+        <div className="flex justify-center mb-16">
+          <div className="bg-white border border-[#e8ecf2] p-1.5 rounded-xl inline-flex shadow-sm">
             <button
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-premium ${
-                activeCategory === cat
+              onClick={() => setActiveTab('photos')}
+              className={`flex items-center gap-2 px-8 py-3 rounded-lg text-sm font-semibold transition-premium ${
+                activeTab === 'photos'
                   ? 'gradient-gold text-white shadow-md'
-                  : 'bg-[#f8f9fb] text-[#5a6a82] border border-[#e8ecf2] hover:border-[#B69A4E]/30'
+                  : 'text-[#5a6a82] hover:text-[#0f1d33] hover:bg-[#f3f5f8]'
               }`}
             >
-              {categoryLabels[cat] || cat}
+              <ImageIcon className="w-4 h-4" /> Photos
             </button>
-          ))}
-        </div>
-      )}
-
-      {/* Image Grid */}
-      {filteredImages.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-12">
-          {filteredImages.map((img) => (
             <button
-              key={img.id}
-              onClick={() => openLightbox(img.url)}
-              className="group relative aspect-[4/3] rounded-xl overflow-hidden border border-[#e8ecf2] transition-premium hover:scale-[1.02] hover:shadow-xl hover:border-[#B69A4E]/30"
+              onClick={() => setActiveTab('videos')}
+              className={`flex items-center gap-2 px-8 py-3 rounded-lg text-sm font-semibold transition-premium ${
+                activeTab === 'videos'
+                  ? 'gradient-gold text-white shadow-md'
+                  : 'text-[#5a6a82] hover:text-[#0f1d33] hover:bg-[#f3f5f8]'
+              }`}
             >
-              <Image
-                src={img.url}
-                alt={img.alt_text || 'Gallery image'}
-                fill
-                className="object-cover transition-transform duration-700 group-hover:scale-110"
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              />
-              <div className="absolute inset-0 bg-[#002935]/0 group-hover:bg-[#002935]/30 transition-all duration-500" />
-              {img.alt_text && (
-                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[#002935]/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                  <p className="text-sm text-white font-medium">{img.alt_text}</p>
-                </div>
-              )}
-              {img.category && (
-                <div className="absolute top-3 left-3">
-                  <span className="px-2 py-1 rounded-md bg-white/90 text-[10px] font-semibold text-[#002935] uppercase tracking-wider">
-                    {categoryLabels[img.category] || img.category}
-                  </span>
-                </div>
-              )}
+              <Film className="w-4 h-4" /> Videos
             </button>
-          ))}
-        </div>
-      )}
-
-      {filteredImages.length === 0 && activeCategory !== 'all' && (
-        <div className="text-center py-12 mb-12">
-          <p className="text-[#5a6a82]">No images in this category yet.</p>
-        </div>
-      )}
-
-      {/* Videos */}
-      {videos.length > 0 && (
-        <>
-          <h2 className="text-2xl font-bold text-[#002935] mb-6">Videos</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {videos.map((video) => (
-              <div key={video.id} className="bg-white rounded-xl overflow-hidden border border-[#e8ecf2] shadow-sm">
-                <div className="relative aspect-video">
-                  {video.platform === 'youtube' ? (
-                    <iframe
-                      src={`https://www.youtube.com/embed/${video.video_id}`}
-                      title={video.title || 'Video'}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                      className="absolute inset-0 w-full h-full"
-                    />
-                  ) : (
-                    <iframe
-                      src={`https://player.vimeo.com/video/${video.video_id}`}
-                      title={video.title || 'Video'}
-                      allow="autoplay; fullscreen; picture-in-picture"
-                      allowFullScreen
-                      className="absolute inset-0 w-full h-full"
-                    />
-                  )}
-                </div>
-                {video.title && (
-                  <div className="p-4 flex items-center gap-2">
-                    <Play className="w-4 h-4 text-[#B69A4E]" />
-                    <p className="text-sm font-medium text-[#002935]">{video.title}</p>
-                  </div>
-                )}
-              </div>
-            ))}
           </div>
-        </>
-      )}
+        </div>
+
+        {/* Photos Tab Content */}
+        {activeTab === 'photos' && (
+          <div className="space-y-20">
+            {projectsWithImages.length === 0 ? (
+              <div className="text-center py-12">
+                <ImageIcon className="w-16 h-16 text-[#e8ecf2] mx-auto mb-4" />
+                <p className="text-[#5a6a82] text-lg">No photos available at the moment.</p>
+              </div>
+            ) : (
+              projectsWithImages.map((project, idx) => (
+                <section key={idx}>
+                  <div className="mb-8 border-b border-[#e8ecf2] pb-4">
+                    <h2 className="text-2xl sm:text-3xl font-bold text-[#0f1d33] mb-2">
+                      {project.name}
+                    </h2>
+                    <p className="text-sm text-[#5a6a82]">{project.images.length} photo{project.images.length !== 1 ? 's' : ''}</p>
+                  </div>
+                  
+                  {/* Slow scrolling marquee */}
+                  <div className="overflow-hidden group/marquee">
+                    <div 
+                      className={`flex gap-4 sm:gap-6 w-max ${idx % 2 === 0 ? 'animate-scroll-left' : 'animate-scroll-right'} group-hover/marquee:[animation-play-state:paused]`}
+                    >
+                      {/* Duplicate images twice for seamless loop */}
+                      {[...project.images, ...project.images].map((url, i) => (
+                        <div 
+                          key={i} 
+                          className="flex-shrink-0 w-64 sm:w-72 md:w-80 cursor-pointer group/card"
+                          onClick={() => setLightboxImage(url)}
+                        >
+                          <div className="aspect-[4/3] bg-white border border-[#e8ecf2] shadow-sm rounded-xl overflow-hidden relative transition-premium group-hover/card:border-[#c4a55a]/30 group-hover/card:shadow-md">
+                            <img 
+                              src={url} 
+                              alt={`${project.name} - Image ${(i % project.images.length) + 1}`}
+                              className="w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-105"
+                            />
+                            <div className="absolute inset-0 bg-[#1e3a5f]/5 group-hover/card:bg-transparent transition-colors"></div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </section>
+              ))
+            )}
+          </div>
+        )}
+
+        {/* Videos Tab Content */}
+        {activeTab === 'videos' && (
+          <div className="space-y-20">
+            {projectsWithVideos.length === 0 ? (
+              <div className="text-center py-12">
+                <Film className="w-16 h-16 text-[#e8ecf2] mx-auto mb-4" />
+                <p className="text-[#5a6a82] text-lg">No videos available at the moment.</p>
+              </div>
+            ) : (
+              projectsWithVideos.map((project, idx) => (
+                <section key={idx}>
+                  <div className="mb-8 border-b border-[#e8ecf2] pb-4">
+                    <h2 className="text-2xl sm:text-3xl font-bold text-[#0f1d33] mb-2">
+                      {project.name}
+                    </h2>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* YouTube Video */}
+                    {project.youtubeId && (
+                      <div className="bg-white border border-[#e8ecf2] shadow-sm rounded-xl overflow-hidden group hover:shadow-md transition-premium">
+                        <div className="aspect-video relative bg-[#f3f5f8]">
+                          <iframe 
+                            src={`https://www.youtube.com/embed/${project.youtubeId}`}
+                            title={`${project.name} - YouTube Video`}
+                            className="w-full h-full border-0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                          />
+                        </div>
+                        <div className="p-4 sm:p-6">
+                          <h3 className="text-lg font-bold text-[#0f1d33]">{project.name}</h3>
+                          <p className="text-sm text-[#5a6a82] mt-1">YouTube</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Uploaded Video */}
+                    {project.videoUrl && (
+                      <div className="bg-white border border-[#e8ecf2] shadow-sm rounded-xl overflow-hidden group hover:shadow-md transition-premium">
+                        <div className="aspect-video relative bg-[#f3f5f8]">
+                          <video 
+                            src={project.videoUrl}
+                            controls
+                            className="w-full h-full object-cover"
+                            preload="metadata"
+                          />
+                        </div>
+                        <div className="p-4 sm:p-6">
+                          <h3 className="text-lg font-bold text-[#0f1d33]">{project.name}</h3>
+                          <p className="text-sm text-[#5a6a82] mt-1">Project Video</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </section>
+              ))
+            )}
+          </div>
+        )}
+
+      </div>
 
       {/* Lightbox */}
-      {lightboxOpen && activeImage && (
-        <div
-          className="fixed inset-0 z-50 bg-[#002935]/90 flex items-center justify-center p-4"
-          onClick={() => setLightboxOpen(false)}
+      {lightboxImage && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+          onClick={() => setLightboxImage(null)}
         >
-          <button
-            className="absolute top-6 right-6 text-white/60 hover:text-white p-2"
-            onClick={() => setLightboxOpen(false)}
+          <button 
+            onClick={() => setLightboxImage(null)}
+            className="absolute top-4 right-4 sm:top-6 sm:right-6 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors z-50"
           >
-            <X className="w-8 h-8" />
+            <X className="w-5 h-5" />
           </button>
-          <div className="relative max-w-5xl max-h-[85vh] w-full" onClick={(e) => e.stopPropagation()}>
-            <Image
-              src={activeImage}
-              alt="Full size image"
-              width={1920}
-              height={1080}
-              className="w-full h-auto max-h-[85vh] object-contain rounded-lg"
-            />
-          </div>
+          <img 
+            src={lightboxImage} 
+            alt="Gallery Image"
+            className="max-w-full max-h-[90vh] object-contain rounded-lg"
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       )}
-    </>
+    </div>
   )
 }

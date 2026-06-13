@@ -35,9 +35,7 @@ const defaultFooterLinks = [
   { href: '/about', label: 'About Us' },
   { href: '/projects', label: 'Projects' },
   { href: '/gallery', label: 'Gallery' },
-  { href: '/careers', label: 'Careers' },
   { href: '/blog', label: 'Blog' },
-  { href: '/contact', label: 'Contact' },
 ]
 
 interface FooterSettings {
@@ -77,10 +75,10 @@ export function Footer() {
   const tagline = settings.tagline || 'Land Today. Landmark Tomorrow.'
   const logoSrc = settings.logo ? urlFor(settings.logo).height(96).url() : null
   const footerLinks = settings.navLinks?.length ? settings.navLinks : defaultFooterLinks
-  const address = settings.footerAddress || 'Floor #4, Flat No. #406, Alluri Trade Center, Near KPHB Metro (Pillar #761), Hyderabad, Telangana - 500072'
+  const address = settings.footerAddress || 'Alluri Trade Center, Floor #5 , Unit #406 , KPHB, Near KPHB Metro Station (opposite to pillar number # 761), hyderabad, telangana - 500072'
   const addressLabel = settings.footerAddressLabel || 'Headquarters'
   const mapsUrl = settings.googleMapsUrl || 'https://maps.app.goo.gl/USjC2iYeGiXbZ5U16'
-  const phone = (settings.footerPhone && settings.footerPhone !== '+91 XXXXX XXXXX') ? settings.footerPhone : '+91 96665 04405'
+  const phone = (settings.footerPhone && settings.footerPhone !== '+91 XXXXX XXXXX') ? settings.footerPhone : null
   const email = settings.footerEmail || 'info@bhuwanta.com'
   const copyright = settings.copyrightText || 'Bhuwanta. All rights reserved.'
 
@@ -160,10 +158,12 @@ export function Footer() {
               Contact
             </h3>
             <ul className="space-y-4">
-              <li className="flex items-center gap-3 group">
-                <Phone className="w-4 h-4 text-[#B69A4E] shrink-0" />
-                <a href={`tel:${phone.replace(/\s/g, '')}`} className="text-sm text-white/70 group-hover:text-white transition-colors">{phone}</a>
-              </li>
+              {phone && (
+                <li className="flex items-center gap-3 group">
+                  <Phone className="w-4 h-4 text-[#B69A4E] shrink-0" />
+                  <a href={`tel:${phone.replace(/\s/g, '')}`} className="text-sm text-white/70 group-hover:text-white transition-colors">{phone}</a>
+                </li>
+              )}
               <li className="flex items-center gap-3 group">
                 <Mail className="w-4 h-4 text-[#B69A4E] shrink-0" />
                 <a href={`mailto:${email}`} className="text-sm text-white/70 group-hover:text-white transition-colors">{email}</a>

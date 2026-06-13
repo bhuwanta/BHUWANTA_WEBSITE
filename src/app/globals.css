@@ -153,6 +153,22 @@
   animation-play-state: paused;
 }
 
+/* Gallery slow scroll */
+@keyframes scroll-left {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@keyframes scroll-right {
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+.animate-scroll-left {
+  animation: scroll-left 40s linear infinite;
+}
+.animate-scroll-right {
+  animation: scroll-right 40s linear infinite;
+}
+
 /* Animated underline effect */
 .animated-underline {
   position: relative;

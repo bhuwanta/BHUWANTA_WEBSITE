@@ -1,17 +1,19 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
-import { ArrowRight, MapPin, Phone, MessageCircle } from 'lucide-react'
+import { ArrowRight, MapPin, Phone, MessageCircle, Crown, Check, CreditCard, Download } from 'lucide-react'
 import { generatePageMetadata } from '@/lib/seo'
-import { sanityFetch, projectsQuery, urlFor } from '@/lib/sanity'
+import { sanityFetch, projectsQuery, projectCategoriesQuery, urlFor } from '@/lib/sanity'
 import { JsonLd, buildBreadcrumbSchema, buildRealEstateListingSchema } from '@/components/seo/JsonLd'
 import { DynamicIcon } from '@/components/ui/DynamicIcon'
 import { PageBanner } from '../../../components/ui/PageBanner'
+import { CtaSection } from '@/components/ui/CtaSection'
+import { ProjectsFilterClient } from '@/components/ui/ProjectsFilterClient'
 
 export async function generateMetadata(): Promise<Metadata> {
   return generatePageMetadata('projects', 'Our Projects', 'Explore Bhuwanta\'s HMDA-approved, Vastu-aligned plot developments in Hyderabad\'s high-growth corridors.')
 }
 
-export const revalidate = 120
+export const revalidate = 0
 
 const statusColors: Record<string, string> = {
   'registrations-open': 'bg-emerald-50 text-emerald-700 border-emerald-200',
@@ -22,7 +24,7 @@ const statusColors: Record<string, string> = {
 }
 
 const statusLabels: Record<string, string> = {
-  'registrations-open': '🟢 Registrations Open',
+  'registrations-open': 'Registrations Open',
   upcoming: 'Upcoming',
   'under-development': 'Under Development',
   ready: 'Ready',
@@ -31,35 +33,36 @@ const statusLabels: Record<string, string> = {
 
 interface ProjectEntry {
   name: string
+  category?: string
+  categoryTitle?: string
   slug?: { current: string }
   location: string
-  description: string
+  googleMapsUrl?: string
   plotSizes: string
-  pricePerSqYd: string
-  hmdaLpNumber: string
-  reraNumber: string
-  statusText: string
-  image?: any
-  masterLayoutImage?: any
-  plotDetails?: Array<{ plotSize: string; area: string; pricePerSqYd: string; totalPrice: string }>
-  amenities?: Array<{ icon: string; label: string }>
-  locationHighlights?: Array<{ icon: string; label: string }>
-  approvals?: Array<{ label: string; detail: string }>
+  images?: string[]
+  projectHighlights?: string[]
+  brochureUrl?: string
+  description?: string
 }
 
 export default async function ProjectsPage() {
   let projects: ProjectEntry[] = []
   let pageHeading = 'Our Projects'
-  let pageSubheading = 'Every Bhuwanta project is HMDA-approved, Vastu-aligned, and built for long-term value. Explore what\'s available.'
+  let categories: { id: string; title: string; label: string; order?: number }[] = []
 
   try {
-    const sanityData = await sanityFetch<{ pageHeading?: string; pageSubheading?: string; projectEntries?: ProjectEntry[] }>({
+    const sanityData = await sanityFetch<{ pageHeading?: string; projectEntries?: ProjectEntry[] }>({
       query: projectsQuery,
       tags: ['projects'],
     })
+    const sanityCategories = await sanityFetch<{ id: string; title: string; label: string; order?: number }[]>({
+      query: projectCategoriesQuery,
+      tags: ['projectCategory'],
+    })
+    
+    if (sanityCategories) categories = sanityCategories
     if (sanityData?.projectEntries) projects = sanityData.projectEntries
     if (sanityData?.pageHeading) pageHeading = sanityData.pageHeading
-    if (sanityData?.pageSubheading) pageSubheading = sanityData.pageSubheading
   } catch { /* fallback */ }
 
   // Fallback project
@@ -67,40 +70,12 @@ export default async function ProjectsPage() {
     projects = [
       {
         name: '[PROJECT NAME]',
+        category: 'warangal-highway',
         location: '[LOCATION], Hyderabad',
+        googleMapsUrl: 'https://maps.google.com',
         description: 'Bhuwanta\'s debut development — a carefully planned, Vastu-aligned layout in one of Hyderabad\'s fastest-growing zones. Every plot is HMDA-approved, clearly titled, and ready for construction.',
         plotSizes: '150 sq yd – 300 sq yd',
-        pricePerSqYd: 'Starting ₹[PRICE] per sq yd',
-        hmdaLpNumber: 'LP No. [NUMBER]',
-        reraNumber: 'No. [NUMBER]',
-        statusText: 'registrations-open',
-        amenities: [
-          { icon: 'Route', label: 'Wide black-topped internal roads' },
-          { icon: 'Zap', label: 'Underground electricity supply' },
-          { icon: 'Droplets', label: 'Dedicated water supply line' },
-          { icon: 'Trees', label: 'Parks and open green spaces' },
-          { icon: 'Building', label: 'Compound wall with gated entry' },
-          { icon: 'CloudRain', label: 'Proper drainage system' },
-        ],
-        locationHighlights: [
-          { icon: 'MapPin', label: '[X km] from [MAJOR LANDMARK / HIGHWAY]' },
-          { icon: 'GraduationCap', label: '[X km] from [SCHOOL / COLLEGE]' },
-          { icon: 'Hospital', label: '[X km] from [HOSPITAL]' },
-          { icon: 'ShoppingCart', label: '[X km] from [MARKET / MALL]' },
-          { icon: 'Bus', label: '[X km] from [BUS STOP / METRO]' },
-        ],
-        approvals: [
-          { label: 'HMDA Approved', detail: 'LP No. [NUMBER]' },
-          { label: 'RERA Registered', detail: 'No. [NUMBER]' },
-          { label: 'Clear Title', detail: 'Verified by [LAW FIRM / ADVOCATE NAME]' },
-          { label: 'Vastu-Certified', detail: 'By [CONSULTANT NAME]' },
-        ],
-        plotDetails: [
-          { plotSize: 'Standard', area: '[X sq yd]', pricePerSqYd: '₹[PRICE]', totalPrice: '₹[TOTAL]' },
-          { plotSize: 'Premium', area: '[X sq yd]', pricePerSqYd: '₹[PRICE]', totalPrice: '₹[TOTAL]' },
-          { plotSize: 'Corner', area: '[X sq yd]', pricePerSqYd: '₹[PRICE]', totalPrice: '₹[TOTAL]' },
-        ],
-      },
+      }
     ]
   }
 
@@ -115,7 +90,6 @@ export default async function ProjectsPage() {
       name: p.name,
       description: p.description,
       url: `${siteUrl}/projects`,
-      status: p.statusText,
     })
   )
 
@@ -124,8 +98,12 @@ export default async function ProjectsPage() {
       <JsonLd data={[breadcrumb, ...listingSchemas]} />
 
       <PageBanner 
-        title="Our Portfolio" 
+        title={pageHeading}
       />
+
+      <ProjectsFilterClient projects={projects} categories={categories} />
+
+      <CtaSection />
     </>
   )
 }

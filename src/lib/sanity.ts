@@ -44,85 +44,116 @@ export async function sanityFetch<T>({
 // ================================
 
 export const homeQuery = `*[_type == "home"][0]{
-  heroHeading,
-  heroSubheading,
-  heroImage,
+  // Hero
   heroPrimaryCta,
   heroSecondaryCta,
-  trustBadges[]{ label },
-  whyOwnLandHeading,
-  whyOwnLandSubheading,
-  whyOwnLandCards[]{ icon, title, description },
-  vastuHeading,
-  vastuSubheading,
-  vastuCards[]{ icon, title, description },
+  heroPhoneNumber,
+  heroImages[] {
+    image {
+      asset->{
+        url
+      }
+    },
+    asset->{
+      url
+    },
+    text
+  },
+  // Why Choose
+  whyChooseHeading,
+  whyChooseSubheading,
+  whyChooseFeatures[]{ icon, title },
+  // Featured Projects
+  featuredProjectsHeading,
+  featuredProjectsSubheading,
+  featuredProjects[]{ name, tag, "imageUrl": image.asset->url },
+  featuredProjectsFooterText,
+  // Journey
   journeyHeading,
-  journeySubheading,
-  journeySteps[]{ icon, title, description },
-  reviewsHeading,
-  reviews[]{ name, role, rating, content },
-  mapFeatures[]{ icon, title, distance },
-  mapLocationDescription,
+  journeyHeadingHighlight,
+  journeySteps[]{ stepNumber, title, description },
+  // Certifications
+  certificationsHeading,
+  certificationsSubheading,
+  certifications[]{ icon, title },
+  // Testimonials
+  testimonialsHeading,
+  testimonialsSubheading,
   youtubeVideos[]{ title, videoId },
-  faqHeading,
-  faqItems[]{ question, answer },
-  finalCtaHeading,
-  finalCtaSubtext,
-  finalCtaSupportingText
+  // Site Visit
+  siteVisitHeading,
+  siteVisitSubheading,
+  siteVisitPhone,
+  siteVisitWhatsappHours
 }`
 
 export const aboutQuery = `*[_type == "about"][0]{
-  whoWeAreHeading,
-  whoWeAreBody,
-  visionHeading,
-  visionBody,
-  missionHeading,
+  // Banner
+  pageHeading,
+  pageSubtitle,
+  // Our Story
+  storyHeading,
+  storyParagraphs,
+  storyImage {
+    asset->{
+      url
+    }
+  },
+  // Mission & Vision
+  missionTitle,
   missionBody,
-  missionCommitments[]{ title, description },
-  whyChooseHeading,
-  differentiators[]{ title, description },
-  legalHeading,
-  legalBody,
-  legalCommitments,
-  closingLine,
-  closingContact
+  visionTitle,
+  visionBody,
+  // Core Values
+  coreValues[]{ title, description },
+  // Leadership
+  leadershipHeading,
+  leaders[]{ name, role, bio },
+  // Strengths
+  strengthsHeading,
+  strengths[]{ title, description },
+  // CTA
+  ctaTitle,
+  ctaDescription
 }`
 
-export const galleryQuery = `*[_type == "gallery"][0]{
-  pageHeading,
-  pageSubheading,
-  images[]{
-    alt,
-    category,
-    asset->{ url }
-  },
-  youtubeVideos[]{
-    title,
-    url
-  },
-  devUpdateHeading,
-  devUpdateBody
+export const galleryQuery = `*[_type == "projects"][0]{
+  projectEntries[]{
+    name,
+    "images": images[].asset->url,
+    "videoUrl": videoFile.asset->url,
+    youtubeUrl
+  }
 }`
 
 export const projectsQuery = `*[_type == "projects"][0]{
   pageHeading,
-  pageSubheading,
   projectEntries[]{
     name,
+    "category": category->slug.current,
+    "categoryTitle": category->title,
     slug,
     location,
+    googleMapsUrl,
     description,
-    image,
-    masterLayoutImage,
-    plotSizes,
-    pricePerSqYd,
-    hmdaLpNumber,
-    reraNumber,
-    statusText,
-    plotDetails[]{ plotSize, area, pricePerSqYd, totalPrice },
-    amenities[]{ icon, label },
-    locationHighlights[]{ icon, label },
-    approvals[]{ label, detail }
+    "images": images[].asset->url,
+    "videoUrl": videoFile.asset->url,
+    youtubeUrl,
+    projectHighlights,
+    "brochureUrl": brochure.asset->url,
+    approvalBadge
+  }
+}`
+
+export const projectCategoriesQuery = `*[_type == "projectCategory"] | order(order asc){
+  "id": slug.current,
+  title,
+  "label": title,
+  order,
+  image {
+    asset->{
+      url
+    }
   }
 }`
 
@@ -149,15 +180,6 @@ export const blogPostQuery = `*[_type == "blog" && slug.current == $slug][0]{
   focusKeyword
 }`
 
-export const careersQuery = `*[_type == "careers"][0]{
-  pageHeading,
-  pageSubheading,
-  bodyText,
-  whatWeLookFor,
-  applyEmail,
-  footerNote
-}`
-
 export const contactQuery = `*[_type == "contact"][0]{
   pageHeading,
   pageSubheading,
@@ -166,20 +188,6 @@ export const contactQuery = `*[_type == "contact"][0]{
   thankYouMessage,
   whatsappLink,
   googleMapsEmbed
-}`
-
-export const jobListingsQuery = `*[_type == "jobListing" && isActive == true] | order(postedAt desc){
-  _id,
-  title,
-  department,
-  location,
-  employmentType,
-  salaryMin,
-  salaryMax,
-  description,
-  requirements,
-  applyUrl,
-  postedAt
 }`
 
 export const siteSettingsQuery = `*[_type == "siteSettings"][0]{

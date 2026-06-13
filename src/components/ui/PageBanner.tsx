@@ -9,7 +9,7 @@ export function PageBanner({ title, subtitle }: PageBannerProps) {
   return (
     <section className="relative overflow-hidden bg-[#002935] luxury-bg-grid-white">
       {/* Navbar Safe Zone */}
-      <div className="h-24 sm:h-32" />
+      <div className="h-32 sm:h-40" />
       
       <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#B69A4E]/10 rounded-full blur-[150px]" />
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#B69A4E]/5 rounded-full blur-[120px]" />

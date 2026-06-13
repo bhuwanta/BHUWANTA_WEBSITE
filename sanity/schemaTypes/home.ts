@@ -5,43 +5,22 @@ export const homeSchema = defineType({
   type: 'document',
   title: 'Home Page',
   groups: [
-    { name: 'hero', title: 'Hero Section' },
-    { name: 'trustBar', title: 'Trust Bar' },
-    { name: 'whyOwnLand', title: 'Why Own Land' },
-    { name: 'featuredProject', title: 'Featured Project Teaser' },
-    { name: 'vastu', title: 'Vastu Section' },
-    { name: 'faq', title: 'FAQ' },
-    { name: 'finalCta', title: 'Final CTA' },
+    { name: 'hero', title: '1. Hero Section' },
+    { name: 'whyChoose', title: '2. Why Choose Bhuwanta' },
+    { name: 'featuredProjects', title: '4. Featured Projects' },
+    { name: 'journey', title: '5. Journey to Ownership' },
+    { name: 'certifications', title: '6. Certifications' },
+    { name: 'testimonials', title: '7. YouTube Testimonials' },
+    { name: 'siteVisit', title: '8. Book Site Visit CTA' },
   ],
   fields: [
-    // ===== HERO =====
-    defineField({
-      name: 'heroHeading',
-      type: 'string',
-      title: 'Hero Heading',
-      group: 'hero',
-      description: 'Main headline on the hero section',
-    }),
-    defineField({
-      name: 'heroSubheading',
-      type: 'text',
-      title: 'Hero Subheading',
-      group: 'hero',
-      description: 'Supporting text below the hero headline',
-    }),
-    defineField({
-      name: 'heroImage',
-      type: 'image',
-      title: 'Hero Background Image',
-      group: 'hero',
-      options: { hotspot: true },
-    }),
+    // ===== 1. HERO =====
     defineField({
       name: 'heroPrimaryCta',
       type: 'string',
       title: 'Primary CTA Button Label',
       group: 'hero',
-      description: 'e.g. "Book Free Site Visit"',
+      description: 'e.g. "Book a Free Site Visit"',
     }),
     defineField({
       name: 'heroSecondaryCta',
@@ -50,52 +29,70 @@ export const homeSchema = defineType({
       group: 'hero',
       description: 'e.g. "Call Now"',
     }),
-
-    // ===== TRUST BAR =====
     defineField({
-      name: 'trustBadges',
+      name: 'heroPhoneNumber',
+      type: 'string',
+      title: 'Phone Number (for Call Now button)',
+      group: 'hero',
+      description: 'e.g. +919666504405',
+    }),
+    defineField({
+      name: 'heroImages',
       type: 'array',
-      title: 'Trust Badges',
-      group: 'trustBar',
-      description: 'Horizontal strip of trust indicators (4 recommended)',
+      title: 'Hero Background Images with Text',
+      group: 'hero',
+      description: 'Upload images and their corresponding text for the hero slider.',
       of: [
         {
           type: 'object',
           fields: [
-            defineField({ name: 'label', type: 'string', title: 'Badge Label' }),
+            defineField({ name: 'image', type: 'image', title: 'Image', options: { hotspot: true } }),
+            defineField({ name: 'text', type: 'string', title: 'Overlay Text', description: 'e.g. "Farm Lands in Hyderabad"' }),
           ],
           preview: {
-            select: { title: 'label' },
+            select: {
+              title: 'text',
+              media: 'image',
+            },
+            prepare(selection) {
+              const { title, media } = selection
+              return {
+                title: title || 'Image without text',
+                media: media,
+              }
+            }
           },
         },
       ],
     }),
 
-    // ===== WHY OWN LAND =====
+    // ===== 2. WHY CHOOSE BHUWANTA =====
     defineField({
-      name: 'whyOwnLandHeading',
+      name: 'whyChooseHeading',
       type: 'string',
       title: 'Section Heading',
-      group: 'whyOwnLand',
+      group: 'whyChoose',
+      description: 'e.g. "Why Choose BHUWANTA?"',
     }),
     defineField({
-      name: 'whyOwnLandSubheading',
+      name: 'whyChooseSubheading',
       type: 'text',
       title: 'Section Subheading',
-      group: 'whyOwnLand',
+      group: 'whyChoose',
+      rows: 3,
     }),
     defineField({
-      name: 'whyOwnLandCards',
+      name: 'whyChooseFeatures',
       type: 'array',
-      title: 'Benefit Cards',
-      group: 'whyOwnLand',
+      title: 'Feature Items (Scrolling Marquee)',
+      group: 'whyChoose',
+      description: 'Items displayed in the auto-scrolling marquee strip',
       of: [
         {
           type: 'object',
           fields: [
-            defineField({ name: 'icon', type: 'string', title: 'Lucide Icon Name', description: 'e.g. TrendingUp, Home, Globe, Key' }),
-            defineField({ name: 'title', type: 'string', title: 'Card Title' }),
-            defineField({ name: 'description', type: 'text', title: 'Card Description' }),
+            defineField({ name: 'icon', type: 'string', title: 'Lucide Icon Name', description: 'e.g. ShieldCheck, Building2, FileCheck, MapPin, IndianRupee, Compass, Hammer' }),
+            defineField({ name: 'title', type: 'string', title: 'Feature Title' }),
           ],
           preview: {
             select: { title: 'title', subtitle: 'icon' },
@@ -104,78 +101,114 @@ export const homeSchema = defineType({
       ],
     }),
 
-    // ===== FEATURED PROJECT TEASER =====
+    // ===== 4. FEATURED PROJECTS =====
     defineField({
-      name: 'featuredProjectName',
+      name: 'featuredProjectsHeading',
       type: 'string',
-      title: 'Project Name',
-      group: 'featuredProject',
+      title: 'Section Heading',
+      group: 'featuredProjects',
     }),
     defineField({
-      name: 'featuredProjectLocation',
-      type: 'string',
-      title: 'Project Location',
-      group: 'featuredProject',
-    }),
-    defineField({
-      name: 'featuredProjectDescription',
+      name: 'featuredProjectsSubheading',
       type: 'text',
-      title: 'Project Description',
-      group: 'featuredProject',
+      title: 'Section Subheading',
+      group: 'featuredProjects',
+      rows: 3,
     }),
     defineField({
-      name: 'featuredProjectDetails',
+      name: 'featuredProjects',
       type: 'array',
-      title: 'Project Details',
-      group: 'featuredProject',
-      description: 'Key-value pairs like Location, Plot Sizes, Price, etc.',
+      title: 'Featured Project Cards',
+      group: 'featuredProjects',
       of: [
         {
           type: 'object',
           fields: [
-            defineField({ name: 'icon', type: 'string', title: 'Lucide Icon Name', description: 'e.g. MapPin, Ruler, IndianRupee, Landmark, CheckCircle' }),
-            defineField({ name: 'label', type: 'string', title: 'Label' }),
-            defineField({ name: 'value', type: 'string', title: 'Value' }),
+            defineField({ name: 'name', type: 'string', title: 'Project Name' }),
+            defineField({ name: 'tag', type: 'string', title: 'Badge Tag', description: 'e.g. "High Appreciation", "Fast Selling"' }),
+            defineField({
+              name: 'image',
+              type: 'image',
+              title: 'Project Image',
+              options: { hotspot: true },
+            }),
           ],
           preview: {
-            select: { title: 'label', subtitle: 'value' },
+            select: { title: 'name', subtitle: 'tag', media: 'image' },
           },
         },
       ],
     }),
     defineField({
-      name: 'featuredProjectFormHeadline',
+      name: 'featuredProjectsFooterText',
       type: 'string',
-      title: 'Registration Form Headline',
-      group: 'featuredProject',
-      description: 'e.g. "Be among the first to own a plot in [PROJECT NAME]."',
+      title: 'Footer Text',
+      group: 'featuredProjects',
+      description: 'e.g. "Plus more premium layouts in Peddapur & Sadashivpet..."',
     }),
 
-    // ===== VASTU SECTION =====
+    // ===== 5. JOURNEY TO OWNERSHIP =====
     defineField({
-      name: 'vastuHeading',
+      name: 'journeyHeading',
       type: 'string',
       title: 'Section Heading',
-      group: 'vastu',
+      group: 'journey',
     }),
     defineField({
-      name: 'vastuSubheading',
-      type: 'text',
-      title: 'Section Subheading',
-      group: 'vastu',
+      name: 'journeyHeadingHighlight',
+      type: 'string',
+      title: 'Highlighted Text (Gold)',
+      group: 'journey',
+      description: 'e.g. "with Bhuwanta"',
     }),
     defineField({
-      name: 'vastuCards',
+      name: 'journeySteps',
       type: 'array',
-      title: 'Vastu Feature Cards',
-      group: 'vastu',
+      title: 'Journey Steps',
+      group: 'journey',
       of: [
         {
           type: 'object',
           fields: [
-            defineField({ name: 'icon', type: 'string', title: 'Lucide Icon Name', description: 'e.g. Compass, Home, Sun, Sprout' }),
-            defineField({ name: 'title', type: 'string', title: 'Card Title' }),
-            defineField({ name: 'description', type: 'text', title: 'Card Description' }),
+            defineField({ name: 'stepNumber', type: 'string', title: 'Step Number', description: 'e.g. "01"' }),
+            defineField({ name: 'title', type: 'string', title: 'Step Title' }),
+            defineField({ name: 'description', type: 'text', title: 'Step Description', rows: 2 }),
+          ],
+          preview: {
+            select: { title: 'title', subtitle: 'stepNumber' },
+            prepare({ title, subtitle }) {
+              return { title: `${subtitle}. ${title}` }
+            },
+          },
+        },
+      ],
+    }),
+
+    // ===== 6. CERTIFICATIONS =====
+    defineField({
+      name: 'certificationsHeading',
+      type: 'string',
+      title: 'Section Heading',
+      group: 'certifications',
+    }),
+    defineField({
+      name: 'certificationsSubheading',
+      type: 'text',
+      title: 'Section Subheading',
+      group: 'certifications',
+      rows: 2,
+    }),
+    defineField({
+      name: 'certifications',
+      type: 'array',
+      title: 'Certification Items',
+      group: 'certifications',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            defineField({ name: 'icon', type: 'string', title: 'Lucide Icon Name', description: 'e.g. ShieldCheck, Building2, BadgeCheck, Landmark, FileCheck' }),
+            defineField({ name: 'title', type: 'string', title: 'Certification Label' }),
           ],
           preview: {
             select: { title: 'title', subtitle: 'icon' },
@@ -184,51 +217,66 @@ export const homeSchema = defineType({
       ],
     }),
 
-    // ===== FAQ =====
+    // ===== 7. YOUTUBE TESTIMONIALS =====
     defineField({
-      name: 'faqHeading',
+      name: 'testimonialsHeading',
       type: 'string',
-      title: 'FAQ Section Heading',
-      group: 'faq',
+      title: 'Section Heading',
+      group: 'testimonials',
     }),
     defineField({
-      name: 'faqItems',
+      name: 'testimonialsSubheading',
+      type: 'text',
+      title: 'Section Subheading',
+      group: 'testimonials',
+      rows: 2,
+    }),
+    defineField({
+      name: 'youtubeVideos',
       type: 'array',
-      title: 'FAQ Items',
-      group: 'faq',
+      title: 'YouTube Video Testimonials',
+      group: 'testimonials',
       of: [
         {
           type: 'object',
           fields: [
-            defineField({ name: 'question', type: 'string', title: 'Question' }),
-            defineField({ name: 'answer', type: 'text', title: 'Answer' }),
+            defineField({ name: 'title', type: 'string', title: 'Video Title' }),
+            defineField({ name: 'videoId', type: 'string', title: 'YouTube Video ID', description: 'The ID from the YouTube URL (e.g. "dQw4w9WgXcQ" from youtube.com/watch?v=dQw4w9WgXcQ)' }),
           ],
           preview: {
-            select: { title: 'question' },
+            select: { title: 'title', subtitle: 'videoId' },
           },
         },
       ],
     }),
 
-    // ===== FINAL CTA =====
+    // ===== 8. BOOK SITE VISIT CTA =====
     defineField({
-      name: 'finalCtaHeading',
+      name: 'siteVisitHeading',
       type: 'string',
-      title: 'CTA Heading',
-      group: 'finalCta',
+      title: 'Section Heading',
+      group: 'siteVisit',
+      description: 'e.g. "Book Your Free Site Visit Today"',
     }),
     defineField({
-      name: 'finalCtaSubtext',
+      name: 'siteVisitSubheading',
       type: 'text',
-      title: 'CTA Subtext',
-      group: 'finalCta',
+      title: 'Section Description',
+      group: 'siteVisit',
+      rows: 3,
     }),
     defineField({
-      name: 'finalCtaSupportingText',
+      name: 'siteVisitPhone',
       type: 'string',
-      title: 'Supporting Text (below buttons)',
-      group: 'finalCta',
-      description: 'e.g. "📞 [PHONE] | ✉️ info@bhuwanta.com"',
+      title: 'Phone Number',
+      group: 'siteVisit',
+    }),
+    defineField({
+      name: 'siteVisitWhatsappHours',
+      type: 'string',
+      title: 'WhatsApp Availability Hours',
+      group: 'siteVisit',
+      description: 'e.g. "Available Mon-Sat, 9 AM to 6 PM"',
     }),
   ],
   preview: {

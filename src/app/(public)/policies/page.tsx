@@ -86,39 +86,39 @@ export default function PoliciesPage() {
 
             <div className="space-y-6 text-sm text-[#5a6a82] leading-relaxed">
               <div>
-                <h3 className="text-lg font-semibold text-[#002935] mb-2">1. Acceptance</h3>
-                <p>By accessing this website, you agree to these terms. If you do not agree, please do not use this site.</p>
+                <h3 className="text-lg font-semibold text-[#002935] mb-2">1. Acceptance & General Disclaimer</h3>
+                <p>By accessing and using this website, you agree to these terms and acknowledge that the information provided is subject to change without notice. The information, images, plans, layouts, pricing, specifications, amenities, and other materials displayed on this website are provided for general informational and marketing purposes only. They do not constitute a legal offer, contract, warranty, or guarantee of any kind.</p>
               </div>
 
               <div>
                 <h3 className="text-lg font-semibold text-[#002935] mb-2">2. Intellectual Property</h3>
-                <p>All content on this website — including text, images, logos, and design — is the property of Bhuwanta. Reproduction without written permission is prohibited.</p>
+                <p>All content on this website — including text, images, logos, and design — is the property of Bhuwanta Developers. Reproduction without written permission is strictly prohibited.</p>
               </div>
 
               <div>
-                <h3 className="text-lg font-semibold text-[#002935] mb-2">3. Property Information</h3>
-                <p>Property details, pricing, and availability are indicative and subject to change without prior notice. Nothing on this site constitutes a binding offer or contract.</p>
+                <h3 className="text-lg font-semibold text-[#002935] mb-2">3. Marketing Representations & Accuracy</h3>
+                <p>Illustrations, photographs, maps, renderings, and lifestyle images are artistic impressions and may not accurately represent the final product. Actual development may vary. All project details, prices, availability, approvals, specifications, and timelines are subject to change without prior notice at the sole discretion of the developer or as required by applicable laws and regulatory authorities.</p>
               </div>
 
               <div>
-                <h3 className="text-lg font-semibold text-[#002935] mb-2">4. Limitation of Liability</h3>
-                <p>Bhuwanta shall not be held liable for any loss or damage arising from the use of this website or reliance on the information provided.</p>
+                <h3 className="text-lg font-semibold text-[#002935] mb-2">4. Independent Verification & Advice</h3>
+                <p>Prospective buyers are advised to independently verify all project approvals, title documents, specifications, dimensions, availability, pricing, payment terms, and other relevant information before making any investment decision. Nothing contained on this website shall be construed as legal, financial, tax, or investment advice. Visitors should consult their own professional advisors before making any purchase or investment.</p>
               </div>
 
               <div>
-                <h3 className="text-lg font-semibold text-[#002935] mb-2">5. Governing Law</h3>
-                <p>These terms are governed by the laws of India. Any disputes shall be subject to the exclusive jurisdiction of the courts in the applicable state.</p>
+                <h3 className="text-lg font-semibold text-[#002935] mb-2">5. Limitation of Liability</h3>
+                <p>The company shall not be liable for any direct, indirect, incidental, or consequential loss arising from reliance on the information provided on this website.</p>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-semibold text-[#002935] mb-2">6. Governing Law</h3>
+                <p>These terms are governed by the applicable laws of India. Any disputes arising out of the use of this website shall be subject to the exclusive jurisdiction of the competent courts in Hyderabad, Telangana.</p>
               </div>
             </div>
           </section>
         </div>
 
         {/* Footer Note */}
-        <div className="mt-16 text-center">
-          <p className="text-sm text-[#5a6a82]">
-            Have questions? <a href="/contact" className="text-[#B69A4E] font-semibold hover:underline">Contact us</a>.
-          </p>
-        </div>
       </div>
     </main>
   )

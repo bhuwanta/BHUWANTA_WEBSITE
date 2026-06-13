@@ -6,7 +6,7 @@ import { X, CheckCircle2 } from 'lucide-react'
 import Image from 'next/image'
 import logoImg from '@/images/logo.png'
 
-export function LeadPopup() {
+export function LeadPopup({ projectNames = [] }: { projectNames?: string[] }) {
   const [isOpen, setIsOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
@@ -14,7 +14,9 @@ export function LeadPopup() {
     name: '',
     phone: '',
     email: '',
-    budget: '',
+    project: 'Not Sure',
+    enquiryType: 'Site Visit',
+    message: '',
   })
 
   useEffect(() => {
@@ -113,31 +115,62 @@ export function LeadPopup() {
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   />
 
-                  <input
-                    required
-                    type="tel"
-                    placeholder="Phone Number *"
-                    className="w-full px-4 py-3 bg-[#f8f9fb] border border-[#e8ecf2] rounded-xl text-sm text-[#002935] placeholder:text-[#002935]/40 focus:outline-none focus:ring-2 focus:ring-[#002935]/20 focus:border-[#002935]/50 transition-all"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  />
+                  <div className="grid grid-cols-2 gap-3">
+                    <input
+                      required
+                      type="tel"
+                      placeholder="Phone Number *"
+                      className="w-full px-4 py-3 bg-[#f8f9fb] border border-[#e8ecf2] rounded-xl text-sm text-[#002935] placeholder:text-[#002935]/40 focus:outline-none focus:ring-2 focus:ring-[#002935]/20 focus:border-[#002935]/50 transition-all"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    />
+                    <input
+                      required
+                      type="email"
+                      placeholder="Email Address *"
+                      className="w-full px-4 py-3 bg-[#f8f9fb] border border-[#e8ecf2] rounded-xl text-sm text-[#002935] placeholder:text-[#002935]/40 focus:outline-none focus:ring-2 focus:ring-[#002935]/20 focus:border-[#002935]/50 transition-all"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    />
+                  </div>
 
-                  <input
-                    required
-                    type="email"
-                    placeholder="Email Address *"
-                    className="w-full px-4 py-3 bg-[#f8f9fb] border border-[#e8ecf2] rounded-xl text-sm text-[#002935] placeholder:text-[#002935]/40 focus:outline-none focus:ring-2 focus:ring-[#002935]/20 focus:border-[#002935]/50 transition-all"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  />
+                  <div className="relative">
+                    <select 
+                      className="w-full appearance-none px-4 py-3 bg-[#f8f9fb] border border-[#e8ecf2] rounded-xl text-sm text-[#002935] focus:outline-none focus:ring-2 focus:ring-[#002935]/20 focus:border-[#002935]/50 transition-all"
+                      value={formData.project}
+                      onChange={(e) => setFormData({ ...formData, project: e.target.value })}
+                    >
+                      <option value="Not Sure">Project: Not Sure</option>
+                      {projectNames.map((name, idx) => (
+                        <option key={idx} value={name}>{name}</option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-[#002935]/40">
+                      <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" /></svg>
+                    </div>
+                  </div>
 
-                  <input
-                    required
-                    type="text"
-                    placeholder="Approx. Budget *"
-                    className="w-full px-4 py-3 bg-[#f8f9fb] border border-[#e8ecf2] rounded-xl text-sm text-[#002935] placeholder:text-[#002935]/40 focus:outline-none focus:ring-2 focus:ring-[#002935]/20 focus:border-[#002935]/50 transition-all"
-                    value={formData.budget}
-                    onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
+                  <div className="relative">
+                    <select 
+                      className="w-full appearance-none px-4 py-3 bg-[#f8f9fb] border border-[#e8ecf2] rounded-xl text-sm text-[#002935] focus:outline-none focus:ring-2 focus:ring-[#002935]/20 focus:border-[#002935]/50 transition-all"
+                      value={formData.enquiryType}
+                      onChange={(e) => setFormData({ ...formData, enquiryType: e.target.value })}
+                    >
+                      <option value="Site Visit">Enquiry Type: Site Visit</option>
+                      <option value="General Inquiry">Enquiry Type: General Inquiry</option>
+                      <option value="Pricing Details">Enquiry Type: Pricing Details</option>
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-[#002935]/40">
+                      <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" /></svg>
+                    </div>
+                  </div>
+
+                  <textarea
+                    placeholder="Your Message (Optional)"
+                    rows={2}
+                    className="w-full px-4 py-3 bg-[#f8f9fb] border border-[#e8ecf2] rounded-xl text-sm text-[#002935] placeholder:text-[#002935]/40 focus:outline-none focus:ring-2 focus:ring-[#002935]/20 focus:border-[#002935]/50 transition-all resize-none"
+                    value={formData.message}
+                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                   />
                 </div>
 

@@ -4,7 +4,7 @@ import { WhatsAppFloat } from '@/components/ui/WhatsAppFloat'
 import { LeadPopup } from '@/components/ui/LeadPopup'
 import { JsonLd, buildWebSiteSchema, buildOrganizationSchema } from '@/components/seo/JsonLd'
 import Script from 'next/script'
-import { sanityFetch, siteSettingsQuery } from '@/lib/sanity'
+import { sanityFetch, siteSettingsQuery, projectsQuery } from '@/lib/sanity'
 
 export default async function PublicLayout({
   children,
@@ -15,9 +15,17 @@ export default async function PublicLayout({
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let settings: any = null
+  let projectsData: any = null
   try {
     settings = await sanityFetch({ query: siteSettingsQuery, tags: ['siteSettings'] })
+    projectsData = await sanityFetch({ query: projectsQuery, tags: ['projects'] })
   } catch { /* fallback */ }
+
+  const uniqueProjectNames = Array.from(new Set(
+    (projectsData?.projectEntries || [])
+      .map((p: any) => p.categoryTitle)
+      .filter(Boolean)
+  )) as string[]
 
   const websiteSchema = buildWebSiteSchema({
     name: 'Bhuwanta',
@@ -83,10 +91,10 @@ export default async function PublicLayout({
       )}
 
       <Navbar />
-      <main className="min-h-screen">{children}</main>
+      <main className="flex-1 flex flex-col">{children}</main>
       <Footer />
       <WhatsAppFloat />
-      <LeadPopup />
+      <LeadPopup projectNames={uniqueProjectNames} />
     </>
   )
 }

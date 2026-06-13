@@ -19,7 +19,7 @@ import {
 export default defineConfig({
   name: 'bhuwanta-studio',
   title: 'Bhuwanta CMS',
-  basePath: '/dashboard',
+  basePath: '/studio',
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || 'placeholder',
   dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
   plugins: [
@@ -100,16 +100,7 @@ export default defineConfig({
                           .documentId('gallery')
                           .title('Gallery — Photos & Videos')
                       ),
-                    S.listItem()
-                      .title('Careers Page')
-                      .id('careers-page')
-                      .icon(CaseIcon)
-                      .child(
-                        S.document()
-                          .schemaType('careers')
-                          .documentId('careers')
-                          .title('Careers — Culture, Benefits, Why Work Here')
-                      ),
+
                     S.listItem()
                       .title('Contact Page')
                       .id('contact-page')
@@ -147,15 +138,7 @@ export default defineConfig({
                   .title('All Blog Posts')
               ),
 
-            // ===== JOB LISTINGS =====
-            S.listItem()
-              .title('Job Listings')
-              .id('job-listings')
-              .icon(BulbOutlineIcon)
-              .child(
-                S.documentTypeList('jobListing')
-                  .title('All Job Listings')
-              ),
+
           ]),
     }),
   ],

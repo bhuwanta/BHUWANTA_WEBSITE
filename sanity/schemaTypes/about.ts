@@ -5,141 +5,176 @@ export const aboutSchema = defineType({
   type: 'document',
   title: 'About Page',
   groups: [
-    { name: 'whoWeAre', title: 'Who We Are' },
-    { name: 'vision', title: 'Vision' },
-    { name: 'mission', title: 'Mission' },
-    { name: 'whyChoose', title: 'Why Choose Bhuwanta' },
-    { name: 'legal', title: 'Legal Transparency' },
-    { name: 'closing', title: 'Closing' },
+    { name: 'banner', title: '1. Page Banner' },
+    { name: 'story', title: '2. Our Story' },
+    { name: 'missionVision', title: '3. Mission & Vision' },
+    { name: 'values', title: '4. Core Values' },
+    { name: 'leadership', title: '5. Leadership' },
+    { name: 'strengths', title: '6. Our Strengths' },
+    { name: 'cta', title: '7. CTA Section' },
   ],
   fields: [
-    // ===== WHO WE ARE =====
+    // ===== 1. BANNER =====
     defineField({
-      name: 'whoWeAreHeading',
+      name: 'pageHeading',
       type: 'string',
-      title: 'Section Heading',
-      group: 'whoWeAre',
+      title: 'Page Heading',
+      group: 'banner',
+      description: 'e.g. "About Bhuwanta Developers"',
     }),
     defineField({
-      name: 'whoWeAreBody',
-      type: 'text',
-      title: 'Company Overview Text',
-      group: 'whoWeAre',
-      rows: 8,
+      name: 'pageSubtitle',
+      type: 'string',
+      title: 'Page Subtitle',
+      group: 'banner',
+      description: 'e.g. "Land Today, Landmark Tomorrow"',
     }),
 
-    // ===== VISION =====
+    // ===== 2. OUR STORY =====
     defineField({
-      name: 'visionHeading',
+      name: 'storyHeading',
       type: 'string',
-      title: 'Vision Heading',
-      group: 'vision',
+      title: 'Story Section Heading',
+      group: 'story',
+      description: 'e.g. "The Best Real Estate Service With 12+ Years of Excellence"',
     }),
     defineField({
-      name: 'visionBody',
-      type: 'text',
-      title: 'Vision Statement',
-      group: 'vision',
-      rows: 4,
+      name: 'storyParagraphs',
+      type: 'array',
+      title: 'Story Paragraphs',
+      group: 'story',
+      description: 'Add each paragraph as a separate item.',
+      of: [{ type: 'text' }],
+    }),
+    defineField({
+      name: 'storyImage',
+      type: 'image',
+      title: 'Story Section Image',
+      group: 'story',
+      description: 'Image shown on the right side of the Our Story section.',
+      options: { hotspot: true },
     }),
 
-    // ===== MISSION =====
+    // ===== 3. MISSION & VISION =====
     defineField({
-      name: 'missionHeading',
+      name: 'missionTitle',
       type: 'string',
-      title: 'Mission Heading',
-      group: 'mission',
+      title: 'Mission Title',
+      group: 'missionVision',
+      description: 'e.g. "Our Mission"',
     }),
     defineField({
       name: 'missionBody',
       type: 'text',
-      title: 'Mission Intro Text',
-      group: 'mission',
-      rows: 3,
+      title: 'Mission Description',
+      group: 'missionVision',
     }),
     defineField({
-      name: 'missionCommitments',
-      type: 'array',
-      title: 'Mission Commitments',
-      group: 'mission',
-      description: 'e.g. Legal First, Vastu by Design, Total Transparency',
-      of: [
-        {
-          type: 'object',
-          fields: [
-            defineField({ name: 'title', type: 'string', title: 'Commitment Title' }),
-            defineField({ name: 'description', type: 'text', title: 'Description', rows: 3 }),
-          ],
-          preview: {
-            select: { title: 'title' },
-          },
-        },
-      ],
-    }),
-
-    // ===== WHY CHOOSE BHUWANTA =====
-    defineField({
-      name: 'whyChooseHeading',
+      name: 'visionTitle',
       type: 'string',
-      title: 'Section Heading',
-      group: 'whyChoose',
+      title: 'Vision Title',
+      group: 'missionVision',
+      description: 'e.g. "Our Vision"',
     }),
     defineField({
-      name: 'differentiators',
-      type: 'array',
-      title: 'Differentiators',
-      group: 'whyChoose',
-      of: [
-        {
-          type: 'object',
-          fields: [
-            defineField({ name: 'title', type: 'string', title: 'Point Title' }),
-            defineField({ name: 'description', type: 'text', title: 'Description', rows: 3 }),
-          ],
-          preview: {
-            select: { title: 'title' },
-          },
-        },
-      ],
-    }),
-
-    // ===== LEGAL TRANSPARENCY =====
-    defineField({
-      name: 'legalHeading',
-      type: 'string',
-      title: 'Section Heading',
-      group: 'legal',
-    }),
-    defineField({
-      name: 'legalBody',
+      name: 'visionBody',
       type: 'text',
-      title: 'Legal Intro Text',
-      group: 'legal',
-      rows: 4,
-    }),
-    defineField({
-      name: 'legalCommitments',
-      type: 'array',
-      title: 'Legal Commitment Items',
-      group: 'legal',
-      description: 'Bullet points like "Full HMDA Layout Approval in place"',
-      of: [{ type: 'string' }],
+      title: 'Vision Description',
+      group: 'missionVision',
     }),
 
-    // ===== CLOSING =====
+    // ===== 4. CORE VALUES =====
     defineField({
-      name: 'closingLine',
+      name: 'coreValues',
+      type: 'array',
+      title: 'Core Values',
+      group: 'values',
+      description: 'Add your core values (e.g. Trust & Transparency, Quality Excellence, Customer First).',
+      of: [
+        {
+          name: 'coreValue',
+          type: 'object',
+          fields: [
+            defineField({ name: 'title', type: 'string', title: 'Value Title' }),
+            defineField({ name: 'description', type: 'text', title: 'Value Description' }),
+          ],
+          preview: {
+            select: { title: 'title' },
+          },
+        },
+      ],
+    }),
+
+    // ===== 5. LEADERSHIP =====
+    defineField({
+      name: 'leadershipHeading',
       type: 'string',
-      title: 'Closing Tagline',
-      group: 'closing',
-      description: 'e.g. "Bhuwanta. Built on trust. Built on land."',
+      title: 'Leadership Section Heading',
+      group: 'leadership',
+      description: 'e.g. "The Minds Behind Bhuwanta Developers"',
     }),
     defineField({
-      name: 'closingContact',
+      name: 'leaders',
+      type: 'array',
+      title: 'Leadership Profiles',
+      group: 'leadership',
+      of: [
+        {
+          name: 'leader',
+          type: 'object',
+          fields: [
+            defineField({ name: 'name', type: 'string', title: 'Full Name' }),
+            defineField({ name: 'role', type: 'string', title: 'Designation', description: 'e.g. "Managing Director"' }),
+            defineField({ name: 'bio', type: 'text', title: 'Bio / Description' }),
+          ],
+          preview: {
+            select: { title: 'name', subtitle: 'role' },
+          },
+        },
+      ],
+    }),
+
+    // ===== 6. OUR STRENGTHS =====
+    defineField({
+      name: 'strengthsHeading',
       type: 'string',
-      title: 'Closing Contact Info',
-      group: 'closing',
-      description: 'e.g. "📞 [PHONE] | ✉️ info@bhuwanta.com"',
+      title: 'Strengths Section Heading',
+      group: 'strengths',
+      description: 'e.g. "Why Bhuwanta Developers Stands Out"',
+    }),
+    defineField({
+      name: 'strengths',
+      type: 'array',
+      title: 'Strengths',
+      group: 'strengths',
+      of: [
+        {
+          name: 'strength',
+          type: 'object',
+          fields: [
+            defineField({ name: 'title', type: 'string', title: 'Strength Title' }),
+            defineField({ name: 'description', type: 'text', title: 'Strength Description' }),
+          ],
+          preview: {
+            select: { title: 'title' },
+          },
+        },
+      ],
+    }),
+
+    // ===== 7. CTA =====
+    defineField({
+      name: 'ctaTitle',
+      type: 'string',
+      title: 'CTA Heading',
+      group: 'cta',
+      description: 'e.g. "Ready to Invest in Your Dream Property in Hyderabad?"',
+    }),
+    defineField({
+      name: 'ctaDescription',
+      type: 'text',
+      title: 'CTA Description',
+      group: 'cta',
     }),
   ],
   preview: {
