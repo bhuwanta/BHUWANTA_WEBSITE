@@ -42,6 +42,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" data-scroll-behavior="smooth">
+      <head>
+        <link rel="preconnect" href="https://cdn.sanity.io" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://cdn.sanity.io" />
+        <link rel="preconnect" href="https://us.i.posthog.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://us.i.posthog.com" />
+      </head>
       <body className={`${inter.variable} font-sans antialiased flex flex-col min-h-screen overflow-x-hidden`}>
         <PostHogProvider>
           {children}

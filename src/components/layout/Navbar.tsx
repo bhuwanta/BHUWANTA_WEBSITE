@@ -88,6 +88,7 @@ export function Navbar() {
                   isDarkContent && "brightness-0"
                 )}
                 style={{ width: 'auto' }}
+                sizes="(max-width: 640px) 180px, 250px"
                 priority
               />
             </div>

@@ -90,6 +90,7 @@ export function LeadPopup({ projectNames = [] }: { projectNames?: string[] }) {
             priority
             className="w-56 sm:w-72 h-auto max-h-24 object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.3)]" 
             style={{ height: 'auto' }}
+            sizes="(max-width: 640px) 224px, 288px"
           />
         </div>
 

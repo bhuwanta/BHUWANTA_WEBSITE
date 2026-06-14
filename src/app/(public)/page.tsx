@@ -1,5 +1,6 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
+import Image from 'next/image'
 import { 
   ArrowRight, Phone, MessageCircle, Check, ShieldCheck, 
   FileCheck, MapPin, IndianRupee, Compass, Hammer, Building2, 
@@ -124,9 +125,6 @@ export default async function HomePage() {
     { name: 'Priya Sharma', role: 'First-time Buyer', rating: 5, content: 'They helped us find the perfect Vastu-compliant plot. The team is very patient and explains all the legalities clearly.' },
   ]
 
-  // Debug: log raw heroImages from Sanity
-  console.log('Raw heroImages from Sanity:', JSON.stringify(data.heroImages, null, 2))
-
   // Support both old format (direct asset) and new format (object with image + text)
   const mappedHeroImages = (data.heroImages || [])
     .map((item: any) => {
@@ -141,8 +139,6 @@ export default async function HomePage() {
       return null
     })
     .filter(Boolean) as { url: string; text?: string }[]
-
-  console.log('Mapped hero images:', mappedHeroImages)
 
   return (
     <>
@@ -293,9 +289,10 @@ export default async function HomePage() {
             {premiumCategories.map((category, index) => (
               <Link href="/projects" key={index} className="group block">
                 <div className="relative overflow-hidden rounded-2xl shadow-md aspect-[4/3] border border-[#e8ecf2] transition-all duration-500 hover:shadow-xl hover:-translate-y-1 hover:border-[#c4a55a]/50">
-                  <img 
+                  <Image 
                     src={category.image} 
                     alt={category.name} 
+                    fill
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#0f1d33] via-[#0f1d33]/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300" />

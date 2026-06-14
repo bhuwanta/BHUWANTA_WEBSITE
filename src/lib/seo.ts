@@ -99,8 +99,8 @@ export async function generatePageMetadata(
       : { index: true, follow: true },
   }
 
-  if (settings?.canonical_url) {
-    metadata.alternates = { canonical: settings.canonical_url }
+  metadata.alternates = { 
+    canonical: settings?.canonical_url || `${siteUrl}/${pageSlug === 'home' ? '' : pageSlug}`
   }
 
   if (global.google_verification) {

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { MapPin } from 'lucide-react'
+import Image from 'next/image'
 
 interface ProjectImageCarouselProps {
   images?: string[]
@@ -81,10 +82,12 @@ export function ProjectImageCarousel({ images, projectName, videoUrl, youtubeUrl
             i === currentIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'
           }`}
         >
-          <img
+          <Image
             src={imgUrl}
             alt={`${projectName} - Image ${i + 1}`}
-            className={`w-full h-full object-cover transition-transform duration-[5000ms] ease-out ${
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className={`object-cover transition-transform duration-[5000ms] ease-out ${
               i === currentIndex ? 'scale-100' : 'scale-110'
             }`}
           />

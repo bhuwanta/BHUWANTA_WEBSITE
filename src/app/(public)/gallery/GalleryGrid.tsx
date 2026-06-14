@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Play, Image as ImageIcon, Film, X } from 'lucide-react'
+import Image from 'next/image'
 
 interface ProjectGallery {
   name: string
@@ -84,10 +85,12 @@ export function GalleryGrid({ projects = [] }: GalleryGridProps) {
                           onClick={() => setLightboxImage(url)}
                         >
                           <div className="aspect-[4/3] bg-white border border-[#e8ecf2] shadow-sm rounded-xl overflow-hidden relative transition-premium group-hover/card:border-[#c4a55a]/30 group-hover/card:shadow-md">
-                            <img 
+                            <Image 
                               src={url} 
                               alt={`${project.name} - Image ${(i % project.images.length) + 1}`}
-                              className="w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-105"
+                              fill
+                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                              className="object-cover transition-transform duration-500 group-hover/card:scale-105"
                             />
                             <div className="absolute inset-0 bg-[#1e3a5f]/5 group-hover/card:bg-transparent transition-colors"></div>
                           </div>
@@ -176,12 +179,15 @@ export function GalleryGrid({ projects = [] }: GalleryGridProps) {
           >
             <X className="w-5 h-5" />
           </button>
-          <img 
-            src={lightboxImage} 
-            alt="Gallery Image"
-            className="max-w-full max-h-[90vh] object-contain rounded-lg"
-            onClick={(e) => e.stopPropagation()}
-          />
+          <div className="relative w-full h-full max-w-5xl mx-auto max-h-[90vh]">
+            <Image 
+              src={lightboxImage} 
+              alt="Gallery Image"
+              fill
+              className="object-contain rounded-lg"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
         </div>
       )}
     </div>
