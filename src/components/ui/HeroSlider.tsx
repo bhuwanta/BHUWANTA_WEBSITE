@@ -40,6 +40,7 @@ export function HeroSlider({ images }: { images: { url: string; text?: string }[
               alt={img.text || 'Bhuwanta Hero Image'}
               fill
               priority={index === 0}
+              fetchPriority={index === 0 ? 'high' : 'auto'}
               className="object-cover object-center"
             />
             {/* Overlays to ensure text remains readable */}

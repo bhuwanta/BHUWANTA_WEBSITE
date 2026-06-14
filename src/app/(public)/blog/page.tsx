@@ -41,14 +41,14 @@ export default async function BlogPage() {
       <JsonLd data={breadcrumb} />
 
       <PageBanner 
-        title="Latest Blogs" 
+        title={<>Latest <span className="text-[#c4a55a]">Blogs</span></>} 
       />
 
       {/* Newsletter Section */}
       <section className="py-20 bg-white border-t border-[#e8ecf2]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white border border-[#e8ecf2] shadow-sm rounded-xl p-8 sm:p-12 text-center">
-            <h2 className="text-2xl sm:text-3xl font-bold text-[#0f1d33] mb-4">Subscribe to Our Newsletter</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-[#0f1d33] mb-4">Subscribe to Our <span className="text-[#c4a55a]">Newsletter</span></h2>
             <p className="text-[#5a6a82] text-sm sm:text-base mb-8 max-w-2xl mx-auto">
               Get the latest real estate updates, investment tips, and project launches directly in your inbox.
             </p>

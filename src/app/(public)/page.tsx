@@ -33,11 +33,23 @@ export default async function HomePage() {
   let projectsData: any = null
   let categoriesData: any = null
   try {
-    const sanityData = await sanityFetch<any>({ query: homeQuery, tags: ['home'] })
-    if (sanityData) data = { ...fallback, ...sanityData }
+    const [sanityDataResult, projectsDataResult, categoriesDataResult] = await Promise.allSettled([
+      sanityFetch<any>({ query: homeQuery, tags: ['home'] }),
+      sanityFetch<any>({ query: projectsQuery, tags: ['projects'] }),
+      sanityFetch<any>({ query: projectCategoriesQuery, tags: ['projectCategory'] })
+    ])
+
+    if (sanityDataResult.status === 'fulfilled' && sanityDataResult.value) {
+      data = { ...fallback, ...sanityDataResult.value }
+    }
     
-    projectsData = await sanityFetch<any>({ query: projectsQuery, tags: ['projects'] })
-    categoriesData = await sanityFetch<any>({ query: projectCategoriesQuery, tags: ['projectCategory'] })
+    if (projectsDataResult.status === 'fulfilled') {
+      projectsData = projectsDataResult.value
+    }
+
+    if (categoriesDataResult.status === 'fulfilled') {
+      categoriesData = categoriesDataResult.value
+    }
   } catch {
     // Use fallback
   }
@@ -216,7 +228,7 @@ export default async function HomePage() {
           </div>
 
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white text-center mb-5 tracking-tight">
-            Why Choose BHUWANTA?
+            Why Choose <span className="text-[#c4a55a]">BHUWANTA?</span>
           </h2>
 
           <p className="text-base sm:text-lg text-white/80 text-center max-w-3xl mx-auto mb-14 leading-relaxed">
@@ -278,14 +290,14 @@ export default async function HomePage() {
           </div>
 
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#022F3A] text-center mb-5 tracking-tight">
-            Explore Our Premium Open Plot Projects
+            Explore Our Premium <span className="text-[#c4a55a]">Open Plot Projects</span>
           </h2>
 
           <p className="text-base sm:text-lg text-[#3a3a3a] text-center max-w-3xl mx-auto mb-14 leading-relaxed">
             Discover strategically located HMDA-approved plots in Hyderabad's fastest growing corridors. Each project is designed to offer excellent connectivity, infrastructure, and long-term appreciation.
           </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
             {premiumCategories.map((category, index) => (
               <Link href="/projects" key={index} className="group block">
                 <div className="relative overflow-hidden rounded-2xl shadow-md aspect-[4/3] border border-[#e8ecf2] transition-all duration-500 hover:shadow-xl hover:-translate-y-1 hover:border-[#c4a55a]/50">
@@ -305,6 +317,21 @@ export default async function HomePage() {
                 </div>
               </Link>
             ))}
+
+            {/* Explore More Card */}
+            <Link href="/projects" className="group block">
+              <div className="relative overflow-hidden rounded-2xl shadow-sm border border-[#e8ecf2] bg-[#f7f8fa] transition-all duration-500 hover:shadow-md hover:-translate-y-1 hover:border-[#c4a55a]/50 flex flex-col items-center justify-center p-8 text-center aspect-[4/3]">
+                <div className="w-16 h-16 rounded-full bg-[#1e3a5f]/5 flex items-center justify-center mb-6 group-hover:bg-[#c4a55a]/10 transition-colors duration-300">
+                  <ArrowRight className="w-8 h-8 text-[#0f1d33] group-hover:text-[#c4a55a] transition-colors duration-300" />
+                </div>
+                <h3 className="text-xl font-bold text-[#0f1d33] mb-3 group-hover:text-[#c4a55a] transition-colors duration-300">
+                  Explore More
+                </h3>
+                <p className="text-sm text-[#5a6a82] leading-relaxed">
+                  Discover all our premium open plot projects across Hyderabad.
+                </p>
+              </div>
+            </Link>
           </div>
 
           <div className="mt-12 sm:mt-16 flex flex-col items-center">
@@ -398,7 +425,7 @@ export default async function HomePage() {
             </span>
           </div>
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#022F3A] mb-4 tracking-tight">
-            Our Certifications & Approvals
+            Our <span className="text-[#c4a55a]">Certifications & Approvals</span>
           </h2>
           <p className="text-base sm:text-lg text-[#3a3a3a] max-w-2xl mx-auto">
             We ensure every project meets the highest standards of legality and compliance.
@@ -454,7 +481,7 @@ export default async function HomePage() {
               </span>
             </div>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-5 tracking-tight">
-              What Our Customers Say
+              What Our <span className="text-[#c4a55a]">Customers Say</span>
             </h2>
             <p className="text-base sm:text-lg text-white/80 max-w-3xl mx-auto leading-relaxed">
               Our customers trust us for delivering legally secure, well-planned, and value-driven land investments.

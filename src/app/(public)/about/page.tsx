@@ -98,21 +98,21 @@ export default async function AboutPage() {
       <JsonLd data={breadcrumb} />
 
       <PageBanner 
-        title={d.pageHeading} 
+        title={<>About <span className="text-[#c4a55a]">Bhuwanta Developers</span></>} 
         subtitle={d.pageSubtitle}
       />
       
       <div className="flex-1 bg-white">
         
         {/* 2. Our Story */}
-        <section className="py-20 sm:py-28 bg-white">
+        <section className="py-12 sm:py-20 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="text-center mb-12 sm:mb-16">
               <span className="inline-flex items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-[#1e3a5f]/10 text-[#1e3a5f] text-xs font-semibold uppercase tracking-widest mb-4 border border-[#1e3a5f]/20">
                 Our Story
               </span>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#0f1d33] leading-tight mx-auto w-full">
-                {d.storyHeading}
+              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-[2.2rem] xl:text-[2.6rem] 2xl:text-5xl font-bold text-[#0f1d33] leading-tight mx-auto w-full xl:whitespace-nowrap tracking-tight">
+                The Best Real Estate Service With <span className="text-[#c4a55a]">20+ Years of Excellence</span>
               </h2>
             </div>
 
@@ -128,13 +128,13 @@ export default async function AboutPage() {
         </section>
 
         {/* 3. Mission & Vision */}
-        <section className="bg-[#022F3A] py-20 sm:py-28">
+        <section className="bg-[#022F3A] py-12 sm:py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="text-center mb-16">
               <span className="inline-flex items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-[#B69A4E]/10 text-[#B69A4E] text-xs font-semibold uppercase tracking-widest mb-4 border border-[#B69A4E]/20">
                 Our Guiding Principles
               </span>
-              <h2 className="text-3xl sm:text-4xl font-bold text-white">Mission & Vision</h2>
+              <h2 className="text-3xl sm:text-4xl font-bold text-white">Our <span className="text-[#c4a55a]">Vision & Mission</span></h2>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 max-w-5xl mx-auto">
@@ -143,7 +143,7 @@ export default async function AboutPage() {
                 <div className="w-14 h-14 bg-[#1e3a5f]/10 rounded-xl flex items-center justify-center mb-6 text-[#1e3a5f] group-hover:scale-110 group-hover:bg-[#1e3a5f] group-hover:text-white transition-all duration-300">
                   <Target className="w-7 h-7" />
                 </div>
-                <h3 className="text-2xl font-bold text-[#0f1d33] mb-4">{d.missionTitle}</h3>
+                <h3 className="text-2xl font-bold text-[#0f1d33] mb-4">Our <span className="text-[#c4a55a]">Mission</span></h3>
                 <p className="text-[#5a6a82] leading-relaxed">
                   {d.missionBody}
                 </p>
@@ -154,7 +154,7 @@ export default async function AboutPage() {
                 <div className="w-14 h-14 bg-[#c4a55a]/10 rounded-xl flex items-center justify-center mb-6 text-[#c4a55a] group-hover:scale-110 group-hover:bg-[#c4a55a] group-hover:text-white transition-all duration-300">
                   <Eye className="w-7 h-7" />
                 </div>
-                <h3 className="text-2xl font-bold text-[#0f1d33] mb-4">{d.visionTitle}</h3>
+                <h3 className="text-2xl font-bold text-[#0f1d33] mb-4">Our <span className="text-[#c4a55a]">Vision</span></h3>
                 <p className="text-[#5a6a82] leading-relaxed">
                   {d.visionBody}
                 </p>
@@ -164,13 +164,13 @@ export default async function AboutPage() {
         </section>
 
         {/* 4. Our Core Values */}
-        <section className="bg-[#f7f8fa] pt-20 pb-20 sm:pt-28 sm:pb-28">
+        <section className="bg-[#f7f8fa] py-12 sm:py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="text-center mb-16">
               <span className="inline-flex items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-[#1e3a5f]/10 text-[#1e3a5f] text-xs font-semibold uppercase tracking-widest mb-4 border border-[#1e3a5f]/20">
                 Our Core Values
               </span>
-              <h2 className="text-3xl sm:text-4xl font-bold text-[#0f1d33]">What Drives Us</h2>
+              <h2 className="text-3xl sm:text-4xl font-bold text-[#0f1d33]">What <span className="text-[#c4a55a]">Drives Us</span></h2>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -191,13 +191,13 @@ export default async function AboutPage() {
         </section>
 
         {/* 5. Leadership Profile */}
-        <section className="bg-[#022F3A] py-20 sm:py-28">
+        <section className="bg-[#022F3A] py-12 sm:py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="text-center mb-16">
               <span className="inline-flex items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-[#B69A4E]/10 text-[#B69A4E] text-xs font-semibold uppercase tracking-widest mb-4 border border-[#B69A4E]/20">
                 Our Leadership
               </span>
-              <h2 className="text-3xl sm:text-4xl font-bold text-white">{d.leadershipHeading}</h2>
+              <h2 className="text-3xl sm:text-4xl font-bold text-white">The Minds Behind <span className="text-[#c4a55a]">Bhuwanta Developers</span></h2>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
@@ -217,13 +217,13 @@ export default async function AboutPage() {
         </section>
 
         {/* 6. Our Strengths */}
-        <section className="bg-white py-20 sm:py-28">
+        <section className="bg-white py-12 sm:py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="text-center mb-16">
               <span className="inline-flex items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-[#1e3a5f]/10 text-[#1e3a5f] text-xs font-semibold uppercase tracking-widest mb-4 border border-[#1e3a5f]/20">
                 Our Strengths
               </span>
-              <h2 className="text-3xl sm:text-4xl font-bold text-[#0f1d33]">{d.strengthsHeading}</h2>
+              <h2 className="text-3xl sm:text-4xl font-bold text-[#0f1d33]">Why Bhuwanta Developers <span className="text-[#c4a55a]">Stands Out</span></h2>
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">

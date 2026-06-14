@@ -22,7 +22,7 @@ export interface ProjectEntry {
   youtubeUrl?: string
 }
 
-export function ProjectsFilterClient({ projects, categories = [] }: { projects: ProjectEntry[], categories?: { id: string; title: string; label: string; order?: number }[] }) {
+export function ProjectsFilterClient({ projects, categories = [], pageHeading }: { projects: ProjectEntry[], categories?: { id: string; title: string; label: string; order?: number }[], pageHeading?: string }) {
   const [activeFilter, setActiveFilter] = useState<string>('all')
   const filterRef = useRef<HTMLDivElement>(null)
 
@@ -58,44 +58,23 @@ export function ProjectsFilterClient({ projects, categories = [] }: { projects: 
 
   return (
     <div ref={filterRef}>
-      <div className="bg-white border-b border-[#e8ecf2] py-4 shadow-sm sticky top-[80px] sm:top-[96px] z-40">
+      <div className="bg-white border-b border-[#e8ecf2] py-4 shadow-sm z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
-            <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
-              {filterCategories.slice(0, 6).map((cat) => (
-                <button 
-                  key={cat.id} 
-                  onClick={() => handleFilterClick(cat.id)}
-                  className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
-                    activeFilter === cat.id ? 'text-[#c4a55a] font-bold border-b-2 border-[#c4a55a] pb-1' : 'text-[#1e3a5f] hover:text-[#c4a55a] pb-1 border-b-2 border-transparent'
-                  }`}
-                >
-                  <MapPin className={`w-4 h-4 ${activeFilter === cat.id ? 'text-[#c4a55a]' : 'text-[#c4a55a]'}`} />
-                  <span className="capitalize">{cat.label}</span>
-                </button>
-              ))}
-            </div>
-
-            {filterCategories.length > 6 && (
-              <div className="hidden lg:block w-px h-6 bg-[#e8ecf2]"></div>
-            )}
-
-            {filterCategories.length > 6 && (
-              <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
-                {filterCategories.slice(6).map((cat) => (
-                  <button 
-                    key={cat.id} 
-                    onClick={() => handleFilterClick(cat.id)}
-                    className={`flex items-center gap-1.5 text-sm font-bold transition-colors ${
-                      activeFilter === cat.id ? 'text-[#c4a55a] border-b-2 border-[#c4a55a] pb-1' : 'text-[#0f1d33] hover:text-[#c4a55a] pb-1 border-b-2 border-transparent'
-                    }`}
-                  >
-                    <MapPin className={`w-4 h-4 ${activeFilter === cat.id ? 'text-[#c4a55a]' : 'text-[#c4a55a]'}`} />
-                    <span>{cat.label}</span>
-                  </button>
-                ))}
-              </div>
-            )}
+          <div className="flex flex-wrap lg:flex-nowrap items-center justify-center gap-2.5 w-full">
+            {filterCategories.map((cat) => (
+              <button 
+                key={cat.id} 
+                onClick={() => handleFilterClick(cat.id)}
+                className={`lg:flex-1 flex items-center justify-center gap-1.5 text-xs lg:text-sm font-semibold px-4 py-2 rounded-full transition-all duration-300 whitespace-nowrap ${
+                  activeFilter === cat.id 
+                    ? 'gradient-gold text-white shadow-md' 
+                    : 'bg-white border border-[#c4a55a] text-[#c4a55a] hover:bg-[#c4a55a] hover:text-white shadow-sm'
+                }`}
+              >
+                <MapPin className={`w-3.5 h-3.5 lg:w-4 lg:h-4 ${activeFilter === cat.id ? 'text-white' : ''}`} />
+                <span className="capitalize">{cat.label}</span>
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -106,9 +85,9 @@ export function ProjectsFilterClient({ projects, categories = [] }: { projects: 
             <section key={category.id} id={category.id} className="scroll-mt-36">
               <div className="flex items-center justify-center gap-3 mb-8 text-center">
                 <div className="w-10 h-10 rounded-full bg-[#1e3a5f]/10 flex items-center justify-center flex-shrink-0">
-                  <MapPin className="w-5 h-5 text-[#1e3a5f]" />
+                  <MapPin className="w-5 h-5 text-[#0f1d33]" />
                 </div>
-                <h2 className="text-2xl sm:text-3xl font-bold text-[#0f1d33]">{category.title}</h2>
+                <h2 className="text-2xl sm:text-3xl font-bold text-[#c4a55a]">{category.title}</h2>
               </div>
               
               <div className="grid grid-cols-1 gap-8">

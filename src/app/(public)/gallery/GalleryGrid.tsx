@@ -6,6 +6,7 @@ import Image from 'next/image'
 
 interface ProjectGallery {
   name: string
+  categoryTitle: string | null
   images: string[]
   videoUrl: string | null
   youtubeId: string | null
@@ -23,6 +24,19 @@ export function GalleryGrid({ projects = [] }: GalleryGridProps) {
   const projectsWithImages = projects.filter((p) => p.images.length > 0)
   // Filter projects that have videos
   const projectsWithVideos = projects.filter((p) => p.youtubeId || p.videoUrl)
+
+  // Grouping helper
+  const groupByCategory = (list: ProjectGallery[]) => {
+    return list.reduce((acc, project) => {
+      const cat = project.categoryTitle || 'Other Projects'
+      if (!acc[cat]) acc[cat] = []
+      acc[cat].push(project)
+      return acc
+    }, {} as Record<string, ProjectGallery[]>)
+  }
+
+  const groupedImages = groupByCategory(projectsWithImages)
+  const groupedVideos = groupByCategory(projectsWithVideos)
 
   return (
     <div className="py-16 bg-[#f7f8fa]">
@@ -63,40 +77,51 @@ export function GalleryGrid({ projects = [] }: GalleryGridProps) {
                 <p className="text-[#5a6a82] text-lg">No photos available at the moment.</p>
               </div>
             ) : (
-              projectsWithImages.map((project, idx) => (
-                <section key={idx}>
-                  <div className="mb-8 border-b border-[#e8ecf2] pb-4">
-                    <h2 className="text-2xl sm:text-3xl font-bold text-[#0f1d33] mb-2">
-                      {project.name}
-                    </h2>
-                    <p className="text-sm text-[#5a6a82]">{project.images.length} photo{project.images.length !== 1 ? 's' : ''}</p>
+              Object.entries(groupedImages).map(([category, catProjects], idx) => (
+                <section key={idx} className="bg-white p-8 sm:p-10 rounded-2xl shadow-sm border border-[#e8ecf2]">
+                  <div className="mb-10 text-center">
+                    <p className="text-sm text-[#c4a55a] uppercase tracking-widest font-bold mb-2">Location</p>
+                    <h2 className="text-3xl sm:text-4xl font-bold text-[#0f1d33]">{category}</h2>
                   </div>
                   
-                  {/* Slow scrolling marquee */}
-                  <div className="overflow-hidden group/marquee">
-                    <div 
-                      className={`flex gap-4 sm:gap-6 w-max ${idx % 2 === 0 ? 'animate-scroll-left' : 'animate-scroll-right'} group-hover/marquee:[animation-play-state:paused]`}
-                    >
-                      {/* Duplicate images twice for seamless loop */}
-                      {[...project.images, ...project.images].map((url, i) => (
-                        <div 
-                          key={i} 
-                          className="flex-shrink-0 w-64 sm:w-72 md:w-80 cursor-pointer group/card"
-                          onClick={() => setLightboxImage(url)}
-                        >
-                          <div className="aspect-[4/3] bg-white border border-[#e8ecf2] shadow-sm rounded-xl overflow-hidden relative transition-premium group-hover/card:border-[#c4a55a]/30 group-hover/card:shadow-md">
-                            <Image 
-                              src={url} 
-                              alt={`${project.name} - Image ${(i % project.images.length) + 1}`}
-                              fill
-                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                              className="object-cover transition-transform duration-500 group-hover/card:scale-105"
-                            />
-                            <div className="absolute inset-0 bg-[#1e3a5f]/5 group-hover/card:bg-transparent transition-colors"></div>
+                  <div className="space-y-16">
+                    {catProjects.map((project, pIdx) => (
+                      <div key={pIdx}>
+                        <div className="mb-6 border-b border-[#e8ecf2] pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-2">
+                          <h3 className="text-2xl font-bold text-[#c4a55a]">
+                            {project.name}
+                          </h3>
+                          <p className="text-sm text-[#5a6a82]">{project.images.length} photo{project.images.length !== 1 ? 's' : ''}</p>
+                        </div>
+                        
+                        {/* Slow scrolling marquee */}
+                        <div className="overflow-hidden group/marquee">
+                          <div 
+                            className={`flex gap-4 sm:gap-6 w-max ${pIdx % 2 === 0 ? 'animate-scroll-left' : 'animate-scroll-right'} group-hover/marquee:[animation-play-state:paused]`}
+                          >
+                            {/* Duplicate images twice for seamless loop */}
+                            {[...project.images, ...project.images].map((url, i) => (
+                              <div 
+                                key={i} 
+                                className="flex-shrink-0 w-64 sm:w-72 md:w-80 cursor-pointer group/card"
+                                onClick={() => setLightboxImage(url)}
+                              >
+                                <div className="aspect-[4/3] bg-white border border-[#e8ecf2] shadow-sm rounded-xl overflow-hidden relative transition-premium group-hover/card:border-[#c4a55a]/30 group-hover/card:shadow-md">
+                                  <Image 
+                                    src={url} 
+                                    alt={`${project.name} - Image ${(i % project.images.length) + 1}`}
+                                    fill
+                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                    className="object-cover transition-transform duration-500 group-hover/card:scale-105"
+                                  />
+                                  <div className="absolute inset-0 bg-[#1e3a5f]/5 group-hover/card:bg-transparent transition-colors"></div>
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    ))}
                   </div>
                 </section>
               ))
@@ -113,51 +138,54 @@ export function GalleryGrid({ projects = [] }: GalleryGridProps) {
                 <p className="text-[#5a6a82] text-lg">No videos available at the moment.</p>
               </div>
             ) : (
-              projectsWithVideos.map((project, idx) => (
-                <section key={idx}>
-                  <div className="mb-8 border-b border-[#e8ecf2] pb-4">
-                    <h2 className="text-2xl sm:text-3xl font-bold text-[#0f1d33] mb-2">
-                      {project.name}
-                    </h2>
+              Object.entries(groupedVideos).map(([category, catProjects], idx) => (
+                <section key={idx} className="bg-white p-8 sm:p-10 rounded-2xl shadow-sm border border-[#e8ecf2]">
+                  <div className="mb-10 text-center">
+                    <p className="text-sm text-[#c4a55a] uppercase tracking-widest font-bold mb-2">Location</p>
+                    <h2 className="text-3xl sm:text-4xl font-bold text-[#0f1d33]">{category}</h2>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* YouTube Video */}
-                    {project.youtubeId && (
-                      <div className="bg-white border border-[#e8ecf2] shadow-sm rounded-xl overflow-hidden group hover:shadow-md transition-premium">
-                        <div className="aspect-video relative bg-[#f3f5f8]">
-                          <iframe 
-                            src={`https://www.youtube.com/embed/${project.youtubeId}`}
-                            title={`${project.name} - YouTube Video`}
-                            className="w-full h-full border-0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                          />
-                        </div>
-                        <div className="p-4 sm:p-6">
-                          <h3 className="text-lg font-bold text-[#0f1d33]">{project.name}</h3>
-                          <p className="text-sm text-[#5a6a82] mt-1">YouTube</p>
-                        </div>
-                      </div>
-                    )}
+                    {catProjects.map((project, pIdx) => (
+                      <div key={pIdx} className="contents">
+                        {/* YouTube Video */}
+                        {project.youtubeId && (
+                          <div className="bg-white border border-[#e8ecf2] shadow-sm rounded-xl overflow-hidden group hover:shadow-md transition-premium h-fit">
+                            <div className="aspect-video relative bg-[#f3f5f8]">
+                              <iframe 
+                                src={`https://www.youtube.com/embed/${project.youtubeId}`}
+                                title={`${project.name} - YouTube Video`}
+                                className="w-full h-full border-0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                              />
+                            </div>
+                            <div className="p-4 sm:p-6">
+                              <h4 className="text-lg font-bold text-[#0f1d33]">{project.name}</h4>
+                              <p className="text-sm text-[#5a6a82] mt-1">YouTube</p>
+                            </div>
+                          </div>
+                        )}
 
-                    {/* Uploaded Video */}
-                    {project.videoUrl && (
-                      <div className="bg-white border border-[#e8ecf2] shadow-sm rounded-xl overflow-hidden group hover:shadow-md transition-premium">
-                        <div className="aspect-video relative bg-[#f3f5f8]">
-                          <video 
-                            src={project.videoUrl}
-                            controls
-                            className="w-full h-full object-cover"
-                            preload="metadata"
-                          />
-                        </div>
-                        <div className="p-4 sm:p-6">
-                          <h3 className="text-lg font-bold text-[#0f1d33]">{project.name}</h3>
-                          <p className="text-sm text-[#5a6a82] mt-1">Project Video</p>
-                        </div>
+                        {/* Uploaded Video */}
+                        {project.videoUrl && (
+                          <div className="bg-white border border-[#e8ecf2] shadow-sm rounded-xl overflow-hidden group hover:shadow-md transition-premium h-fit">
+                            <div className="aspect-video relative bg-[#f3f5f8]">
+                              <video 
+                                src={project.videoUrl}
+                                controls
+                                className="w-full h-full object-cover"
+                                preload="metadata"
+                              />
+                            </div>
+                            <div className="p-4 sm:p-6">
+                              <h4 className="text-lg font-bold text-[#0f1d33]">{project.name}</h4>
+                              <p className="text-sm text-[#5a6a82] mt-1">Project Video</p>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    )}
+                    ))}
                   </div>
                 </section>
               ))

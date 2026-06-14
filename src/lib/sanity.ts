@@ -34,6 +34,7 @@ export async function sanityFetch<T>({
 }): Promise<T> {
   return client.fetch<T>(query, params, {
     next: {
+      revalidate: 60,
       tags,
     },
   })
@@ -120,6 +121,7 @@ export const aboutQuery = `*[_type == "about"][0]{
 export const galleryQuery = `*[_type == "projects"][0]{
   projectEntries[]{
     name,
+    "categoryTitle": category->title,
     "images": images[].asset->url,
     "videoUrl": videoFile.asset->url,
     youtubeUrl

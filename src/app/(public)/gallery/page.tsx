@@ -15,6 +15,7 @@ export const revalidate = 120
 
 interface ProjectEntry {
   name?: string
+  categoryTitle?: string
   images?: string[]
   videoUrl?: string
   youtubeUrl?: string
@@ -23,6 +24,7 @@ interface ProjectEntry {
 export default async function GalleryPage() {
   let projects: Array<{
     name: string
+    categoryTitle: string | null
     images: string[]
     videoUrl: string | null
     youtubeId: string | null
@@ -38,6 +40,7 @@ export default async function GalleryPage() {
         .filter((p) => p.name)
         .map((p) => ({
           name: p.name || 'Untitled Project',
+          categoryTitle: p.categoryTitle || null,
           images: (p.images || []).filter(Boolean),
           videoUrl: p.videoUrl || null,
           youtubeId: p.youtubeUrl ? extractYouTubeId(p.youtubeUrl) || null : null,
@@ -63,7 +66,7 @@ export default async function GalleryPage() {
       <JsonLd data={gallerySchema ? [breadcrumb, gallerySchema] : [breadcrumb]} />
 
       <PageBanner 
-        title="Our Gallery" 
+        title={<>Our <span className="text-[#c4a55a]">Gallery</span></>} 
       />
 
       <div className="flex-1 bg-[#f7f8fa]">

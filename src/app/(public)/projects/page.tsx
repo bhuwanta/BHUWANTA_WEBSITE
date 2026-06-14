@@ -98,7 +98,7 @@ export default async function ProjectsPage() {
       <JsonLd data={[breadcrumb, ...listingSchemas]} />
 
       <PageBanner 
-        title={pageHeading}
+        title={<>Our <span className="text-[#c4a55a]">Projects</span></>}
       />
 
       <ProjectsFilterClient projects={projects} categories={categories} />

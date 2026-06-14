@@ -117,7 +117,7 @@ export function Footer() {
               <div className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-[#B69A4E] mt-0.5 shrink-0" />
                 <div className="text-sm text-white/70 leading-relaxed pr-2">
-                  <strong className="block text-white mb-1 text-base tracking-wide">{addressLabel}</strong>
+                  <strong className="block text-[#c4a55a] mb-1 text-base tracking-wide">{addressLabel}</strong>
                   <p>{address}</p>
                 </div>
               </div>
@@ -135,7 +135,7 @@ export function Footer() {
 
           {/* Quick Links */}
           <div className="lg:col-span-2 lg:justify-self-center">
-            <h3 className="text-sm font-semibold text-white mb-4 uppercase tracking-wider">
+            <h3 className="text-sm font-semibold text-[#c4a55a] mb-4 uppercase tracking-wider">
               Quick Links
             </h3>
             <ul className="space-y-3">
@@ -154,7 +154,7 @@ export function Footer() {
 
           {/* Contact Info */}
           <div className="lg:col-span-3 lg:justify-self-center">
-            <h3 className="text-sm font-semibold text-white mb-4 uppercase tracking-wider">
+            <h3 className="text-sm font-semibold text-[#c4a55a] mb-4 uppercase tracking-wider">
               Contact
             </h3>
             <ul className="space-y-4">
@@ -173,7 +173,7 @@ export function Footer() {
 
           {/* Follow Us Column */}
           <div className="lg:col-span-2 lg:justify-self-end">
-            <h3 className="text-sm font-semibold text-white mb-4 uppercase tracking-wider">
+            <h3 className="text-sm font-semibold text-[#c4a55a] mb-4 uppercase tracking-wider">
               Follow Us
             </h3>
             <div className="flex flex-col gap-3">
