@@ -9,9 +9,8 @@ import {
 import { generatePageMetadata } from '@/lib/seo'
 import { sanityFetch, homeQuery, projectsQuery, projectCategoriesQuery } from '@/lib/sanity'
 import { extractYouTubeId } from '@/lib/utils'
-import dynamic from 'next/dynamic'
 // Form imports temporarily removed
-const ReviewsSection = dynamic(() => import('@/components/ui/ReviewsSection').then(m => m.ReviewsSection))
+import { ReviewsSection } from '@/components/ui/ReviewsSection'
 import { ContactForm } from '@/components/ui/ContactForm'
 import { AnimatedCounter } from '@/components/ui/AnimatedCounter'
 import { HeroSlider } from '@/components/ui/HeroSlider'
