@@ -155,13 +155,6 @@ export default async function HomePage() {
   return (
     <>
       <style dangerouslySetInnerHTML={{__html: `
-        @keyframes marquee {
-          0% { transform: translateX(0%); }
-          100% { transform: translateX(-50%); }
-        }
-        .animate-marquee {
-          animation: marquee 50s linear infinite;
-        }
         .hide-scroll-bar::-webkit-scrollbar {
           display: none;
         }
@@ -305,6 +298,9 @@ export default async function HomePage() {
                     src={category.image} 
                     alt={category.name} 
                     fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                    quality={80}
+                    loading="lazy"
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#0f1d33] via-[#0f1d33]/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300" />

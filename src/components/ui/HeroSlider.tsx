@@ -39,6 +39,8 @@ export function HeroSlider({ images }: { images: { url: string; text?: string }[
               src={img.url}
               alt={img.text || 'Bhuwanta Hero Image'}
               fill
+              sizes="100vw"
+              quality={85}
               priority={index === 0}
               fetchPriority={index === 0 ? 'high' : 'auto'}
               className="object-cover object-center"

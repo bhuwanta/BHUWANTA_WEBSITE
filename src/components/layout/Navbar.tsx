@@ -82,6 +82,7 @@ export function Navbar() {
                 alt={siteName} 
                 width={180}
                 height={64}
+                fetchPriority="high"
                 className={cn(
                   "h-12 sm:h-16 w-auto object-contain transition-all duration-500",
                   !isDarkContent && "drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]",
@@ -107,7 +108,7 @@ export function Navbar() {
                     "px-4 py-2 text-sm transition-premium rounded-lg",
                     isDarkContent 
                       ? "text-[#002935] font-bold hover:text-[#B69A4E] hover:bg-[#f3f5f8]" 
-                      : "text-white/80 font-medium hover:text-white hover:bg-white/10"
+                      : "text-white/90 font-medium hover:text-white hover:bg-white/10 drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]"
                   )}
                 >
                   {link.label}

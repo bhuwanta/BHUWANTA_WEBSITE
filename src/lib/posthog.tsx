@@ -15,6 +15,8 @@ if (
     person_profiles: 'identified_only',
     capture_pageview: false, // We capture manually for SPA navigation
     capture_pageleave: true,
+    disable_surveys: true, // Prevents loading surveys.js (~25 KiB)
+    disable_session_recording: true, // Sentry handles replays
   })
 }
 

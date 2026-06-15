@@ -87,7 +87,7 @@ export function LeadPopup({ projectNames = [] }: { projectNames?: string[] }) {
             alt="Bhuwanta Logo" 
             width={320} 
             height={120} 
-            priority
+            loading="lazy"
             className="w-56 sm:w-72 h-auto max-h-24 object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.3)]" 
             style={{ height: 'auto' }}
             sizes="(max-width: 640px) 224px, 288px"
@@ -111,6 +111,7 @@ export function LeadPopup({ projectNames = [] }: { projectNames?: string[] }) {
                     required
                     type="text"
                     placeholder="Full Name *"
+                    aria-label="Full Name"
                     className="w-full px-4 py-3 bg-[#f8f9fb] border border-[#e8ecf2] rounded-xl text-sm text-[#002935] placeholder:text-[#002935]/40 focus:outline-none focus:ring-2 focus:ring-[#002935]/20 focus:border-[#002935]/50 transition-all"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -121,6 +122,7 @@ export function LeadPopup({ projectNames = [] }: { projectNames?: string[] }) {
                       required
                       type="tel"
                       placeholder="Phone Number *"
+                      aria-label="Phone Number"
                       className="w-full px-4 py-3 bg-[#f8f9fb] border border-[#e8ecf2] rounded-xl text-sm text-[#002935] placeholder:text-[#002935]/40 focus:outline-none focus:ring-2 focus:ring-[#002935]/20 focus:border-[#002935]/50 transition-all"
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
@@ -129,6 +131,7 @@ export function LeadPopup({ projectNames = [] }: { projectNames?: string[] }) {
                       required
                       type="email"
                       placeholder="Email Address *"
+                      aria-label="Email Address"
                       className="w-full px-4 py-3 bg-[#f8f9fb] border border-[#e8ecf2] rounded-xl text-sm text-[#002935] placeholder:text-[#002935]/40 focus:outline-none focus:ring-2 focus:ring-[#002935]/20 focus:border-[#002935]/50 transition-all"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -137,6 +140,7 @@ export function LeadPopup({ projectNames = [] }: { projectNames?: string[] }) {
 
                   <div className="relative">
                     <select 
+                      aria-label="Select project"
                       className="w-full appearance-none px-4 py-3 bg-[#f8f9fb] border border-[#e8ecf2] rounded-xl text-sm text-[#002935] focus:outline-none focus:ring-2 focus:ring-[#002935]/20 focus:border-[#002935]/50 transition-all"
                       value={formData.project}
                       onChange={(e) => setFormData({ ...formData, project: e.target.value })}
@@ -153,6 +157,7 @@ export function LeadPopup({ projectNames = [] }: { projectNames?: string[] }) {
 
                   <div className="relative">
                     <select 
+                      aria-label="Select enquiry type"
                       className="w-full appearance-none px-4 py-3 bg-[#f8f9fb] border border-[#e8ecf2] rounded-xl text-sm text-[#002935] focus:outline-none focus:ring-2 focus:ring-[#002935]/20 focus:border-[#002935]/50 transition-all"
                       value={formData.enquiryType}
                       onChange={(e) => setFormData({ ...formData, enquiryType: e.target.value })}
@@ -169,6 +174,7 @@ export function LeadPopup({ projectNames = [] }: { projectNames?: string[] }) {
                   <textarea
                     placeholder="Your Message (Optional)"
                     rows={2}
+                    aria-label="Your message"
                     className="w-full px-4 py-3 bg-[#f8f9fb] border border-[#e8ecf2] rounded-xl text-sm text-[#002935] placeholder:text-[#002935]/40 focus:outline-none focus:ring-2 focus:ring-[#002935]/20 focus:border-[#002935]/50 transition-all resize-none"
                     value={formData.message}
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}

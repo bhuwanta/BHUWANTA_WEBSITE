@@ -107,6 +107,8 @@ export function Footer() {
                     alt={siteName} 
                     width={240}
                     height={80}
+                    loading="lazy"
+                    sizes="(max-width: 640px) 200px, 240px"
                     className="h-16 sm:h-20 w-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]"
                     style={{ width: 'auto' }}
                   />

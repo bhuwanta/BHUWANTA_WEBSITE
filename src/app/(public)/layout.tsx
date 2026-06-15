@@ -1,7 +1,6 @@
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
-import { WhatsAppFloat } from '@/components/ui/WhatsAppFloat'
-import { LeadPopup } from '@/components/ui/LeadPopup'
+import { DynamicClientComponents } from '@/components/ui/DynamicClientComponents'
 import { JsonLd, buildWebSiteSchema, buildOrganizationSchema } from '@/components/seo/JsonLd'
 import Script from 'next/script'
 import { sanityFetch, siteSettingsQuery, projectsQuery } from '@/lib/sanity'
@@ -42,24 +41,26 @@ export default async function PublicLayout({
     <>
       <JsonLd data={[websiteSchema, orgSchema]} />
 
-      {/* Marketing Scripts (conditionally rendered if marketer added them in Sanity) */}
-      {settings?.googleAnalyticsId && (
-        <Script
-          src={`https://www.googletagmanager.com/gtag/js?id=${settings.googleAnalyticsId}`}
-          strategy="afterInteractive"
-        />
-      )}
-      {settings?.googleAnalyticsId && (
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){window.dataLayer.push(arguments);}
-            gtag('js', new Date());
-
-            gtag('config', '${settings.googleAnalyticsId}');
-          `}
-        </Script>
-      )}
+      {/* Google Analytics — uses Sanity setting with hardcoded fallback */}
+      {(() => {
+        const gaId = settings?.googleAnalyticsId || 'G-98QJJZ5DCG';
+        return (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
+              strategy="afterInteractive"
+            />
+            <Script id="google-analytics" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){window.dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${gaId}');
+              `}
+            </Script>
+          </>
+        );
+      })()}
 
       {settings?.googleTagManagerId && (
         <Script id="google-tag-manager" strategy="afterInteractive">
@@ -93,8 +94,7 @@ export default async function PublicLayout({
       <Navbar />
       <main className="flex-1 flex flex-col">{children}</main>
       <Footer />
-      <WhatsAppFloat />
-      <LeadPopup projectNames={uniqueProjectNames} />
+      <DynamicClientComponents projectNames={uniqueProjectNames} />
     </>
   )
 }
