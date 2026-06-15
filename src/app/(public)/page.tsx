@@ -94,9 +94,9 @@ export default async function HomePage() {
         let previewImage = fallbackImage
 
         if (categoryData?.image?.asset?.url) {
-          previewImage = categoryData.image.asset.url
+          previewImage = `${categoryData.image.asset.url}?w=800&q=75&auto=format`
         } else if (p.images && p.images.length > 0) {
-          previewImage = p.images[0]
+          previewImage = `${p.images[0]}?w=800&q=75&auto=format`
         } else if (p.youtubeUrl) {
           const ytId = extractYouTubeId(p.youtubeUrl)
           if (ytId) {
@@ -142,11 +142,11 @@ export default async function HomePage() {
     .map((item: any) => {
       // New format: { image: { asset: { url } }, text }
       if (item.image?.asset?.url) {
-        return { url: item.image.asset.url, text: item.text }
+        return { url: `${item.image.asset.url}?w=2048&q=80&auto=format`, text: item.text }
       }
       // Old format: { asset: { url } } (direct image)
       if (item.asset?.url) {
-        return { url: item.asset.url, text: item.text || '' }
+        return { url: `${item.asset.url}?w=2048&q=80&auto=format`, text: item.text || '' }
       }
       return null
     })
