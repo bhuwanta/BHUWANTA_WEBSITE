@@ -37,7 +37,7 @@ export function HeroSlider({ images }: { images: { url: string; text?: string }[
             {/* Background Image */}
             <Image 
               src={img.url}
-              alt={img.text || 'Bhuwanta Hero Image'}
+              alt={img.text || 'Bhuwanta Hero'}
               fill
               sizes="100vw"
               quality={85}

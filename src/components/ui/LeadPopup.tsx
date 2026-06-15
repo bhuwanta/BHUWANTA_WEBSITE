@@ -84,7 +84,7 @@ export function LeadPopup({ projectNames = [] }: { projectNames?: string[] }) {
           {/* Logo */}
           <Image 
             src={logoImg} 
-            alt="Bhuwanta Logo" 
+            alt="Bhuwanta" 
             width={320} 
             height={120} 
             loading="lazy"

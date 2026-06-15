@@ -9,8 +9,9 @@ import {
 import { generatePageMetadata } from '@/lib/seo'
 import { sanityFetch, homeQuery, projectsQuery, projectCategoriesQuery } from '@/lib/sanity'
 import { extractYouTubeId } from '@/lib/utils'
+import dynamic from 'next/dynamic'
 // Form imports temporarily removed
-import { ReviewsSection } from '@/components/ui/ReviewsSection'
+const ReviewsSection = dynamic(() => import('@/components/ui/ReviewsSection').then(m => m.ReviewsSection))
 import { ContactForm } from '@/components/ui/ContactForm'
 import { AnimatedCounter } from '@/components/ui/AnimatedCounter'
 import { HeroSlider } from '@/components/ui/HeroSlider'
@@ -519,7 +520,7 @@ export default async function HomePage() {
                     <MessageCircle className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-[#022F3A]">WhatsApp Support</h4>
+                    <h3 className="font-semibold text-[#022F3A]">WhatsApp Support</h3>
                     <p className="text-sm text-gray-500 mt-1">Available Mon-Sat, 9 AM to 6 PM</p>
                   </div>
                 </div>
