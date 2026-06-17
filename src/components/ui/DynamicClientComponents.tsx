@@ -19,10 +19,18 @@ export function DynamicClientComponents({ projectNames = [] }: { projectNames?: 
   const [shouldRender, setShouldRender] = useState(false)
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setShouldRender(true)
-    }, 3500)
-    return () => clearTimeout(timer)
+    const handleInteract = () => setShouldRender(true)
+    const events = ['scroll', 'mousemove', 'touchstart', 'keydown']
+    
+    events.forEach(e => window.addEventListener(e, handleInteract, { once: true, passive: true }))
+    
+    // Fallback: if user does nothing for 7 seconds, load it anyway
+    const timer = setTimeout(handleInteract, 7000)
+
+    return () => {
+      clearTimeout(timer)
+      events.forEach(e => window.removeEventListener(e, handleInteract))
+    }
   }, [])
 
   if (!shouldRender) return null

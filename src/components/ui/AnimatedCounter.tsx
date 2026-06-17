@@ -22,42 +22,38 @@ export function AnimatedCounter({ value, duration = 2000 }: AnimatedCounterProps
       return
     }
 
-    const timer = setTimeout(() => {
-      const observer = new IntersectionObserver(
-        (entries) => {
-          if (entries[0].isIntersecting && !hasAnimated) {
-            setHasAnimated(true)
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !hasAnimated) {
+          setHasAnimated(true)
+          
+          let startTimestamp: number | null = null
+          const step = (timestamp: number) => {
+            if (!startTimestamp) startTimestamp = timestamp
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1)
             
-            let startTimestamp: number | null = null
-            const step = (timestamp: number) => {
-              if (!startTimestamp) startTimestamp = timestamp
-              const progress = Math.min((timestamp - startTimestamp) / duration, 1)
-              
-              // easeOutExpo for a smoother finish
-              const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress)
-              
-              setCount(Math.floor(easeProgress * targetNumber))
-              
-              if (progress < 1) {
-                window.requestAnimationFrame(step)
-              } else {
-                setCount(targetNumber)
-              }
+            // easeOutExpo for a smoother finish
+            const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress)
+            
+            setCount(Math.floor(easeProgress * targetNumber))
+            
+            if (progress < 1) {
+              window.requestAnimationFrame(step)
+            } else {
+              setCount(targetNumber)
             }
-            window.requestAnimationFrame(step)
           }
-        },
-        { threshold: 0.5 }
-      )
+          window.requestAnimationFrame(step)
+        }
+      },
+      { threshold: 0.8 }
+    )
 
-      if (elementRef.current) {
-        observer.observe(elementRef.current)
-      }
+    if (elementRef.current) {
+      observer.observe(elementRef.current)
+    }
 
-      return () => observer.disconnect()
-    }, 2000)
-
-    return () => clearTimeout(timer)
+    return () => observer.disconnect()
   }, [targetNumber, duration, hasAnimated])
 
   if (!targetNumber) {
