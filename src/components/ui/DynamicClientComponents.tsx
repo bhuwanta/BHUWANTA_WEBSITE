@@ -1,5 +1,7 @@
 'use client'
 
+import { useState, useEffect } from 'react'
+
 import dynamic from 'next/dynamic'
 
 // Dynamic imports for non-critical UI — defers ~100 KiB (includes framer-motion)
@@ -14,6 +16,17 @@ const LeadPopup = dynamic(
 )
 
 export function DynamicClientComponents({ projectNames = [] }: { projectNames?: string[] }) {
+  const [shouldRender, setShouldRender] = useState(false)
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShouldRender(true)
+    }, 3500)
+    return () => clearTimeout(timer)
+  }, [])
+
+  if (!shouldRender) return null
+
   return (
     <>
       <WhatsAppFloat />
