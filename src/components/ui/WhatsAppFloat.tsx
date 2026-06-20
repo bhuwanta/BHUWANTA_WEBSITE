@@ -2,8 +2,8 @@
 
 import { Phone } from 'lucide-react'
 
-const WHATSAPP_NUMBER = '919666618683' // Replace with your actual number
-const PHONE_NUMBER = '+919666618683'   // Replace with your actual number
+const WHATSAPP_NUMBER = '919666504405' // Replace with your actual number
+const PHONE_NUMBER = '+919666504405'   // Replace with your actual number
 const DEFAULT_MESSAGE = 'Hi Bhuwanta, I would like to know more about your projects.'
 
 function WhatsAppIcon({ className }: { className?: string }) {
@@ -20,15 +20,14 @@ export function WhatsAppFloat() {
   return (
     <div className="fixed bottom-4 right-4 sm:bottom-8 sm:right-6 z-40 flex flex-col items-end gap-2 sm:gap-3">
       {/* WhatsApp Button */}
-      <a
-        href={whatsappUrl}
-        target="_blank"
-        rel="noopener noreferrer"
+      <button
+        type="button"
+        onClick={() => window.open(whatsappUrl, '_blank')}
         aria-label="Chat on WhatsApp"
-        className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#25D366] flex items-center justify-center shadow-lg shadow-[#25D366]/30 hover:scale-110 hover:shadow-xl hover:shadow-[#25D366]/40 transition-all duration-300"
+        className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#25D366] flex items-center justify-center shadow-lg shadow-[#25D366]/30 hover:scale-110 hover:shadow-xl hover:shadow-[#25D366]/40 transition-all duration-300 cursor-pointer border-none outline-none"
       >
         <WhatsAppIcon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
-      </a>
+      </button>
     </div>
   )
 }

@@ -142,7 +142,11 @@ export const projectsQuery = `*[_type == "projects"][0]{
     "videoUrl": videoFile.asset->url,
     youtubeUrl,
     projectHighlights,
-    "brochureUrl": brochure.asset->url,
+    "brochureUrls": brochure[].asset->url,
+    "layoutUrls": layoutPdf[].asset->url,
+    "reraUrls": reraCertificate[].asset->url,
+    approvalCertificateLabel,
+    "hmdaDtcpUrls": hmdaDtcpCertificate[].asset->url,
     approvalBadge
   }
 }`

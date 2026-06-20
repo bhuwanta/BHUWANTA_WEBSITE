@@ -41,7 +41,11 @@ interface ProjectEntry {
   plotSizes: string
   images?: string[]
   projectHighlights?: string[]
-  brochureUrl?: string
+  brochureUrls?: string[]
+  layoutUrls?: string[]
+  reraUrls?: string[]
+  approvalCertificateLabel?: string
+  hmdaDtcpUrls?: string[]
   description: string
 }
 

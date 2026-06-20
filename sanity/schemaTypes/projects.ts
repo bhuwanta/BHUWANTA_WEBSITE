@@ -57,10 +57,37 @@ export const projectsSchema = defineType({
             }),
             defineField({
               name: 'brochure',
-              type: 'file',
-              title: 'Project Brochure (PDF)',
-              options: { accept: '.pdf' },
-              description: 'Upload a PDF brochure for this project.'
+              type: 'array',
+              title: 'Project Brochures',
+              of: [{ type: 'file', options: { accept: '.pdf' } }],
+              description: 'Upload one or more brochure PDFs for this project.'
+            }),
+            defineField({
+              name: 'layoutPdf',
+              type: 'array',
+              title: 'Project Layouts',
+              of: [{ type: 'file', options: { accept: '.pdf' } }],
+              description: 'Upload one or more layout map PDFs for this project.'
+            }),
+            defineField({
+              name: 'reraCertificate',
+              type: 'array',
+              title: 'RERA Certificates',
+              of: [{ type: 'file', options: { accept: '.pdf' } }],
+              description: 'Upload one or more RERA Certificate PDFs for this project.'
+            }),
+            defineField({
+              name: 'approvalCertificateLabel',
+              type: 'string',
+              title: 'Approval Certificate Button Label',
+              description: 'e.g. "HMDA Approved Documents" or "DTCP Approved Documents" (Defaults to "HMDA/DTCP Approved Documents")',
+            }),
+            defineField({
+              name: 'hmdaDtcpCertificate',
+              type: 'array',
+              title: 'HMDA / DTCP Certificates',
+              of: [{ type: 'file', options: { accept: '.pdf' } }],
+              description: 'Upload one or more HMDA or DTCP Approval Certificate PDFs for this project.'
             }),
             defineField({
               name: 'approvalBadge',
@@ -87,65 +114,7 @@ export const projectsSchema = defineType({
                 "Fully Secured Layout"
               ]
             }),
-            defineField({
-              name: 'plotSizes',
-              type: 'string',
-              title: 'Plot Sizes',
-              description: 'e.g. "150 sq yd – 300 sq yd"'
-            }),
-            defineField({
-              name: 'pricePerSqYd',
-              type: 'string',
-              title: 'Price per sq yd',
-              description: 'e.g. "Starting ₹15,000 per sq yd"'
-            }),
-            defineField({
-              name: 'hmdaLpNumber',
-              type: 'string',
-              title: 'HMDA LP Number'
-            }),
-            defineField({
-              name: 'reraRegistrationNumber',
-              type: 'string',
-              title: 'RERA Registration Number'
-            }),
-            defineField({
-              name: 'projectStatus',
-              type: 'string',
-              title: 'Status',
-              description: 'e.g. "Ongoing", "Completed", "Upcoming"'
-            }),
-            defineField({
-              name: 'plotDetailsTable',
-              type: 'array',
-              title: 'Plot Details Table',
-              description: 'Rows for the plot pricing table',
-              of: [{
-                type: 'object',
-                fields: [
-                  { name: 'plotType', type: 'string', title: 'Plot Type / Size' },
-                  { name: 'price', type: 'string', title: 'Price' }
-                ]
-              }]
-            }),
-            defineField({
-              name: 'amenities',
-              type: 'array',
-              title: 'Amenities',
-              of: [{ type: 'string' }]
-            }),
-            defineField({
-              name: 'locationHighlights',
-              type: 'array',
-              title: 'Location Highlights',
-              of: [{ type: 'string' }]
-            }),
-            defineField({
-              name: 'approvalsCertifications',
-              type: 'array',
-              title: 'Approvals & Certifications',
-              of: [{ type: 'string' }]
-            }),
+
           ],
           preview: {
             select: { title: 'name', subtitle: 'category.title' },

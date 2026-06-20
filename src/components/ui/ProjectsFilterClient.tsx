@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react'
 import Link from 'next/link'
-import { MapPin, Crown, Check, CreditCard, Download } from 'lucide-react'
+import { MapPin, Crown, Check, CreditCard, Download, FileText, ShieldCheck, Scale } from 'lucide-react'
 import { ProjectImageCarousel } from '@/components/ui/ProjectImageCarousel'
 
 export interface ProjectEntry {
@@ -16,7 +16,11 @@ export interface ProjectEntry {
   plotSizes: string
   images?: string[]
   projectHighlights?: string[]
-  brochureUrl?: string
+  brochureUrls?: string[]
+  layoutUrls?: string[]
+  reraUrls?: string[]
+  approvalCertificateLabel?: string
+  hmdaDtcpUrls?: string[]
   approvalBadge?: string
   videoUrl?: string
   youtubeUrl?: string
@@ -25,6 +29,24 @@ export interface ProjectEntry {
 export function ProjectsFilterClient({ projects, categories = [], pageHeading }: { projects: ProjectEntry[], categories?: { id: string; title: string; label: string; order?: number }[], pageHeading?: string }) {
   const [activeFilter, setActiveFilter] = useState<string>('all')
   const filterRef = useRef<HTMLDivElement>(null)
+
+  const handleMultipleDownloads = (urls?: string[]) => {
+    if (!urls || urls.length === 0) return;
+    
+    urls.forEach((url, index) => {
+      setTimeout(() => {
+        const link = document.createElement('a');
+        // Add ?dl= to force Sanity CDN to return Content-Disposition: attachment
+        const downloadUrl = url.includes('?') ? `${url}&dl=` : `${url}?dl=`;
+        link.href = downloadUrl;
+        link.setAttribute('download', '');
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }, index * 300); // 300ms delay between each download to prevent browser blocking
+    });
+  };
 
   const handleFilterClick = (catId: string) => {
     setActiveFilter(catId)
@@ -129,27 +151,32 @@ export function ProjectsFilterClient({ projects, categories = [], pageHeading }:
                          )}
 
                          <div className="mt-auto">
-                           <div className="flex flex-wrap items-center gap-3 mb-4">
-                             <Link href="/#book-visit" className="px-6 py-2 gradient-gold text-white font-semibold rounded shadow-lg shadow-[#c4a55a]/20 hover:scale-105 transition-premium text-sm text-center">
-                               Enquire Now
-                             </Link>
-                             {project.slug?.current && (
-                               <Link href={`/projects/${project.slug.current}`} className="px-6 py-2 bg-white border border-[#c4a55a] text-[#c4a55a] font-semibold rounded hover:bg-[#f7f8fa] transition-premium text-sm text-center">
-                                 View Project
-                               </Link>
-                             )}
-                             {project.googleMapsUrl && (
-                               <a href={project.googleMapsUrl} target="_blank" rel="noopener noreferrer" className="px-6 py-2 bg-white border border-[#e8ecf2] text-[#0f1d33] font-semibold rounded hover:bg-[#f3f5f8] transition-premium text-sm text-center flex items-center gap-2">
-                                 <MapPin className="w-4 h-4 text-[#c4a55a]" /> Location
-                               </a>
-                             )}
-                             {project.brochureUrl && (
-                               <a href={project.brochureUrl} target="_blank" rel="noopener noreferrer" className="px-6 py-2 bg-white border border-[#e8ecf2] text-[#0f1d33] font-semibold rounded hover:bg-[#f3f5f8] transition-premium text-sm text-center flex items-center gap-2">
-                                 <Download className="w-4 h-4 text-[#c4a55a]" /> Brochure
-                               </a>
-                             )}
-                           </div>
-                           <div className="mt-4 pt-4 border-t border-[#e8ecf2] flex items-center gap-2 text-xs font-semibold text-[#5a6a82]">
+                            <div className="grid grid-cols-2 md:flex md:flex-wrap items-center gap-2 md:gap-3 mb-4">
+                              <Link href="/#book-visit" className="w-full col-span-1 px-2 py-2 md:px-6 md:w-auto gradient-gold text-white font-semibold rounded-lg shadow-lg shadow-[#c4a55a]/20 hover:scale-105 transition-premium text-xs sm:text-sm text-center flex items-center justify-center md:justify-start">
+                                Enquire Now
+                              </Link>
+                              {project.slug?.current && (
+                                <Link href={`/projects/${project.slug.current}`} className="w-full col-span-1 px-2 py-2 md:px-6 md:w-auto bg-white border border-[#c4a55a] text-[#c4a55a] font-semibold rounded-lg hover:bg-[#f7f8fa] transition-premium text-xs sm:text-sm text-center flex items-center justify-center md:justify-start">
+                                  View Project
+                                </Link>
+                              )}
+                              <button type="button" onClick={() => project.googleMapsUrl && window.open(project.googleMapsUrl, '_blank')} className="w-full col-span-1 px-2 py-2 md:px-5 md:w-auto bg-white border border-[#e8ecf2] text-[#1e3a5f] font-semibold rounded-lg hover:border-[#c4a55a] hover:shadow-md transition-all text-xs sm:text-sm text-center flex items-center justify-center md:justify-start gap-1 md:gap-2 cursor-pointer">
+                                <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-[#c4a55a] flex-shrink-0" /> <span className="truncate">View Location</span>
+                              </button>
+                              <button type="button" onClick={() => handleMultipleDownloads(project.brochureUrls)} className="w-full col-span-1 px-2 py-2 md:px-5 md:w-auto bg-white border border-[#e8ecf2] text-[#1e3a5f] font-semibold rounded-lg hover:border-[#c4a55a] hover:shadow-md transition-all text-xs sm:text-sm text-center flex items-center justify-center md:justify-start gap-1 md:gap-2 cursor-pointer">
+                                <Download className="w-3 h-3 sm:w-4 sm:h-4 text-[#c4a55a] flex-shrink-0" /> <span className="truncate"><span className="hidden lg:inline">Download </span>Brochure</span>
+                              </button>
+                              <button type="button" onClick={() => handleMultipleDownloads(project.layoutUrls)} className="w-full col-span-1 px-2 py-2 md:px-5 md:w-auto bg-white border border-[#e8ecf2] text-[#1e3a5f] font-semibold rounded-lg hover:border-[#c4a55a] hover:shadow-md transition-all text-xs sm:text-sm text-center flex items-center justify-center md:justify-start gap-1 md:gap-2 cursor-pointer">
+                                <Download className="w-3 h-3 sm:w-4 sm:h-4 text-[#c4a55a] flex-shrink-0" /> <span className="truncate"><span className="hidden lg:inline">Download </span>Layout</span>
+                              </button>
+                              <button type="button" onClick={() => handleMultipleDownloads(project.reraUrls)} className="w-full col-span-1 px-2 py-2 md:px-5 md:w-auto bg-white border border-[#e8ecf2] text-[#1e3a5f] font-semibold rounded-lg hover:border-[#c4a55a] hover:shadow-md transition-all text-xs sm:text-sm text-center flex items-center justify-center md:justify-start gap-1 md:gap-2 cursor-pointer">
+                                <Download className="w-3 h-3 sm:w-4 sm:h-4 text-[#c4a55a] flex-shrink-0" /> <span className="truncate">RERA <span className="hidden md:inline">Documents</span><span className="md:hidden">Docs</span></span>
+                              </button>
+                              <button type="button" onClick={() => handleMultipleDownloads(project.hmdaDtcpUrls)} className="w-full col-span-2 md:col-span-1 px-2 py-2 md:px-5 md:w-auto bg-white border border-[#e8ecf2] text-[#1e3a5f] font-semibold rounded-lg hover:border-[#c4a55a] hover:shadow-md transition-all text-xs sm:text-sm text-center flex items-center justify-center md:justify-start gap-1 md:gap-2 cursor-pointer">
+                                <Download className="w-3 h-3 sm:w-4 sm:h-4 text-[#c4a55a] flex-shrink-0" /> <span className="truncate">{project.approvalCertificateLabel || 'HMDA/DTCP Approved'}</span>
+                              </button>
+                            </div>
+                            <div className="mt-4 pt-4 border-t border-[#e8ecf2] flex items-center gap-2 text-xs font-semibold text-[#5a6a82]">
                              <CreditCard className="w-4 h-4 text-[#5a6a82]" />
                              Bank Loan Available <span className="text-[#e8ecf2]">|</span> Ready for Construction
                            </div>
