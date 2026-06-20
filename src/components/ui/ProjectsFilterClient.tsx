@@ -4,6 +4,7 @@ import { useState, useRef } from 'react'
 import Link from 'next/link'
 import { MapPin, Crown, Check, CreditCard, Download, FileText, ShieldCheck, Scale } from 'lucide-react'
 import { ProjectImageCarousel } from '@/components/ui/ProjectImageCarousel'
+import { DownloadPopup } from '@/components/ui/DownloadPopup'
 
 export interface ProjectEntry {
   name: string
@@ -29,6 +30,7 @@ export interface ProjectEntry {
 export function ProjectsFilterClient({ projects, categories = [], pageHeading }: { projects: ProjectEntry[], categories?: { id: string; title: string; label: string; order?: number }[], pageHeading?: string }) {
   const [activeFilter, setActiveFilter] = useState<string>('all')
   const filterRef = useRef<HTMLDivElement>(null)
+  const [downloadQueue, setDownloadQueue] = useState<{ urls: string[]; projectName: string; documentType: string } | null>(null)
 
   const handleMultipleDownloads = (urls?: string[]) => {
     if (!urls || urls.length === 0) return;
@@ -163,16 +165,16 @@ export function ProjectsFilterClient({ projects, categories = [], pageHeading }:
                               <button type="button" onClick={() => project.googleMapsUrl && window.open(project.googleMapsUrl, '_blank')} className="w-full col-span-1 px-2 py-2 md:px-5 md:w-auto bg-white border border-[#e8ecf2] text-[#1e3a5f] font-semibold rounded-lg hover:border-[#c4a55a] hover:shadow-md transition-all text-xs sm:text-sm text-center flex items-center justify-center md:justify-start gap-1 md:gap-2 cursor-pointer">
                                 <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-[#c4a55a] flex-shrink-0" /> <span className="truncate">View Location</span>
                               </button>
-                              <button type="button" onClick={() => handleMultipleDownloads(project.brochureUrls)} className="w-full col-span-1 px-2 py-2 md:px-5 md:w-auto bg-white border border-[#e8ecf2] text-[#1e3a5f] font-semibold rounded-lg hover:border-[#c4a55a] hover:shadow-md transition-all text-xs sm:text-sm text-center flex items-center justify-center md:justify-start gap-1 md:gap-2 cursor-pointer">
-                                <Download className="w-3 h-3 sm:w-4 sm:h-4 text-[#c4a55a] flex-shrink-0" /> <span className="truncate"><span className="hidden lg:inline">Download </span>Brochure</span>
+                              <button type="button" onClick={() => setDownloadQueue({ urls: project.brochureUrls!, projectName: project.name, documentType: 'Brochure' })} className="w-full col-span-1 px-2 py-2 md:px-5 md:w-auto bg-white border border-[#e8ecf2] text-[#1e3a5f] font-semibold rounded-lg hover:border-[#c4a55a] hover:shadow-md transition-all text-xs sm:text-sm text-center flex items-center justify-center md:justify-start gap-1 md:gap-2 cursor-pointer" disabled={!project.brochureUrls || project.brochureUrls.length === 0}>
+                                <Download className="w-3 h-3 sm:w-4 sm:h-4 text-[#c4a55a] flex-shrink-0" /> <span className="truncate">Brochure</span>
                               </button>
-                              <button type="button" onClick={() => handleMultipleDownloads(project.layoutUrls)} className="w-full col-span-1 px-2 py-2 md:px-5 md:w-auto bg-white border border-[#e8ecf2] text-[#1e3a5f] font-semibold rounded-lg hover:border-[#c4a55a] hover:shadow-md transition-all text-xs sm:text-sm text-center flex items-center justify-center md:justify-start gap-1 md:gap-2 cursor-pointer">
-                                <Download className="w-3 h-3 sm:w-4 sm:h-4 text-[#c4a55a] flex-shrink-0" /> <span className="truncate"><span className="hidden lg:inline">Download </span>Layout</span>
+                              <button type="button" onClick={() => setDownloadQueue({ urls: project.layoutUrls!, projectName: project.name, documentType: 'Layout' })} className="w-full col-span-1 px-2 py-2 md:px-5 md:w-auto bg-white border border-[#e8ecf2] text-[#1e3a5f] font-semibold rounded-lg hover:border-[#c4a55a] hover:shadow-md transition-all text-xs sm:text-sm text-center flex items-center justify-center md:justify-start gap-1 md:gap-2 cursor-pointer" disabled={!project.layoutUrls || project.layoutUrls.length === 0}>
+                                <Download className="w-3 h-3 sm:w-4 sm:h-4 text-[#c4a55a] flex-shrink-0" /> <span className="truncate">Layout</span>
                               </button>
-                              <button type="button" onClick={() => handleMultipleDownloads(project.reraUrls)} className="w-full col-span-1 px-2 py-2 md:px-5 md:w-auto bg-white border border-[#e8ecf2] text-[#1e3a5f] font-semibold rounded-lg hover:border-[#c4a55a] hover:shadow-md transition-all text-xs sm:text-sm text-center flex items-center justify-center md:justify-start gap-1 md:gap-2 cursor-pointer">
+                              <button type="button" onClick={() => setDownloadQueue({ urls: project.reraUrls!, projectName: project.name, documentType: 'RERA Documents' })} className="w-full col-span-1 px-2 py-2 md:px-5 md:w-auto bg-white border border-[#e8ecf2] text-[#1e3a5f] font-semibold rounded-lg hover:border-[#c4a55a] hover:shadow-md transition-all text-xs sm:text-sm text-center flex items-center justify-center md:justify-start gap-1 md:gap-2 cursor-pointer" disabled={!project.reraUrls || project.reraUrls.length === 0}>
                                 <Download className="w-3 h-3 sm:w-4 sm:h-4 text-[#c4a55a] flex-shrink-0" /> <span className="truncate">RERA <span className="hidden md:inline">Documents</span><span className="md:hidden">Docs</span></span>
                               </button>
-                              <button type="button" onClick={() => handleMultipleDownloads(project.hmdaDtcpUrls)} className="w-full col-span-2 md:col-span-1 px-2 py-2 md:px-5 md:w-auto bg-white border border-[#e8ecf2] text-[#1e3a5f] font-semibold rounded-lg hover:border-[#c4a55a] hover:shadow-md transition-all text-xs sm:text-sm text-center flex items-center justify-center md:justify-start gap-1 md:gap-2 cursor-pointer">
+                              <button type="button" onClick={() => setDownloadQueue({ urls: project.hmdaDtcpUrls!, projectName: project.name, documentType: project.approvalCertificateLabel || 'HMDA/DTCP Approved' })} className="w-full col-span-2 md:col-span-1 px-2 py-2 md:px-5 md:w-auto bg-white border border-[#e8ecf2] text-[#1e3a5f] font-semibold rounded-lg hover:border-[#c4a55a] hover:shadow-md transition-all text-xs sm:text-sm text-center flex items-center justify-center md:justify-start gap-1 md:gap-2 cursor-pointer" disabled={!project.hmdaDtcpUrls || project.hmdaDtcpUrls.length === 0}>
                                 <Download className="w-3 h-3 sm:w-4 sm:h-4 text-[#c4a55a] flex-shrink-0" /> <span className="truncate">{project.approvalCertificateLabel || 'HMDA/DTCP Approved'}</span>
                               </button>
                             </div>
@@ -198,6 +200,18 @@ export function ProjectsFilterClient({ projects, categories = [], pageHeading }:
           ))}
         </div>
       </div>
+
+      <DownloadPopup
+        isOpen={downloadQueue !== null}
+        onClose={() => setDownloadQueue(null)}
+        onSuccess={() => {
+          if (downloadQueue) {
+            handleMultipleDownloads(downloadQueue.urls)
+          }
+        }}
+        projectName={downloadQueue?.projectName || ''}
+        documentType={downloadQueue?.documentType || ''}
+      />
     </div>
   )
 }

@@ -21,11 +21,15 @@ export async function sendContactNotification(lead: {
     return null
   }
 
-  const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'info@bhuwanta.com'
+  const emailsToNotify = Array.from(new Set([
+    process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'bhuwanta9@gmail.com',
+    'info@bhuwanta.com',
+    'bhuwanta9@gmail.com'
+  ]))
 
   const { data, error } = await resend.emails.send({
     from: FROM_EMAIL,
-    to: ADMIN_EMAIL,
+    to: emailsToNotify,
     replyTo: lead.email,
     subject: `New Lead: ${lead.name} — ${lead.project || 'General Inquiry'}`,
     html: `
