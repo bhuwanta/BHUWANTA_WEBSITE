@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 
 import Image from 'next/image'
+import { sanityImageLoader } from '@/lib/sanity'
 
 export function HeroSlider({ images }: { images: { url: string; text?: string }[] }) {
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -27,6 +28,9 @@ export function HeroSlider({ images }: { images: { url: string; text?: string }[
     <>
       {images.map((img, index) => {
         const Tag = index === 0 ? 'h1' : 'h2'
+        // Only use the loader if it's a sanity image
+        const isSanity = img.url.includes('cdn.sanity.io')
+        
         return (
           <div
             key={img.url}
@@ -42,6 +46,7 @@ export function HeroSlider({ images }: { images: { url: string; text?: string }[
               sizes="100vw"
               priority={index === 0}
               fetchPriority={index === 0 ? 'high' : 'auto'}
+              loader={isSanity ? sanityImageLoader : undefined}
               className="object-cover object-center"
             />
             {/* Overlays to ensure text remains readable */}

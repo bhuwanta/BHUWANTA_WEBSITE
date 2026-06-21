@@ -13,6 +13,19 @@ export function urlFor(source: any) {
   return builder.image(source)
 }
 
+import type { ImageLoaderProps } from 'next/image'
+export const sanityImageLoader = ({ src, width, quality }: ImageLoaderProps) => {
+  // If it's already a sanity URL, use its transform API
+  if (src.includes('cdn.sanity.io')) {
+    const url = new URL(src)
+    url.searchParams.set('auto', 'format')
+    url.searchParams.set('w', width.toString())
+    url.searchParams.set('q', (quality || 75).toString())
+    return url.href
+  }
+  return src
+}
+
 // Client for secured API mutations
 export const writeClient = createClient({
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID!,
