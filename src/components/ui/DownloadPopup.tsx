@@ -1,22 +1,21 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { X, CheckCircle2, Download } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { X, Download } from 'lucide-react'
 import Image from 'next/image'
 import logoImg from '@/images/logo.png'
 
 interface DownloadPopupProps {
   isOpen: boolean
   onClose: () => void
-  onSuccess: () => void
+  urls: string[]
   projectName: string
   documentType: string
 }
 
-export function DownloadPopup({ isOpen, onClose, onSuccess, projectName, documentType }: DownloadPopupProps) {
+export function DownloadPopup({ isOpen, onClose, urls, projectName, documentType }: DownloadPopupProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isSubmitted, setIsSubmitted] = useState(false)
   const [phoneError, setPhoneError] = useState('')
   const [formData, setFormData] = useState({
     name: '',
@@ -24,13 +23,23 @@ export function DownloadPopup({ isOpen, onClose, onSuccess, projectName, documen
     email: '',
   })
 
-  // Reset state when opened
+  // Reset state and handle background scrolling
   useEffect(() => {
     if (isOpen) {
-      setIsSubmitted(false)
       setIsSubmitting(false)
       setPhoneError('')
       setFormData({ name: '', phone: '', email: '' })
+      
+      document.body.style.overflow = 'hidden'
+      document.documentElement.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+      document.documentElement.style.overflow = ''
+    }
+    
+    return () => {
+      document.body.style.overflow = ''
+      document.documentElement.style.overflow = ''
     }
   }, [isOpen])
 
@@ -38,8 +47,15 @@ export function DownloadPopup({ isOpen, onClose, onSuccess, projectName, documen
     e.preventDefault()
     setIsSubmitting(true)
 
+    // Open documents IMMEDIATELY in a new tab to bypass mobile popup blockers
+    if (urls && urls.length > 0) {
+      urls.forEach(url => {
+        window.open(url, '_blank')
+      })
+    }
+
     try {
-      const response = await fetch('/api/contact', {
+      await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -50,18 +66,11 @@ export function DownloadPopup({ isOpen, onClose, onSuccess, projectName, documen
           sourcePage: 'Website Document Download',
         }),
       })
-
-      if (response.ok) {
-        setIsSubmitted(true)
-        // Trigger the download callback immediately
-        onSuccess()
-        // Close the popup after a brief success message
-        setTimeout(() => onClose(), 3000)
-      }
     } catch (error) {
       console.error('Submission error:', error)
     } finally {
       setIsSubmitting(false)
+      onClose() // Close the popup immediately
     }
   }
 
@@ -112,15 +121,9 @@ export function DownloadPopup({ isOpen, onClose, onSuccess, projectName, documen
           <p className="text-white/80 text-xs sm:text-sm mt-1">{projectName}</p>
         </div>
 
-        {/* Form / Success States */}
+        {/* Form */}
         <div className="px-6 py-6 sm:py-7">
-          <AnimatePresence mode="wait">
-            {!isSubmitted ? (
-              <motion.form
-                key="form"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 10 }}
+              <form
                 onSubmit={handleSubmit}
                 className="space-y-4"
               >
@@ -185,7 +188,7 @@ export function DownloadPopup({ isOpen, onClose, onSuccess, projectName, documen
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        Verifying...
+                        Opening Document...
                       </span>
                     ) : (
                       <>
@@ -197,20 +200,7 @@ export function DownloadPopup({ isOpen, onClose, onSuccess, projectName, documen
                     Your information is kept 100% confidential.
                   </p>
                 </div>
-              </motion.form>
-            ) : (
-              <motion.div
-                key="success"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="text-center py-8 sm:py-10"
-              >
-                <CheckCircle2 className="w-14 h-14 text-emerald-500 mx-auto mb-4" />
-                <h3 className="text-lg sm:text-xl font-bold text-[#002935] mb-2">Success!</h3>
-                <p className="text-sm text-[#002935]/60">Your download should begin automatically.</p>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              </form>
         </div>
       </motion.div>
     </div>

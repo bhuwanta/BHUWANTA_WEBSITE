@@ -32,17 +32,6 @@ export function ProjectsFilterClient({ projects, categories = [], pageHeading }:
   const filterRef = useRef<HTMLDivElement>(null)
   const [downloadQueue, setDownloadQueue] = useState<{ urls: string[]; projectName: string; documentType: string } | null>(null)
 
-  const handleMultipleDownloads = (urls?: string[]) => {
-    if (!urls || urls.length === 0) return;
-    
-    urls.forEach((url, index) => {
-      setTimeout(() => {
-        // Open the document in a new tab instead of forcing a download
-        window.open(url, '_blank');
-      }, index * 300); // 300ms delay between each to prevent browser popup blocking
-    });
-  };
-
   const handleFilterClick = (catId: string) => {
     setActiveFilter(catId)
     setTimeout(() => {
@@ -197,11 +186,7 @@ export function ProjectsFilterClient({ projects, categories = [], pageHeading }:
       <DownloadPopup
         isOpen={downloadQueue !== null}
         onClose={() => setDownloadQueue(null)}
-        onSuccess={() => {
-          if (downloadQueue) {
-            handleMultipleDownloads(downloadQueue.urls)
-          }
-        }}
+        urls={downloadQueue?.urls || []}
         projectName={downloadQueue?.projectName || ''}
         documentType={downloadQueue?.documentType || ''}
       />
