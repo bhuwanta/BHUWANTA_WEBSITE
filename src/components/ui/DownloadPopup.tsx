@@ -49,8 +49,14 @@ export function DownloadPopup({ isOpen, onClose, urls, projectName, documentType
 
     // Open documents IMMEDIATELY in a new tab to bypass mobile popup blockers
     if (urls && urls.length > 0) {
-      urls.forEach(url => {
-        window.open(url, '_blank')
+      urls.forEach((url) => {
+        // If the file is a PDF, use Google Docs Viewer to force it to display inside the mobile browser
+        // instead of forcing a download (since Android/mobile browsers lack native PDF viewers)
+        if (url.toLowerCase().includes('.pdf')) {
+          window.open(`https://docs.google.com/viewer?url=${encodeURIComponent(url)}`, '_blank')
+        } else {
+          window.open(url, '_blank')
+        }
       })
     }
 
