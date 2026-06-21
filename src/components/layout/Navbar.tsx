@@ -13,6 +13,7 @@ const defaultNavLinks = [
   { href: '/', label: 'Home' },
   { href: '/about', label: 'About Us' },
   { href: '/projects', label: 'Projects' },
+  { href: '#', label: 'Reviews' },
   { href: '/gallery', label: 'Gallery' },
   { href: '/blog', label: 'Blogs' },
   { href: '/forms', label: 'Forms' },
@@ -38,6 +39,15 @@ export function Navbar() {
   const showGlass = scrolled
   const isDarkContent = showGlass || !isHome
 
+  // Always scroll to top on route change, unless there is a hash
+  useEffect(() => {
+    setTimeout(() => {
+      if (!window.location.hash) {
+        window.scrollTo(0, 0)
+      }
+    }, 50)
+  }, [pathname])
+
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20)
@@ -56,7 +66,19 @@ export function Navbar() {
     }).catch(() => {})
   }, [])
 
-  const navLinks = settings.navLinks?.length ? settings.navLinks : defaultNavLinks
+  let navLinks = settings.navLinks?.length ? settings.navLinks : defaultNavLinks
+  
+  // Inject "Reviews" beside "Projects" in case navLinks are coming from Sanity CMS
+  if (!navLinks.find((l: any) => l.label.toLowerCase().includes('review'))) {
+    const projectIdx = navLinks.findIndex((l: any) => l.label.toLowerCase() === 'projects')
+    if (projectIdx !== -1) {
+      navLinks = [
+        ...navLinks.slice(0, projectIdx + 1),
+        { href: '#', label: 'Reviews' },
+        ...navLinks.slice(projectIdx + 1)
+      ]
+    }
+  }
   const siteName = settings.siteName || 'BHUWANTA'
   const tagline = settings.tagline || 'Land Today. Landmark Tomorrow.'
   const ctaText = settings.ctaButtonText || 'Book Site Visit'
@@ -104,6 +126,11 @@ export function Navbar() {
                   key={link.href}
                   href={link.href}
                   id={`nav-${link.label.toLowerCase()}`}
+                  onClick={() => {
+                    if (!link.href.includes('#')) {
+                      window.scrollTo(0, 0)
+                    }
+                  }}
                   className={cn(
                     "px-4 py-2 text-sm transition-premium rounded-lg",
                     isDarkContent 
@@ -162,7 +189,12 @@ export function Navbar() {
             <Link
               key={link.href}
               href={link.href}
-              onClick={() => setIsOpen(false)}
+              onClick={() => {
+                setIsOpen(false)
+                if (!link.href.includes('#')) {
+                  window.scrollTo(0, 0)
+                }
+              }}
               className="block px-4 py-3 text-sm font-semibold text-[#0f1d33] hover:text-[#002935] hover:bg-[#f3f5f8] rounded-lg transition-premium"
             >
               {link.label}

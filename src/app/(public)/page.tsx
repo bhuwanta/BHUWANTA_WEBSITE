@@ -9,10 +9,11 @@ import {
 import { generatePageMetadata } from '@/lib/seo'
 import { sanityFetch, homeQuery, projectsQuery, projectCategoriesQuery } from '@/lib/sanity'
 import { extractYouTubeId } from '@/lib/utils'
-// Form imports temporarily removed
-import { ReviewsSection } from '@/components/ui/ReviewsSection'
-import { ContactForm } from '@/components/ui/ContactForm'
-import { AnimatedCounter } from '@/components/ui/AnimatedCounter'
+import dynamic from 'next/dynamic'
+
+const ReviewsSection = dynamic(() => import('@/components/ui/ReviewsSection').then(mod => mod.ReviewsSection))
+const ContactForm = dynamic(() => import('@/components/ui/ContactForm').then(mod => mod.ContactForm))
+const AnimatedCounter = dynamic(() => import('@/components/ui/AnimatedCounter').then(mod => mod.AnimatedCounter))
 import { HeroSlider } from '@/components/ui/HeroSlider'
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -54,11 +55,12 @@ export default async function HomePage() {
     // Use fallback
   }
 
-  const dynamicProjectNames = Array.from(new Set(
-    (projectsData?.projectEntries || [])
-      .map((p: any) => p.categoryTitle)
-      .filter(Boolean)
-  )) as string[]
+  const projectsList = (projectsData?.projectEntries || []).map((p: any) => ({
+    name: p.name,
+    location: p.categoryTitle,
+  })).filter((p: any) => p.name)
+
+  const locationNames = Array.from(new Set(projectsList.map((p: any) => p.location).filter(Boolean))) as string[]
 
   // 1. Why Features
   const whyFeatures = [
@@ -317,8 +319,8 @@ export default async function HomePage() {
             {/* Explore More Card */}
             <Link href="/projects" className="group block">
               <div className="relative overflow-hidden rounded-2xl shadow-sm border border-[#e8ecf2] bg-[#f7f8fa] transition-all duration-500 hover:shadow-md hover:-translate-y-1 hover:border-[#c4a55a]/50 flex flex-col items-center justify-center p-8 text-center aspect-[4/3]">
-                <div className="w-16 h-16 rounded-full bg-[#1e3a5f]/5 flex items-center justify-center mb-6 group-hover:bg-[#c4a55a]/10 transition-colors duration-300">
-                  <ArrowRight className="w-8 h-8 text-[#0f1d33] group-hover:text-[#c4a55a] transition-colors duration-300" />
+                <div className="w-16 h-16 rounded-full bg-[#1e3a5f]/5 flex items-center justify-center mb-6 group-hover:bg-gradient-to-tr group-hover:from-[#c4a55a] group-hover:to-[#d4b872] group-hover:shadow-lg group-hover:shadow-[#c4a55a]/30 transition-all duration-500">
+                  <ArrowRight className="w-8 h-8 text-[#0f1d33] group-hover:text-white group-hover:translate-x-1.5 transition-all duration-500" />
                 </div>
                 <h3 className="text-xl font-bold text-[#0f1d33] mb-3 group-hover:text-[#c4a55a] transition-colors duration-300">
                   Explore More
@@ -489,7 +491,7 @@ export default async function HomePage() {
       </section>
 
       {/* ===== SECTION 8 — BOOK YOUR FREE SITE VISIT TODAY (WHITE/GRAY-50) ===== */}
-      <section className="bg-gray-50 py-20 sm:py-28" id="book-visit">
+      <section className="bg-gray-50 pt-10 pb-20 sm:pt-16 sm:pb-28" id="book-visit">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
 
           {/* Top Center Badge */}
@@ -528,7 +530,7 @@ export default async function HomePage() {
 
             {/* Right Side: Form */}
             <div className="bg-white border border-gray-100 rounded-2xl p-6 sm:p-10 shadow-xl lg:order-2">
-              <ContactForm projectNames={dynamicProjectNames} />
+              <ContactForm projectsList={projectsList} locationNames={locationNames} />
             </div>
 
           </div>

@@ -20,11 +20,12 @@ export default async function PublicLayout({
     projectsData = await sanityFetch({ query: projectsQuery, tags: ['projects'] })
   } catch { /* fallback */ }
 
-  const uniqueProjectNames = Array.from(new Set(
-    (projectsData?.projectEntries || [])
-      .map((p: any) => p.categoryTitle)
-      .filter(Boolean)
-  )) as string[]
+  const projectsList = (projectsData?.projectEntries || []).map((p: any) => ({
+    name: p.name,
+    location: p.categoryTitle,
+  })).filter((p: any) => p.name)
+
+  const uniqueLocations = Array.from(new Set(projectsList.map((p: any) => p.location).filter(Boolean))) as string[]
 
   const websiteSchema = buildWebSiteSchema({
     name: 'Bhuwanta',
@@ -94,7 +95,7 @@ export default async function PublicLayout({
       <Navbar />
       <main className="flex-1 flex flex-col">{children}</main>
       <Footer />
-      <DynamicClientComponents projectNames={uniqueProjectNames} />
+      <DynamicClientComponents projectsList={projectsList} locationNames={uniqueLocations} />
     </>
   )
 }

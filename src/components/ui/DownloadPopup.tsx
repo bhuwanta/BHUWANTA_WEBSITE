@@ -17,6 +17,7 @@ interface DownloadPopupProps {
 export function DownloadPopup({ isOpen, onClose, onSuccess, projectName, documentType }: DownloadPopupProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [phoneError, setPhoneError] = useState('')
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -28,6 +29,7 @@ export function DownloadPopup({ isOpen, onClose, onSuccess, projectName, documen
     if (isOpen) {
       setIsSubmitted(false)
       setIsSubmitting(false)
+      setPhoneError('')
       setFormData({ name: '', phone: '', email: '' })
     }
   }, [isOpen])
@@ -137,15 +139,29 @@ export function DownloadPopup({ isOpen, onClose, onSuccess, projectName, documen
                   />
 
                   <div className="grid grid-cols-2 gap-3">
-                    <input
-                      required
-                      type="tel"
-                      placeholder="Phone Number *"
-                      aria-label="Phone Number"
-                      className="w-full px-4 py-3 bg-[#f8f9fb] border border-[#e8ecf2] rounded-xl text-sm text-[#002935] placeholder:text-[#002935]/40 focus:outline-none focus:ring-2 focus:ring-[#002935]/20 focus:border-[#002935]/50 transition-all"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    />
+                    <div>
+                      <input
+                        required
+                        type="tel"
+                        placeholder="Phone Number *"
+                        aria-label="Phone Number"
+                        minLength={10}
+                        pattern="[0-9]{10}"
+                        className={`w-full px-4 py-3 bg-[#f8f9fb] border ${phoneError ? 'border-red-500 focus:ring-red-500' : 'border-[#e8ecf2] focus:ring-[#002935]/20'} rounded-xl text-sm text-[#002935] placeholder:text-[#002935]/40 focus:outline-none focus:ring-2 focus:border-[#002935]/50 transition-all`}
+                        value={formData.phone}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          const digitsOnly = val.replace(/\D/g, '');
+                          if (val !== digitsOnly || digitsOnly.length > 10) {
+                            setPhoneError('Please enter 10 digits only');
+                          } else {
+                            setPhoneError('');
+                          }
+                          setFormData({ ...formData, phone: digitsOnly.slice(0, 10) });
+                        }}
+                      />
+                      {phoneError && <p className="text-red-500 text-xs mt-1">{phoneError}</p>}
+                    </div>
                     <input
                       required
                       type="email"

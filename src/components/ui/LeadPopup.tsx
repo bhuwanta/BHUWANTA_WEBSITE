@@ -6,14 +6,16 @@ import { X, CheckCircle2 } from 'lucide-react'
 import Image from 'next/image'
 import logoImg from '@/images/logo.png'
 
-export function LeadPopup({ projectNames = [] }: { projectNames?: string[] }) {
+export function LeadPopup({ projectsList = [], locationNames = [] }: { projectsList?: { name: string, location: string }[], locationNames?: string[] }) {
   const [isOpen, setIsOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [phoneError, setPhoneError] = useState('')
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
     email: '',
+    location: 'All',
     project: 'Not Sure',
     enquiryType: 'Site Visit',
     message: '',
@@ -118,15 +120,29 @@ export function LeadPopup({ projectNames = [] }: { projectNames?: string[] }) {
                   />
 
                   <div className="grid grid-cols-2 gap-3">
-                    <input
-                      required
-                      type="tel"
-                      placeholder="Phone Number *"
-                      aria-label="Phone Number"
-                      className="w-full px-4 py-3 bg-[#f8f9fb] border border-[#e8ecf2] rounded-xl text-sm text-[#002935] placeholder:text-[#002935]/40 focus:outline-none focus:ring-2 focus:ring-[#002935]/20 focus:border-[#002935]/50 transition-all"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    />
+                    <div>
+                      <input
+                        required
+                        type="tel"
+                        placeholder="Phone Number *"
+                        aria-label="Phone Number"
+                        minLength={10}
+                        pattern="[0-9]{10}"
+                        className={`w-full px-4 py-3 bg-[#f8f9fb] border ${phoneError ? 'border-red-500 focus:ring-red-500' : 'border-[#e8ecf2] focus:ring-[#002935]/20'} rounded-xl text-sm text-[#002935] placeholder:text-[#002935]/40 focus:outline-none focus:ring-2 focus:border-[#002935]/50 transition-all`}
+                        value={formData.phone}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          const digitsOnly = val.replace(/\D/g, '');
+                          if (val !== digitsOnly || digitsOnly.length > 10) {
+                            setPhoneError('Please enter 10 digits only');
+                          } else {
+                            setPhoneError('');
+                          }
+                          setFormData({ ...formData, phone: digitsOnly.slice(0, 10) });
+                        }}
+                      />
+                      {phoneError && <p className="text-red-500 text-xs mt-1">{phoneError}</p>}
+                    </div>
                     <input
                       required
                       type="email"
@@ -140,13 +156,13 @@ export function LeadPopup({ projectNames = [] }: { projectNames?: string[] }) {
 
                   <div className="relative">
                     <select 
-                      aria-label="Select project"
+                      aria-label="Select location"
                       className="w-full appearance-none px-4 py-3 bg-[#f8f9fb] border border-[#e8ecf2] rounded-xl text-sm text-[#002935] focus:outline-none focus:ring-2 focus:ring-[#002935]/20 focus:border-[#002935]/50 transition-all"
-                      value={formData.project}
-                      onChange={(e) => setFormData({ ...formData, project: e.target.value })}
+                      value={formData.location}
+                      onChange={(e) => setFormData({ ...formData, location: e.target.value, project: 'Not Sure' })}
                     >
-                      <option value="Not Sure">Project: Not Sure</option>
-                      {projectNames.map((name, idx) => (
+                      <option value="All">Location: All</option>
+                      {locationNames.map((name, idx) => (
                         <option key={idx} value={name}>{name}</option>
                       ))}
                     </select>
@@ -157,14 +173,19 @@ export function LeadPopup({ projectNames = [] }: { projectNames?: string[] }) {
 
                   <div className="relative">
                     <select 
-                      aria-label="Select enquiry type"
+                      aria-label="Select project"
                       className="w-full appearance-none px-4 py-3 bg-[#f8f9fb] border border-[#e8ecf2] rounded-xl text-sm text-[#002935] focus:outline-none focus:ring-2 focus:ring-[#002935]/20 focus:border-[#002935]/50 transition-all"
-                      value={formData.enquiryType}
-                      onChange={(e) => setFormData({ ...formData, enquiryType: e.target.value })}
+                      value={formData.project}
+                      onChange={(e) => setFormData({ ...formData, project: e.target.value })}
                     >
-                      <option value="Site Visit">Enquiry Type: Site Visit</option>
-                      <option value="General Inquiry">Enquiry Type: General Inquiry</option>
-                      <option value="Pricing Details">Enquiry Type: Pricing Details</option>
+                      <option value="Not Sure">Project: Not Sure</option>
+                      {Array.from(new Set(
+                        projectsList
+                          .filter(p => (formData.location && formData.location !== 'All') ? p.location === formData.location : true)
+                          .map(p => p.name)
+                      )).map((name, idx) => (
+                        <option key={idx} value={name}>{name}</option>
+                      ))}
                     </select>
                     <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-[#002935]/40">
                       <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" /></svg>

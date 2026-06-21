@@ -75,10 +75,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, email, phone, project, enquiryType, message, sourcePage } = body
+    const { name, email, phone, location, project, enquiryType, message, sourcePage } = body
 
     // Create a summarized budget string for CRM (Sanity/Supabase) backwards compatibility
-    const budget = `Project: ${project} | Type: ${enquiryType} | Message: ${message}`
+    const locationStr = location && location !== 'Not Sure' ? `Location: ${location} | ` : ''
+    const budget = `${locationStr}Project: ${project} | Type: ${enquiryType} | Message: ${message}`
 
     // Validation
     if (!name || !email || !phone) {
@@ -117,11 +118,20 @@ export async function POST(request: NextRequest) {
     // Backup into Supabase (Safety net — non-blocking)
     try {
       const supabase = createServiceClient()
+      
+      // Extract download item if it's a download
+      const isDownload = enquiryType?.includes('Document Download')
+      const downloadedItem = isDownload ? enquiryType.replace('Document Download: ', '') : null
+
       await supabase.from('leads').insert({
         name,
         email,
         phone: phone || null,
-        message: budget || '',
+        message: message || '',
+        location: location && location !== 'All' ? location : null,
+        project: project && project !== 'Not Sure' ? project : null,
+        enquiry_type: enquiryType || 'Website Inquiry',
+        downloaded_item: downloadedItem,
         source_page: sourcePage || 'Website',
         status: 'new',
       })
@@ -132,7 +142,7 @@ export async function POST(request: NextRequest) {
     // Send emails (non-blocking, don't fail the request)
     try {
       await Promise.all([
-        sendContactNotification({ name, email, phone, project, enquiryType, message, sourcePage }),
+        sendContactNotification({ name, email, phone, location, project, enquiryType, message, sourcePage }),
         sendDynamicAutoresponder(name, email), // Call our new Sanity-driven function
       ])
     } catch (emailError) {

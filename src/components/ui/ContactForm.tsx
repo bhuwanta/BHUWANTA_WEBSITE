@@ -2,14 +2,16 @@
 
 import { useState } from 'react'
 
-export function ContactForm({ projectNames = [] }: { projectNames?: string[] }) {
+export function ContactForm({ projectsList = [], locationNames = [] }: { projectsList?: { name: string, location: string }[], locationNames?: string[] }) {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
+  const [phoneError, setPhoneError] = useState('')
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
+    location: 'All',
     project: 'Not Sure',
     enquiryType: 'Site Visit',
     message: '',
@@ -19,10 +21,28 @@ export function ContactForm({ projectNames = [] }: { projectNames?: string[] }) 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target
     const checked = (e.target as HTMLInputElement).checked
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }))
+    
+    let finalValue = value
+    if (name === 'phone') {
+      const digitsOnly = value.replace(/\D/g, '')
+      if (value !== digitsOnly || digitsOnly.length > 10) {
+        setPhoneError('Please enter 10 digits only')
+      } else {
+        setPhoneError('')
+      }
+      finalValue = digitsOnly.slice(0, 10)
+    }
+
+    setFormData(prev => {
+      const newData = {
+        ...prev,
+        [name]: type === 'checkbox' ? checked : finalValue
+      }
+      if (name === 'location') {
+        newData.project = 'Not Sure'
+      }
+      return newData
+    })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -45,6 +65,7 @@ export function ContactForm({ projectNames = [] }: { projectNames?: string[] }) 
           name: formData.name,
           email: formData.email,
           phone: formData.phone,
+          location: formData.location,
           project: formData.project,
           enquiryType: formData.enquiryType,
           message: formData.message,
@@ -63,6 +84,7 @@ export function ContactForm({ projectNames = [] }: { projectNames?: string[] }) 
         name: '',
         email: '',
         phone: '',
+        location: 'All',
         project: 'Not Sure',
         enquiryType: 'Site Visit',
         message: '',
@@ -93,7 +115,7 @@ export function ContactForm({ projectNames = [] }: { projectNames?: string[] }) 
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-[#0f1d33] mb-1">Full Name</label>
+          <label htmlFor="name" className="block text-sm font-medium text-[#0f1d33] mb-1">Full Name <span className="text-red-500">*</span></label>
           <input 
             type="text" 
             id="name" 
@@ -106,20 +128,7 @@ export function ContactForm({ projectNames = [] }: { projectNames?: string[] }) 
         </div>
 
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-[#0f1d33] mb-1">Email ID</label>
-          <input 
-            type="email" 
-            id="email" 
-            name="email" 
-            value={formData.email}
-            onChange={handleChange}
-            required 
-            className="w-full bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-3 py-2.5 text-[#0f1d33] text-sm focus:outline-none focus:ring-2 focus:ring-[#c4a55a] focus:border-transparent"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="phone" className="block text-sm font-medium text-[#0f1d33] mb-1">Mobile Number</label>
+          <label htmlFor="phone" className="block text-sm font-medium text-[#0f1d33] mb-1">Mobile Number <span className="text-red-500">*</span></label>
           <input 
             type="tel" 
             id="phone" 
@@ -127,8 +136,34 @@ export function ContactForm({ projectNames = [] }: { projectNames?: string[] }) 
             value={formData.phone}
             onChange={handleChange}
             required 
-            className="w-full bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-3 py-2.5 text-[#0f1d33] text-sm focus:outline-none focus:ring-2 focus:ring-[#c4a55a] focus:border-transparent"
+            minLength={10}
+            pattern="[0-9]{10}"
+            className={`w-full bg-[#f3f5f8] border ${phoneError ? 'border-red-500 focus:ring-red-500' : 'border-[#e8ecf2] focus:ring-[#c4a55a]'} rounded-lg px-3 py-2.5 text-[#0f1d33] text-sm focus:outline-none focus:ring-2 focus:border-transparent`}
           />
+          {phoneError && <p className="text-red-500 text-xs mt-1">{phoneError}</p>}
+        </div>
+
+        <div>
+          <label htmlFor="location" className="block text-sm font-medium text-[#0f1d33] mb-1">Preferred Location</label>
+          <div className="relative">
+            <select 
+              id="location" 
+              name="location" 
+              value={formData.location}
+              onChange={handleChange}
+              className="w-full appearance-none bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg pl-3 pr-10 py-2.5 text-[#0f1d33] text-sm focus:outline-none focus:ring-2 focus:ring-[#c4a55a] focus:border-transparent"
+            >
+              <option value="All">All Locations</option>
+              {locationNames.map((name, idx) => (
+                <option key={idx} value={name}>{name}</option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#5a6a82]">
+              <svg className="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+              </svg>
+            </div>
+          </div>
         </div>
 
         <div>
@@ -142,7 +177,11 @@ export function ContactForm({ projectNames = [] }: { projectNames?: string[] }) 
               className="w-full appearance-none bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg pl-3 pr-10 py-2.5 text-[#0f1d33] text-sm focus:outline-none focus:ring-2 focus:ring-[#c4a55a] focus:border-transparent"
             >
               <option value="Not Sure">Not Sure</option>
-              {projectNames.map((name, idx) => (
+              {Array.from(new Set(
+                projectsList
+                  .filter(p => (formData.location && formData.location !== 'All') ? p.location === formData.location : true)
+                  .map(p => p.name)
+              )).map((name, idx) => (
                 <option key={idx} value={name}>{name}</option>
               ))}
             </select>
@@ -154,7 +193,20 @@ export function ContactForm({ projectNames = [] }: { projectNames?: string[] }) 
           </div>
         </div>
 
-        <div className="sm:col-span-2">
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium text-[#0f1d33] mb-1">Email ID <span className="text-red-500">*</span></label>
+          <input 
+            type="email" 
+            id="email" 
+            name="email" 
+            value={formData.email}
+            onChange={handleChange}
+            required 
+            className="w-full bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-3 py-2.5 text-[#0f1d33] text-sm focus:outline-none focus:ring-2 focus:ring-[#c4a55a] focus:border-transparent"
+          />
+        </div>
+
+        <div>
           <label htmlFor="enquiryType" className="block text-sm font-medium text-[#0f1d33] mb-1">Select Enquiry Type</label>
           <div className="relative">
             <select 

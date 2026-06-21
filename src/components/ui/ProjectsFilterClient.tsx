@@ -37,16 +37,9 @@ export function ProjectsFilterClient({ projects, categories = [], pageHeading }:
     
     urls.forEach((url, index) => {
       setTimeout(() => {
-        const link = document.createElement('a');
-        // Add ?dl= to force Sanity CDN to return Content-Disposition: attachment
-        const downloadUrl = url.includes('?') ? `${url}&dl=` : `${url}?dl=`;
-        link.href = downloadUrl;
-        link.setAttribute('download', '');
-        link.target = '_blank';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }, index * 300); // 300ms delay between each download to prevent browser blocking
+        // Open the document in a new tab instead of forcing a download
+        window.open(url, '_blank');
+      }, index * 300); // 300ms delay between each to prevent browser popup blocking
     });
   };
 

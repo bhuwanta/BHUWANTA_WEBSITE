@@ -1,6 +1,6 @@
 import { homeSchema } from './home'
 import { aboutSchema } from './about'
-import { gallerySchema } from './gallery'
+
 import { projectsSchema } from './projects'
 import { blogSchema } from './blog'
 import { contactSchema } from './contact'
@@ -16,7 +16,7 @@ export const schemaTypes = [
   leadSchema,
   homeSchema,
   aboutSchema,
-  gallerySchema,
+
   projectsSchema,
   blogSchema,
   contactSchema,

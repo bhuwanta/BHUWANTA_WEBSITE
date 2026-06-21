@@ -11,6 +11,7 @@ export async function sendContactNotification(lead: {
   name: string
   email: string
   phone?: string
+  location?: string
   project?: string
   enquiryType?: string
   message?: string
@@ -38,6 +39,7 @@ export async function sendContactNotification(lead: {
         <tr><td style="padding: 8px; font-weight: bold;">Name:</td><td style="padding: 8px;">${lead.name}</td></tr>
         <tr><td style="padding: 8px; font-weight: bold;">Email:</td><td style="padding: 8px;"><a href="mailto:${lead.email}">${lead.email}</a></td></tr>
         ${lead.phone ? `<tr><td style="padding: 8px; font-weight: bold;">Phone:</td><td style="padding: 8px;">${lead.phone}</td></tr>` : ''}
+        <tr><td style="padding: 8px; font-weight: bold;">Location:</td><td style="padding: 8px;">${lead.location || 'Not Sure'}</td></tr>
         <tr><td style="padding: 8px; font-weight: bold;">Project:</td><td style="padding: 8px;">${lead.project || 'Not Sure'}</td></tr>
         <tr><td style="padding: 8px; font-weight: bold;">Type:</td><td style="padding: 8px;">${lead.enquiryType || 'Site Visit'}</td></tr>
         <tr><td style="padding: 8px; font-weight: bold;">Message:</td><td style="padding: 8px; white-space: pre-wrap;">${lead.message || 'No message provided'}</td></tr>
