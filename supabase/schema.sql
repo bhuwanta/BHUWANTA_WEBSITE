@@ -284,3 +284,63 @@ ON CONFLICT DO NOTHING;
 CREATE POLICY "Public can view media files" ON storage.objects FOR SELECT USING (bucket_id = 'media');
 CREATE POLICY "Authenticated users can upload media" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'media' AND auth.role() = 'authenticated');
 CREATE POLICY "Authenticated users can delete media" ON storage.objects FOR DELETE USING (bucket_id = 'media' AND auth.role() = 'authenticated');
+
+-- ===================
+-- CONVERSATIONS TABLE
+-- ===================
+CREATE TABLE IF NOT EXISTS conversations (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  lead_id UUID REFERENCES leads(id) ON DELETE CASCADE,
+  whatsapp_number TEXT NOT NULL,
+  status TEXT DEFAULT 'active' CHECK (status IN ('active', 'closed')),
+  current_state TEXT DEFAULT 'INIT',
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Authenticated users manage conversations" ON conversations FOR ALL USING (auth.role() = 'authenticated');
+
+-- ===================
+-- MESSAGES TABLE
+-- ===================
+CREATE TABLE IF NOT EXISTS messages (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  conversation_id UUID REFERENCES conversations(id) ON DELETE CASCADE,
+  direction TEXT CHECK (direction IN ('inbound', 'outbound')),
+  content TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Authenticated users manage messages" ON messages FOR ALL USING (auth.role() = 'authenticated');
+
+-- ===================
+-- CALLBACKS TABLE
+-- ===================
+CREATE TABLE IF NOT EXISTS callbacks (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  lead_id UUID REFERENCES leads(id) ON DELETE CASCADE,
+  requested_at TIMESTAMPTZ DEFAULT now(),
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'completed')),
+  notes TEXT
+);
+
+ALTER TABLE callbacks ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Authenticated users manage callbacks" ON callbacks FOR ALL USING (auth.role() = 'authenticated');
+
+-- ===================
+-- APPOINTMENTS TABLE
+-- ===================
+CREATE TABLE IF NOT EXISTS appointments (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  lead_id UUID REFERENCES leads(id) ON DELETE CASCADE,
+  scheduled_for TIMESTAMPTZ NOT NULL,
+  status TEXT DEFAULT 'scheduled' CHECK (status IN ('scheduled', 'cancelled', 'completed')),
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE appointments ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Authenticated users manage appointments" ON appointments FOR ALL USING (auth.role() = 'authenticated');
