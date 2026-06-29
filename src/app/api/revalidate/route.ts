@@ -47,9 +47,7 @@ export async function POST(request: NextRequest) {
         safeRevalidateTag('careers')
         revalidatePath('/careers')
         break
-      case 'contact':
-        safeRevalidateTag('contact')
-        break
+
       default:
         // Revalidate all public pages
         revalidatePath('/', 'layout')

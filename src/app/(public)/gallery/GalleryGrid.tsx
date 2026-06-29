@@ -9,22 +9,61 @@ interface ProjectGallery {
   name: string
   categoryTitle: string | null
   images: string[]
-  videoUrl: string | null
-  youtubeId: string | null
+  videoUrls: string[]
+  youtubeIds: string[]
+}
+
+interface GalleryData {
+  pageHeading?: string
+  generalImages?: string[]
+  generalVideos?: string[]
+  generalYoutubeUrls?: string[]
 }
 
 interface GalleryGridProps {
   projects: ProjectGallery[]
+  gallerySingleton?: GalleryData | null
 }
 
-export function GalleryGrid({ projects = [] }: GalleryGridProps) {
+export function GalleryGrid({ projects = [], gallerySingleton = null }: GalleryGridProps) {
   const [activeTab, setActiveTab] = useState<'social_media' | 'photos' | 'videos'>('photos')
   const [lightboxImage, setLightboxImage] = useState<string | null>(null)
 
-  // Filter projects that have images
-  const projectsWithImages = projects.filter((p) => p.images.length > 0)
-  // Filter projects that have videos
-  const projectsWithVideos = projects.filter((p) => p.youtubeId || p.videoUrl)
+  // Append General Gallery images as a pseudo-project
+  const projectsWithImages = [...projects]
+  if (gallerySingleton?.generalImages && gallerySingleton.generalImages.length > 0) {
+    projectsWithImages.push({
+      name: 'General Gallery',
+      categoryTitle: 'Other',
+      images: gallerySingleton.generalImages,
+      videoUrls: [],
+      youtubeIds: []
+    })
+  }
+  const filteredProjectsWithImages = projectsWithImages.filter((p) => p.images.length > 0)
+
+  // Append General Gallery videos as a pseudo-project
+  const projectsWithVideos = [...projects]
+  
+  let generalYoutubeIds: string[] = []
+  if (gallerySingleton?.generalYoutubeUrls) {
+    generalYoutubeIds = gallerySingleton.generalYoutubeUrls.map(url => {
+      const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|shorts\/|watch\?v=|watch\?.+&v=))([^&?]+)/)
+      return match ? match[1] : null
+    }).filter(Boolean) as string[]
+  }
+
+  if ((gallerySingleton?.generalVideos && gallerySingleton.generalVideos.length > 0) || generalYoutubeIds.length > 0) {
+    projectsWithVideos.push({
+      name: 'General Videos',
+      categoryTitle: 'Other',
+      images: [],
+      videoUrls: gallerySingleton?.generalVideos || [],
+      youtubeIds: generalYoutubeIds
+    })
+  }
+  
+  const filteredProjectsWithVideos = projectsWithVideos.filter((p) => p.youtubeIds.length > 0 || p.videoUrls.length > 0)
 
   // Grouping helper
   const groupByCategory = (list: ProjectGallery[]) => {
@@ -36,8 +75,8 @@ export function GalleryGrid({ projects = [] }: GalleryGridProps) {
     }, {} as Record<string, ProjectGallery[]>)
   }
 
-  const groupedImages = groupByCategory(projectsWithImages)
-  const groupedVideos = groupByCategory(projectsWithVideos)
+  const groupedImages = groupByCategory(filteredProjectsWithImages)
+  const groupedVideos = groupByCategory(filteredProjectsWithVideos)
 
   return (
     <div className="py-16 bg-[#f7f8fa]">
@@ -125,7 +164,7 @@ export function GalleryGrid({ projects = [] }: GalleryGridProps) {
         {/* Photos Tab Content */}
         {activeTab === 'photos' && (
           <div className="space-y-20">
-            {projectsWithImages.length === 0 ? (
+            {filteredProjectsWithImages.length === 0 ? (
               <div className="text-center py-12">
                 <ImageIcon className="w-16 h-16 text-[#e8ecf2] mx-auto mb-4" />
                 <p className="text-[#5a6a82] text-lg">No photos available at the moment.</p>
@@ -186,7 +225,7 @@ export function GalleryGrid({ projects = [] }: GalleryGridProps) {
         {/* Videos Tab Content */}
         {activeTab === 'videos' && (
           <div className="space-y-12">
-            {projectsWithVideos.length === 0 ? (
+            {filteredProjectsWithVideos.length === 0 ? (
               <div className="text-center py-12">
                 <Film className="w-16 h-16 text-[#e8ecf2] mx-auto mb-4" />
                 <p className="text-[#5a6a82] text-lg">No videos available at the moment.</p>
@@ -202,13 +241,13 @@ export function GalleryGrid({ projects = [] }: GalleryGridProps) {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {catProjects.map((project, pIdx) => (
                       <div key={pIdx} className="contents">
-                        {/* YouTube Video */}
-                        {project.youtubeId && (
-                          <div className="bg-white border border-[#e8ecf2] shadow-sm rounded-xl overflow-hidden group hover:shadow-md transition-premium h-fit">
+                        {/* YouTube Videos */}
+                        {project.youtubeIds.map((youtubeId, yIdx) => (
+                          <div key={`yt-${pIdx}-${yIdx}`} className="bg-white border border-[#e8ecf2] shadow-sm rounded-xl overflow-hidden group hover:shadow-md transition-premium h-fit">
                             <div className="aspect-video relative bg-[#f3f5f8]">
                               <iframe 
-                                src={`https://www.youtube.com/embed/${project.youtubeId}`}
-                                title={`${project.name} - YouTube Video`}
+                                src={`https://www.youtube.com/embed/${youtubeId}`}
+                                title={`${project.name} - YouTube Video ${yIdx + 1}`}
                                 className="w-full h-full border-0"
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                 allowFullScreen
@@ -216,17 +255,17 @@ export function GalleryGrid({ projects = [] }: GalleryGridProps) {
                             </div>
                             <div className="p-4 sm:p-6">
                               <h4 className="text-lg font-bold text-[#0f1d33]">{project.name}</h4>
-                              <p className="text-sm text-[#5a6a82] mt-1">YouTube</p>
+                              <p className="text-sm text-[#5a6a82] mt-1">YouTube Video</p>
                             </div>
                           </div>
-                        )}
+                        ))}
 
-                        {/* Uploaded Video */}
-                        {project.videoUrl && (
-                          <div className="bg-white border border-[#e8ecf2] shadow-sm rounded-xl overflow-hidden group hover:shadow-md transition-premium h-fit">
+                        {/* Uploaded Videos */}
+                        {project.videoUrls.map((videoUrl, vIdx) => (
+                          <div key={`vid-${pIdx}-${vIdx}`} className="bg-white border border-[#e8ecf2] shadow-sm rounded-xl overflow-hidden group hover:shadow-md transition-premium h-fit">
                             <div className="relative bg-black flex items-center justify-center">
                               <video 
-                                src={project.videoUrl}
+                                src={videoUrl}
                                 controls
                                 className="w-full h-auto max-h-[70vh] object-contain"
                                 preload="metadata"
@@ -237,7 +276,7 @@ export function GalleryGrid({ projects = [] }: GalleryGridProps) {
                               <p className="text-sm text-[#5a6a82] mt-1">Project Video</p>
                             </div>
                           </div>
-                        )}
+                        ))}
                       </div>
                     ))}
                   </div>

@@ -25,6 +25,8 @@ export interface ProjectEntry {
   approvalBadge?: string
   videoUrl?: string
   youtubeUrl?: string
+  videoUrls?: string[]
+  youtubeUrls?: string[]
 }
 
 export function ProjectsFilterClient({ projects, categories = [], pageHeading }: { projects: ProjectEntry[], categories?: { id: string; title: string; label: string; order?: number }[], pageHeading?: string }) {
@@ -103,7 +105,12 @@ export function ProjectsFilterClient({ projects, categories = [], pageHeading }:
                       
                       {/* Left: Image Area */}
                       <div className="w-full lg:w-2/5 h-64 lg:h-auto bg-[#f3f5f8] relative overflow-hidden flex-shrink-0 flex items-center justify-center border-b lg:border-b-0 lg:border-r border-[#e8ecf2]">
-                        <ProjectImageCarousel images={project.images} projectName={project.name} videoUrl={project.videoUrl} youtubeUrl={project.youtubeUrl} />
+                        <ProjectImageCarousel 
+                          images={project.images} 
+                          projectName={project.name} 
+                          videoUrl={project.videoUrl || project.videoUrls?.[0]} 
+                          youtubeUrl={project.youtubeUrl || project.youtubeUrls?.[0]} 
+                        />
                         <div className="absolute inset-0 bg-[#1e3a5f]/5 group-hover:bg-transparent transition-colors z-30 pointer-events-none"></div>
                       </div>
 

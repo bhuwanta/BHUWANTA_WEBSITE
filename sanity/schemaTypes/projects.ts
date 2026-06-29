@@ -56,6 +56,20 @@ export const projectsSchema = defineType({
               description: 'Optional: Provide a YouTube link instead of uploading a video file.'
             }),
             defineField({
+              name: 'videoFiles',
+              type: 'array',
+              title: 'Additional Project Videos (MP4)',
+              of: [{ type: 'file', options: { accept: 'video/*' } }],
+              description: 'Upload multiple MP4 videos. The first video (or legacy video) will be shown on the Projects page, but all will show in the Gallery.'
+            }),
+            defineField({
+              name: 'youtubeUrls',
+              type: 'array',
+              title: 'Additional YouTube Video URLs',
+              of: [{ type: 'url' }],
+              description: 'Provide multiple YouTube links. The first link (or legacy link) will be shown on the Projects page, but all will show in the Gallery.'
+            }),
+            defineField({
               name: 'brochure',
               type: 'array',
               title: 'Project Brochures',

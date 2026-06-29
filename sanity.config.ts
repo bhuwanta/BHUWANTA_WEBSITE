@@ -91,16 +91,15 @@ export default defineConfig({
                           .title('Projects Page — Listings & Details')
                       ),
 
-
                     S.listItem()
-                      .title('Contact Page')
-                      .id('contact-page')
-                      .icon(EnvelopeIcon)
+                      .title('Gallery Page')
+                      .id('gallery-page')
+                      .icon(ImagesIcon)
                       .child(
                         S.document()
-                          .schemaType('contact')
-                          .documentId('contact')
-                          .title('Contact — Form Labels & Thank You Message')
+                          .schemaType('gallery')
+                          .documentId('gallery')
+                          .title('Gallery Page — Standalone Photos & Videos')
                       ),
                   ])
               ),

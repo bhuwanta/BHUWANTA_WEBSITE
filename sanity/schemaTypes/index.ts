@@ -3,7 +3,7 @@ import { aboutSchema } from './about'
 
 import { projectsSchema } from './projects'
 import { blogSchema } from './blog'
-import { contactSchema } from './contact'
+import { gallerySchema } from './gallery'
 import { siteSettingsSchema } from './siteSettings'
 import { autoresponderSchema } from './autoresponder'
 import { leadSchema } from './lead'
@@ -19,5 +19,5 @@ export const schemaTypes = [
 
   projectsSchema,
   blogSchema,
-  contactSchema,
+  gallerySchema,
 ]

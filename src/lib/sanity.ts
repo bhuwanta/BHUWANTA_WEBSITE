@@ -131,13 +131,23 @@ export const aboutQuery = `*[_type == "about"][0]{
   ctaDescription
 }`
 
-export const galleryQuery = `*[_type == "projects"][0]{
-  projectEntries[]{
-    name,
-    "categoryTitle": category->title,
-    "images": images[].asset->url,
-    "videoUrl": videoFile.asset->url,
-    youtubeUrl
+export const galleryQuery = `{
+  "projectsData": *[_type == "projects"][0]{
+    projectEntries[]{
+      name,
+      "categoryTitle": category->title,
+      "images": images[].asset->url,
+      "videoUrl": videoFile.asset->url,
+      "videoUrls": videoFiles[].asset->url,
+      youtubeUrl,
+      youtubeUrls
+    }
+  },
+  "galleryData": *[_type == "gallery"][0]{
+    pageHeading,
+    "generalImages": generalImages[].asset->url,
+    "generalVideos": generalVideos[].asset->url,
+    generalYoutubeUrls
   }
 }`
 
@@ -153,7 +163,9 @@ export const projectsQuery = `*[_type == "projects"][0]{
     description,
     "images": images[].asset->url,
     "videoUrl": videoFile.asset->url,
+    "videoUrls": videoFiles[].asset->url,
     youtubeUrl,
+    youtubeUrls,
     projectHighlights,
     "brochureUrls": brochure[].asset->url,
     "layoutUrls": layoutPdf[].asset->url,
@@ -199,15 +211,6 @@ export const blogPostQuery = `*[_type == "blog" && slug.current == $slug][0]{
   focusKeyword
 }`
 
-export const contactQuery = `*[_type == "contact"][0]{
-  pageHeading,
-  pageSubheading,
-  formLabels,
-  queryOptions,
-  thankYouMessage,
-  whatsappLink,
-  googleMapsEmbed
-}`
 
 export const siteSettingsQuery = `*[_type == "siteSettings"][0]{
   siteName,
