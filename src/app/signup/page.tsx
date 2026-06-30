@@ -3,10 +3,10 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Eye, EyeOff } from 'lucide-react'
-import { login } from './actions'
+import { signup } from './actions'
 import { useActionState } from 'react'
 
-export default function AdminLoginPage() {
+export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isPending, setIsPending] = useState(false)
@@ -14,7 +14,7 @@ export default function AdminLoginPage() {
   async function handleSubmit(formData: FormData) {
     setIsPending(true)
     setError(null)
-    const result = await login(formData)
+    const result = await signup(formData)
     if (result?.error) {
       setError(result.error)
       setIsPending(false)
@@ -26,10 +26,10 @@ export default function AdminLoginPage() {
       <div className="w-full max-w-md space-y-8 rounded-xl bg-white p-10 shadow-sm border border-[#e8ecf2]">
         <div className="text-center">
           <h2 className="mt-6 text-3xl font-bold tracking-tight text-[#0f1d33]">
-            Admin Login
+            Create Admin Account
           </h2>
           <p className="mt-2 text-sm text-[#5a6a82]">
-            Welcome back to the Bhuwanta CRM
+            Sign up to access the Bhuwanta CRM
           </p>
         </div>
         
@@ -41,6 +41,34 @@ export default function AdminLoginPage() {
           )}
 
           <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-[#0f1d33] mb-1">
+                Full Name
+              </label>
+              <input
+                name="name"
+                type="text"
+                required
+                placeholder="John Doe"
+                className="w-full bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-3 py-2.5 text-[#0f1d33] text-sm focus:outline-none focus:ring-2 focus:ring-[#1e3a5f]"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[#0f1d33] mb-1">
+                Phone Number
+              </label>
+              <input
+                name="phone"
+                type="tel"
+                required
+                pattern="[0-9]{10}"
+                minLength={10}
+                maxLength={10}
+                title="Please enter exactly 10 digits"
+                placeholder="9876543210"
+                className="w-full bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-3 py-2.5 text-[#0f1d33] text-sm focus:outline-none focus:ring-2 focus:ring-[#1e3a5f]"
+              />
+            </div>
             <div>
               <label className="block text-sm font-medium text-[#0f1d33] mb-1">
                 Email Address
@@ -86,12 +114,12 @@ export default function AdminLoginPage() {
               disabled={isPending}
               className="flex w-full justify-center items-center h-12 gradient-gold text-white font-semibold rounded-lg shadow-lg shadow-[#c4a55a]/20 hover:opacity-90 transition-opacity disabled:opacity-50"
             >
-              {isPending ? 'Signing in...' : 'Sign In'}
+              {isPending ? 'Creating account...' : 'Sign Up'}
             </button>
           </div>
           
           <div className="text-center mt-4 text-sm text-[#5a6a82]">
-            Don't have an account? <Link href="/signup" className="text-[#1e3a5f] hover:underline font-medium">Sign up</Link>
+            Already have an account? <Link href="/login" className="text-[#1e3a5f] hover:underline font-medium">Log in</Link>
           </div>
         </form>
       </div>

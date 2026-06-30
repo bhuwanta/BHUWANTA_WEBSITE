@@ -11,7 +11,10 @@ import {
   LineChart,
   PieChart,
   Settings,
-  LogOut
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+  Link as LinkIcon
 } from "lucide-react";
 
 const navigation = [
@@ -21,55 +24,79 @@ const navigation = [
   { name: 'Projects', href: '/admin/projects', icon: Building2 },
   { name: 'Brochures', href: '/admin/brochures', icon: FileText },
   { name: 'Layouts', href: '/admin/layouts', icon: Map },
+  { name: 'Link Documents', href: '/admin/link-documents', icon: LinkIcon },
   { name: 'Reports', href: '/admin/reports', icon: LineChart },
   { name: 'Analytics', href: '/admin/analytics', icon: PieChart },
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  isCollapsed: boolean;
+  toggleCollapse: () => void;
+}
+
+export function Sidebar({ isCollapsed, toggleCollapse }: SidebarProps) {
   const pathname = usePathname();
 
   return (
-    <div className="flex h-full flex-col overflow-y-auto border-r border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-950">
-      <div className="flex h-16 shrink-0 items-center border-b px-6">
-        <Link href="/admin" className="flex items-center gap-2 font-bold text-xl tracking-tight">
-          <Building2 className="h-6 w-6 text-blue-600" />
-          <span>Bhuwanta<span className="text-blue-600">CRM</span></span>
-        </Link>
+    <div className="flex h-full flex-col overflow-y-auto border-r border-[#e8ecf2] bg-white">
+      <div className={cn("flex h-16 shrink-0 items-center border-b border-[#e8ecf2]", isCollapsed ? "px-0 justify-center" : "px-6 justify-between")}>
+        {!isCollapsed && (
+          <Link href="/admin" className="flex items-center gap-2 font-bold text-xl tracking-tight text-[#0f1d33]">
+            <Building2 className="h-6 w-6 text-[#c4a55a]" />
+            <span>Bhuwanta<span className="text-[#c4a55a]">CRM</span></span>
+          </Link>
+        )}
+        <button 
+          onClick={toggleCollapse} 
+          className={cn("text-[#5a6a82] hover:text-[#0f1d33] hover:bg-[#f3f5f8] rounded-md p-1.5 transition-colors", isCollapsed && "mx-auto")}
+          title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+        >
+          {isCollapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
+        </button>
       </div>
-      <nav className="flex-1 space-y-1 px-3 py-4">
+      <nav className={cn("flex-1 space-y-1 py-4", isCollapsed ? "px-2" : "px-3")}>
         {navigation.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const isActive = item.href === '/admin' 
+            ? pathname === item.href 
+            : pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (
             <Link
               key={item.name}
               href={item.href}
               className={cn(
                 isActive
-                  ? "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400"
-                  : "text-gray-700 hover:bg-gray-50 hover:text-blue-600 dark:text-gray-300 dark:hover:bg-gray-900 dark:hover:text-blue-400",
-                "group flex items-center rounded-md px-3 py-2.5 text-sm font-medium transition-colors"
+                  ? "bg-[#1e3a5f]/10 text-[#1e3a5f]"
+                  : "text-[#5a6a82] hover:bg-[#f3f5f8] hover:text-[#0f1d33]",
+                "group flex items-center rounded-md text-sm font-medium transition-colors",
+                isCollapsed ? "justify-center py-3 px-2" : "px-3 py-2.5"
               )}
+              title={isCollapsed ? item.name : undefined}
             >
               <item.icon
                 className={cn(
-                  isActive ? "text-blue-700 dark:text-blue-400" : "text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400",
-                  "mr-3 h-5 w-5 flex-shrink-0 transition-colors"
+                  isActive ? "text-[#1e3a5f]" : "text-[#5a6a82] group-hover:text-[#0f1d33]",
+                  isCollapsed ? "h-6 w-6" : "mr-3 h-5 w-5",
+                  "flex-shrink-0 transition-colors"
                 )}
                 aria-hidden="true"
               />
-              {item.name}
+              {!isCollapsed && <span>{item.name}</span>}
             </Link>
           );
         })}
       </nav>
-      <div className="border-t p-4">
+      <div className={cn("border-t border-[#e8ecf2] p-4 flex", isCollapsed ? "justify-center" : "")}>
         <Link
           href="/login"
-          className="group flex w-full items-center rounded-md px-3 py-2.5 text-sm font-medium bg-red-600 text-white hover:bg-red-700 transition-colors dark:bg-red-700 dark:hover:bg-red-800"
+          className={cn(
+            "group flex items-center rounded-md font-medium bg-red-50 text-red-600 hover:bg-red-100 transition-colors",
+            isCollapsed ? "p-2.5 justify-center" : "w-full px-3 py-2.5 text-sm"
+          )}
+          title={isCollapsed ? "Logout" : undefined}
         >
-          <LogOut className="mr-3 h-5 w-5 flex-shrink-0 text-white" aria-hidden="true" />
-          Logout
+          <LogOut className={cn("flex-shrink-0 text-red-600", isCollapsed ? "h-6 w-6" : "mr-3 h-5 w-5")} aria-hidden="true" />
+          {!isCollapsed && <span>Logout</span>}
         </Link>
       </div>
     </div>

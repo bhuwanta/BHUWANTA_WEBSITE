@@ -1,13 +1,16 @@
 'use client'
 
+import { useState } from 'react'
 import { Sidebar } from "@/components/dashboard/Sidebar"
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const [isCollapsed, setIsCollapsed] = useState(false)
+
   return (
-    <div className="flex h-screen w-full bg-gray-50 dark:bg-gray-900 overflow-hidden">
-      {/* Sidebar - hidden on mobile by default, we can add a hamburger menu later if needed */}
-      <div className="hidden md:flex md:w-64 md:flex-col">
-        <Sidebar />
+    <div className="flex h-screen w-full bg-[#f7f8fa] overflow-hidden">
+      {/* Sidebar - hidden on mobile by default */}
+      <div className={`hidden md:flex flex-col transition-all duration-300 ${isCollapsed ? 'md:w-20' : 'md:w-64'}`}>
+        <Sidebar isCollapsed={isCollapsed} toggleCollapse={() => setIsCollapsed(!isCollapsed)} />
       </div>
       
       {/* Main Content Area */}

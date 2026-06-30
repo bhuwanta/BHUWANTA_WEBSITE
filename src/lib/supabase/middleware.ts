@@ -34,9 +34,25 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL
+  // If no user and trying to access admin dashboard, redirect to login
+  if (
+    !user &&
+    request.nextUrl.pathname.startsWith('/admin')
+  ) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    return NextResponse.redirect(url)
+  }
 
-  // Dashboard protection has been removed. Sanity Studio handles its own authentication.
+  // If user is trying to access login or signup but already logged in, redirect to admin
+  if (
+    user &&
+    (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup')
+  ) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/admin'
+    return NextResponse.redirect(url)
+  }
 
   return supabaseResponse
 }

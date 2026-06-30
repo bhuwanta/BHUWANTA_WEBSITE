@@ -1,15 +1,26 @@
-export default function ProjectsPage() {
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Projects</h1>
-        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-          Manage your projects here.
-        </p>
-      </div>
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-950">
-        <p className="text-sm text-gray-500">This module is under construction.</p>
-      </div>
-    </div>
-  );
+import { createClient } from '@/lib/supabase/server'
+import ProjectsClient from './ProjectsClient'
+
+export const dynamic = 'force-dynamic'
+
+export default async function ProjectsPage() {
+  const supabase = await createClient()
+  
+  const { data: areas } = await supabase
+    .from('areas')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  // Fetch projects and their mapped areas using the junction table
+  const { data: projects } = await supabase
+    .from('projects')
+    .select(`
+      *,
+      project_areas(
+        area:areas(*)
+      )
+    `)
+    .order('created_at', { ascending: false })
+
+  return <ProjectsClient projects={projects || []} areas={areas || []} />
 }

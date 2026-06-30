@@ -4,6 +4,54 @@
 -- ============================================
 
 -- ===================
+-- PROFILES TABLE
+-- ===================
+CREATE TABLE IF NOT EXISTS profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  email TEXT NOT NULL,
+  name TEXT,
+  phone TEXT,
+  role TEXT DEFAULT 'Admin' CHECK (role IN ('Admin', 'Sales Manager', 'Sales Executive')),
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Ensure columns exist in case the table was created before we added them
+ALTER TABLE profiles 
+  ADD COLUMN IF NOT EXISTS name TEXT,
+  ADD COLUMN IF NOT EXISTS phone TEXT;
+
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view their own profile" ON profiles;
+CREATE POLICY "Users can view their own profile" ON profiles FOR SELECT USING (auth.uid() = id);
+DROP POLICY IF EXISTS "Authenticated users can view all profiles" ON profiles;
+CREATE POLICY "Authenticated users can view all profiles" ON profiles FOR SELECT USING (auth.role() = 'authenticated');
+DROP POLICY IF EXISTS "Users can update their own profile" ON profiles;
+CREATE POLICY "Users can update their own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
+
+-- Function to handle new user signups and insert a profile automatically
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, name, phone, role)
+  VALUES (
+    new.id, 
+    new.email, 
+    new.raw_user_meta_data->>'name',
+    new.raw_user_meta_data->>'phone',
+    'Admin'
+  );
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger to call the function on signup
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- ===================
 -- LEADS TABLE
 -- ===================
 CREATE TABLE IF NOT EXISTS leads (
@@ -15,332 +63,127 @@ CREATE TABLE IF NOT EXISTS leads (
   property_interest TEXT,
   source_page TEXT DEFAULT 'contact',
   status TEXT DEFAULT 'new' CHECK (status IN ('new', 'contacted', 'qualified', 'closed')),
+  location TEXT,
+  project TEXT,
+  enquiry_type TEXT,
+  downloaded_item TEXT,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
 ALTER TABLE leads ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Anyone can insert leads" ON leads;
 CREATE POLICY "Anyone can insert leads" ON leads FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "Authenticated users can view leads" ON leads;
 CREATE POLICY "Authenticated users can view leads" ON leads FOR SELECT USING (auth.role() = 'authenticated');
+DROP POLICY IF EXISTS "Authenticated users can update leads" ON leads;
 CREATE POLICY "Authenticated users can update leads" ON leads FOR UPDATE USING (auth.role() = 'authenticated');
+DROP POLICY IF EXISTS "Authenticated users can delete leads" ON leads;
+CREATE POLICY "Authenticated users can delete leads" ON leads FOR DELETE USING (auth.role() = 'authenticated');
 
 -- ===================
--- MEDIA IMAGES TABLE
+-- AREAS TABLE
 -- ===================
-CREATE TABLE IF NOT EXISTS media_images (
+CREATE TABLE IF NOT EXISTS areas (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  url TEXT NOT NULL,
-  alt_text TEXT,
-  page_assignment TEXT CHECK (page_assignment IN ('home', 'about', 'gallery', 'projects')),
-  category TEXT,
-  sort_order INT DEFAULT 0,
-  uploaded_at TIMESTAMPTZ DEFAULT now()
-);
-
-ALTER TABLE media_images ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Public can view media images" ON media_images FOR SELECT USING (true);
-CREATE POLICY "Authenticated users manage media images" ON media_images FOR ALL USING (auth.role() = 'authenticated');
-
--- ===================
--- MEDIA VIDEOS TABLE
--- ===================
-CREATE TABLE IF NOT EXISTS media_videos (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  platform TEXT NOT NULL CHECK (platform IN ('youtube', 'vimeo')),
-  video_id TEXT NOT NULL,
-  title TEXT,
-  page_assignment TEXT CHECK (page_assignment IN ('home', 'about', 'gallery', 'projects')),
-  sort_order INT DEFAULT 0,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-
-ALTER TABLE media_videos ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Public can view media videos" ON media_videos FOR SELECT USING (true);
-CREATE POLICY "Authenticated users manage media videos" ON media_videos FOR ALL USING (auth.role() = 'authenticated');
-
--- ===================
--- JOB LISTINGS TABLE
--- ===================
-CREATE TABLE IF NOT EXISTS job_listings (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  title TEXT NOT NULL,
-  department TEXT,
-  location TEXT NOT NULL,
-  employment_type TEXT DEFAULT 'full-time' CHECK (employment_type IN ('full-time', 'part-time', 'contract', 'internship')),
-  salary_min INT,
-  salary_max INT,
-  description TEXT NOT NULL,
-  requirements TEXT[] DEFAULT '{}',
-  apply_url TEXT,
-  is_active BOOLEAN DEFAULT true,
-  posted_at TIMESTAMPTZ DEFAULT now(),
+  name TEXT NOT NULL UNIQUE,
+  created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
-ALTER TABLE job_listings ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Public can view active jobs" ON job_listings FOR SELECT USING (is_active = true);
-CREATE POLICY "Authenticated users manage jobs" ON job_listings FOR ALL USING (auth.role() = 'authenticated');
+-- Seed initial areas
+INSERT INTO areas (name) VALUES 
+  ('Warangal Highway'),
+  ('Mumbai Highway'),
+  ('Shabad'),
+  ('Sharkarpally Highway'),
+  ('Bangalore Highway')
+ON CONFLICT (name) DO NOTHING;
+
+ALTER TABLE areas ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Authenticated users manage areas" ON areas;
+CREATE POLICY "Authenticated users manage areas" ON areas FOR ALL USING (auth.role() = 'authenticated');
 
 -- ===================
--- SEO GLOBAL TABLE
+-- PROJECTS TABLE
 -- ===================
-CREATE TABLE IF NOT EXISTS seo_global (
+CREATE TABLE IF NOT EXISTS projects (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  site_name TEXT DEFAULT 'Bhuwanta',
-  title_template TEXT DEFAULT '{page_title} | Bhuwanta',
-  default_description TEXT DEFAULT 'Premium real estate solutions by Bhuwanta.',
-  default_og_image TEXT,
-  twitter_card_type TEXT DEFAULT 'summary_large_image',
-  google_verification TEXT,
-  bing_verification TEXT,
-  updated_at TIMESTAMPTZ DEFAULT now()
-);
-
-ALTER TABLE seo_global ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Public can view seo global" ON seo_global FOR SELECT USING (true);
-CREATE POLICY "Authenticated users manage seo global" ON seo_global FOR ALL USING (auth.role() = 'authenticated');
-
--- Insert default row
-INSERT INTO seo_global (site_name, title_template, default_description) 
-VALUES ('Bhuwanta', '{page_title} | Bhuwanta', 'Premium real estate solutions by Bhuwanta. Discover luxury properties, residential projects, and commercial spaces.')
-ON CONFLICT DO NOTHING;
-
--- ===================
--- SEO SETTINGS (PER-PAGE) TABLE
--- ===================
-CREATE TABLE IF NOT EXISTS seo_settings (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  page_slug TEXT UNIQUE NOT NULL,
-  meta_title TEXT,
-  meta_description TEXT,
-  og_image TEXT,
-  canonical_url TEXT,
-  noindex BOOLEAN DEFAULT false,
-  focus_keyword TEXT,
-  secondary_keywords TEXT,
-  hreflang JSONB,
-  sitemap_priority NUMERIC(2,1) DEFAULT 0.5,
-  sitemap_changefreq TEXT DEFAULT 'weekly',
-  updated_at TIMESTAMPTZ DEFAULT now()
-);
-
-ALTER TABLE seo_settings ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Public can view seo settings" ON seo_settings FOR SELECT USING (true);
-CREATE POLICY "Authenticated users manage seo settings" ON seo_settings FOR ALL USING (auth.role() = 'authenticated');
-
--- Insert default entries for all pages
-INSERT INTO seo_settings (page_slug, sitemap_priority, sitemap_changefreq) VALUES
-  ('home', 1.0, 'daily'),
-  ('about', 0.8, 'monthly'),
-  ('gallery', 0.7, 'weekly'),
-  ('projects', 0.9, 'weekly'),
-  ('blog', 0.8, 'daily'),
-  ('careers', 0.6, 'weekly'),
-  ('contact', 0.5, 'monthly')
-ON CONFLICT (page_slug) DO NOTHING;
-
--- ===================
--- FAQ ENTRIES TABLE (AEO)
--- ===================
-CREATE TABLE IF NOT EXISTS faq_entries (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  page_slug TEXT NOT NULL,
-  question TEXT NOT NULL,
-  answer TEXT NOT NULL,
-  sort_order INT DEFAULT 0,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-
-ALTER TABLE faq_entries ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Public can view faq entries" ON faq_entries FOR SELECT USING (true);
-CREATE POLICY "Authenticated users manage faq entries" ON faq_entries FOR ALL USING (auth.role() = 'authenticated');
-
--- ===================
--- LOCAL BUSINESS TABLE (GEO)
--- ===================
-CREATE TABLE IF NOT EXISTS local_business (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  business_name TEXT DEFAULT 'Bhuwanta',
-  business_type TEXT DEFAULT 'RealEstateAgent',
-  street_address TEXT,
-  city TEXT,
-  state TEXT,
-  postal_code TEXT,
-  country TEXT DEFAULT 'IN',
-  phone TEXT,
-  email TEXT,
-  website TEXT,
-  latitude NUMERIC(10,7),
-  longitude NUMERIC(10,7),
-  price_range TEXT,
-  logo_url TEXT,
-  opening_hours JSONB DEFAULT '[]',
-  service_areas TEXT[] DEFAULT '{}',
-  social_profiles JSONB DEFAULT '{}',
-  same_as_links TEXT[] DEFAULT '{}',
-  founding_year INT,
-  founders TEXT[] DEFAULT '{}',
-  awards TEXT[] DEFAULT '{}',
-  updated_at TIMESTAMPTZ DEFAULT now()
-);
-
-ALTER TABLE local_business ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Public can view local business" ON local_business FOR SELECT USING (true);
-CREATE POLICY "Authenticated users manage local business" ON local_business FOR ALL USING (auth.role() = 'authenticated');
-
--- Insert default row
-INSERT INTO local_business (business_name, business_type) VALUES ('Bhuwanta', 'RealEstateAgent')
-ON CONFLICT DO NOTHING;
-
--- ===================
--- ENTITY MARKUP TABLE
--- ===================
-CREATE TABLE IF NOT EXISTS entity_markup (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  type TEXT NOT NULL DEFAULT 'Organization',
   name TEXT NOT NULL,
-  same_as_links TEXT[] DEFAULT '{}',
   description TEXT,
-  updated_at TIMESTAMPTZ DEFAULT now()
-);
-
-ALTER TABLE entity_markup ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Public can view entity markup" ON entity_markup FOR SELECT USING (true);
-CREATE POLICY "Authenticated users manage entity markup" ON entity_markup FOR ALL USING (auth.role() = 'authenticated');
-
--- ===================
--- SITE CONFIG TABLE
--- ===================
-CREATE TABLE IF NOT EXISTS site_config (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  ga_id TEXT,
-  fb_pixel_id TEXT,
-  gtm_id TEXT,
-  resend_sender TEXT,
-  sentry_dsn TEXT,
-  updated_at TIMESTAMPTZ DEFAULT now()
-);
-
-ALTER TABLE site_config ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Public can view site config" ON site_config FOR SELECT USING (true);
-CREATE POLICY "Authenticated users manage site config" ON site_config FOR ALL USING (auth.role() = 'authenticated');
-
-INSERT INTO site_config DEFAULT VALUES ON CONFLICT DO NOTHING;
-
--- ===================
--- EMAIL TEMPLATES TABLE
--- ===================
-CREATE TABLE IF NOT EXISTS email_templates (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  name TEXT NOT NULL,
-  subject TEXT NOT NULL,
-  body_html TEXT NOT NULL,
-  type TEXT DEFAULT 'general' CHECK (type IN ('lead_ack', 'agent_notify', 'newsletter', 'drip', 'general')),
+  location TEXT,
+  google_maps_url TEXT,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
-ALTER TABLE email_templates ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Authenticated users manage email templates" ON email_templates FOR ALL USING (auth.role() = 'authenticated');
+ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Authenticated users manage projects" ON projects;
+CREATE POLICY "Authenticated users manage projects" ON projects FOR ALL USING (auth.role() = 'authenticated');
 
 -- ===================
--- EMAIL CAMPAIGNS TABLE
+-- PROJECT_AREAS JUNCTION TABLE
 -- ===================
-CREATE TABLE IF NOT EXISTS email_campaigns (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  template_id UUID REFERENCES email_templates(id),
-  subject TEXT NOT NULL,
-  recipients JSONB DEFAULT '[]',
-  sent_at TIMESTAMPTZ DEFAULT now(),
-  opens INT DEFAULT 0,
-  clicks INT DEFAULT 0,
-  status TEXT DEFAULT 'sent'
+CREATE TABLE IF NOT EXISTS project_areas (
+  project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
+  area_id UUID REFERENCES areas(id) ON DELETE CASCADE,
+  PRIMARY KEY (project_id, area_id)
 );
 
-ALTER TABLE email_campaigns ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Authenticated users manage email campaigns" ON email_campaigns FOR ALL USING (auth.role() = 'authenticated');
+ALTER TABLE project_areas ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Authenticated users manage project_areas" ON project_areas;
+CREATE POLICY "Authenticated users manage project_areas" ON project_areas FOR ALL USING (auth.role() = 'authenticated');
 
 -- ===================
--- DRIP SEQUENCES TABLE
+-- SEED INITIAL PROJECTS
 -- ===================
-CREATE TABLE IF NOT EXISTS drip_sequences (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  name TEXT NOT NULL,
-  steps JSONB NOT NULL DEFAULT '[]',
-  is_active BOOLEAN DEFAULT true,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now()
-);
+DO $$
+DECLARE
+  warangal_id UUID;
+  mumbai_id UUID;
+  shabad_id UUID;
+  proj_id UUID;
+BEGIN
+  -- Get area IDs
+  SELECT id INTO warangal_id FROM areas WHERE name = 'Warangal Highway' LIMIT 1;
+  SELECT id INTO mumbai_id FROM areas WHERE name = 'Mumbai Highway' LIMIT 1;
+  SELECT id INTO shabad_id FROM areas WHERE name = 'Shabad' LIMIT 1;
 
-ALTER TABLE drip_sequences ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Authenticated users manage drip sequences" ON drip_sequences FOR ALL USING (auth.role() = 'authenticated');
+  IF warangal_id IS NOT NULL THEN
+    INSERT INTO projects (name, location, google_maps_url) 
+    VALUES (
+      'S.V.KANAKA MAPLE HOMES', 
+      'Yadigiri Gutta Temple near Mallapur village', 
+      'https://www.google.com/maps/place/SV+Kanaka+Maple+Homes/@17.625177,78.903841,17z/data=!3m1!4b1!4m6!3m5!1s0x3bcb6500350f921f:0xd384f5ea7e43f6e5!8m2!3d17.625177!4d78.903841!16s%2Fg%2F11w7cbb_1n!18m1!1e1?entry=tts&g_ep=EgoyMDI2MDYxMC4wIPu8ASoASAFQAw%3D%3D&skid=88c698fa-c07b-46cd-9ade-bd66a921d633'
+    ) RETURNING id INTO proj_id;
+    INSERT INTO project_areas (project_id, area_id) VALUES (proj_id, warangal_id) ON CONFLICT DO NOTHING;
+  END IF;
 
--- ===================
--- STORAGE BUCKET
--- ===================
-INSERT INTO storage.buckets (id, name, public) VALUES ('media', 'media', true)
-ON CONFLICT DO NOTHING;
+  IF mumbai_id IS NOT NULL THEN
+    INSERT INTO projects (name, location, google_maps_url) 
+    VALUES (
+      'TJR TownShip', 
+      'SANGAREDDY JUNCTION', 
+      'https://www.google.com/maps/place/17%C2%B035''11.5%22N+78%C2%B005''19.1%22E/@17.586525,78.088632,17z/data=!3m1!4b1!4m4!3m3!8m2!3d17.586525!4d78.088632!18m1!1e1?entry=tts&g_ep=EgoyMDI2MDYxMC4wIPu8ASoASAFQAw%3D%3D&skid=facd03b3-0945-4a86-a9a4-e45285103328'
+    ) RETURNING id INTO proj_id;
+    INSERT INTO project_areas (project_id, area_id) VALUES (proj_id, mumbai_id) ON CONFLICT DO NOTHING;
+    
+    INSERT INTO projects (name, location, google_maps_url) 
+    VALUES (
+      'VAIBHAV COUNTY', 
+      'SADASHIVPET', 
+      'https://maps.app.goo.gl/JNEip4dr8Kpza1tP9'
+    ) RETURNING id INTO proj_id;
+    INSERT INTO project_areas (project_id, area_id) VALUES (proj_id, mumbai_id) ON CONFLICT DO NOTHING;
+  END IF;
 
-CREATE POLICY "Public can view media files" ON storage.objects FOR SELECT USING (bucket_id = 'media');
-CREATE POLICY "Authenticated users can upload media" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'media' AND auth.role() = 'authenticated');
-CREATE POLICY "Authenticated users can delete media" ON storage.objects FOR DELETE USING (bucket_id = 'media' AND auth.role() = 'authenticated');
-
--- ===================
--- CONVERSATIONS TABLE
--- ===================
-CREATE TABLE IF NOT EXISTS conversations (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  lead_id UUID REFERENCES leads(id) ON DELETE CASCADE,
-  whatsapp_number TEXT NOT NULL,
-  status TEXT DEFAULT 'active' CHECK (status IN ('active', 'closed')),
-  current_state TEXT DEFAULT 'INIT',
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now()
-);
-
-ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Authenticated users manage conversations" ON conversations FOR ALL USING (auth.role() = 'authenticated');
-
--- ===================
--- MESSAGES TABLE
--- ===================
-CREATE TABLE IF NOT EXISTS messages (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  conversation_id UUID REFERENCES conversations(id) ON DELETE CASCADE,
-  direction TEXT CHECK (direction IN ('inbound', 'outbound')),
-  content TEXT NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-
-ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Authenticated users manage messages" ON messages FOR ALL USING (auth.role() = 'authenticated');
-
--- ===================
--- CALLBACKS TABLE
--- ===================
-CREATE TABLE IF NOT EXISTS callbacks (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  lead_id UUID REFERENCES leads(id) ON DELETE CASCADE,
-  requested_at TIMESTAMPTZ DEFAULT now(),
-  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'completed')),
-  notes TEXT
-);
-
-ALTER TABLE callbacks ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Authenticated users manage callbacks" ON callbacks FOR ALL USING (auth.role() = 'authenticated');
-
--- ===================
--- APPOINTMENTS TABLE
--- ===================
-CREATE TABLE IF NOT EXISTS appointments (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  lead_id UUID REFERENCES leads(id) ON DELETE CASCADE,
-  scheduled_for TIMESTAMPTZ NOT NULL,
-  status TEXT DEFAULT 'scheduled' CHECK (status IN ('scheduled', 'cancelled', 'completed')),
-  notes TEXT,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now()
-);
-
-ALTER TABLE appointments ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Authenticated users manage appointments" ON appointments FOR ALL USING (auth.role() = 'authenticated');
+  IF shabad_id IS NOT NULL THEN
+    INSERT INTO projects (name, location, google_maps_url) 
+    VALUES (
+      'VIAN VALLY', 
+      'SHABADH', 
+      'https://www.google.com/maps/place/Shabad,+Telangana+509217/@17.1617666,78.1333539,15z/data=!3m1!4b1!4m6!3m5!1s0x3bcbc51af8bfa167:0x1b157767f422e78!8m2!3d17.1611023!4d78.1331926!16s%2Fm%2F02r3_dg!18m1!1e1?entry=tts&g_ep=EgoyMDI2MDYxMC4wIPu8ASoASAFQAw%3D%3D&skid=415a74f7-8835-433a-8b23-234121efe814'
+    ) RETURNING id INTO proj_id;
+    INSERT INTO project_areas (project_id, area_id) VALUES (proj_id, shabad_id) ON CONFLICT DO NOTHING;
+  END IF;
+END $$;

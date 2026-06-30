@@ -1,0 +1,127 @@
+'use server'
+
+import { createClient } from '@/lib/supabase/server'
+import { revalidatePath } from 'next/cache'
+
+export async function createProject(formData: FormData) {
+  const supabase = await createClient()
+  const name = formData.get('name') as string
+  const description = formData.get('description') as string
+  const location = formData.get('location') as string
+  const google_maps_url = formData.get('google_maps_url') as string
+  const areaIdsJson = formData.get('areaIds') as string
+  
+  if (!name) {
+    return { error: 'Name is required' }
+  }
+
+  // 1. Insert Project
+  const { data: project, error: projectError } = await supabase
+    .from('projects')
+    .insert([{ name, description, location, google_maps_url }])
+    .select()
+    .single()
+
+  if (projectError) {
+    return { error: projectError.message }
+  }
+
+  // 2. Insert Area Mappings
+  if (areaIdsJson) {
+    try {
+      const areaIds: string[] = JSON.parse(areaIdsJson)
+      if (areaIds.length > 0) {
+        const mappings = areaIds.map(areaId => ({
+          project_id: project.id,
+          area_id: areaId
+        }))
+        
+        const { error: mappingError } = await supabase
+          .from('project_areas')
+          .insert(mappings)
+          
+        if (mappingError) {
+          console.error("Failed to map areas:", mappingError)
+        }
+      }
+    } catch (e) {
+      console.error("Failed to parse areaIds", e)
+    }
+  }
+
+  revalidatePath('/admin/projects')
+  return { success: true }
+}
+
+export async function updateProject(id: string, formData: FormData) {
+  const supabase = await createClient()
+  const name = formData.get('name') as string
+  const description = formData.get('description') as string
+  const location = formData.get('location') as string
+  const google_maps_url = formData.get('google_maps_url') as string
+  const areaIdsJson = formData.get('areaIds') as string
+
+  if (!name) {
+    return { error: 'Name is required' }
+  }
+
+  // 1. Update Project
+  const { error: projectError } = await supabase
+    .from('projects')
+    .update({ name, description, location, google_maps_url, updated_at: new Date().toISOString() })
+    .eq('id', id)
+
+  if (projectError) {
+    return { error: projectError.message }
+  }
+
+  // 2. Update Area Mappings
+  if (areaIdsJson) {
+    try {
+      const areaIds: string[] = JSON.parse(areaIdsJson)
+      
+      // Delete existing mappings
+      await supabase
+        .from('project_areas')
+        .delete()
+        .eq('project_id', id)
+
+      // Insert new mappings
+      if (areaIds.length > 0) {
+        const mappings = areaIds.map(areaId => ({
+          project_id: id,
+          area_id: areaId
+        }))
+        
+        const { error: mappingError } = await supabase
+          .from('project_areas')
+          .insert(mappings)
+          
+        if (mappingError) {
+          console.error("Failed to map areas:", mappingError)
+        }
+      }
+    } catch (e) {
+      console.error("Failed to parse areaIds", e)
+    }
+  }
+
+  revalidatePath('/admin/projects')
+  return { success: true }
+}
+
+export async function deleteProject(id: string) {
+  const supabase = await createClient()
+
+  const { error } = await supabase
+    .from('projects')
+    .delete()
+    .eq('id', id)
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  revalidatePath('/admin/projects')
+  return { success: true }
+}
