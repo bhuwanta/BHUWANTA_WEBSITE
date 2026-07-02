@@ -5,6 +5,8 @@ import { motion } from 'framer-motion'
 import { X, Download } from 'lucide-react'
 import Image from 'next/image'
 import logoImg from '@/images/logo.png'
+import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth'
+import { auth } from '@/lib/firebase/config'
 
 interface DownloadPopupProps {
   isOpen: boolean
@@ -17,6 +19,11 @@ interface DownloadPopupProps {
 export function DownloadPopup({ isOpen, onClose, urls, projectName, documentType }: DownloadPopupProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [phoneError, setPhoneError] = useState('')
+  const [step, setStep] = useState<1 | 2>(1)
+  const [otp, setOtp] = useState('')
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null)
+  const [error, setError] = useState('')
+
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -28,6 +35,9 @@ export function DownloadPopup({ isOpen, onClose, urls, projectName, documentType
     if (isOpen) {
       setIsSubmitting(false)
       setPhoneError('')
+      setError('')
+      setStep(1)
+      setOtp('')
       setFormData({ name: '', phone: '', email: '' })
       
       document.body.style.overflow = 'hidden'
@@ -35,6 +45,10 @@ export function DownloadPopup({ isOpen, onClose, urls, projectName, documentType
     } else {
       document.body.style.overflow = ''
       document.documentElement.style.overflow = ''
+      if (window.recaptchaVerifier) {
+        window.recaptchaVerifier.clear()
+        window.recaptchaVerifier = null
+      }
     }
     
     return () => {
@@ -43,24 +57,62 @@ export function DownloadPopup({ isOpen, onClose, urls, projectName, documentType
     }
   }, [isOpen])
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsSubmitting(true)
-
-    // Open documents IMMEDIATELY in a new tab to bypass mobile popup blockers
-    if (urls && urls.length > 0) {
-      urls.forEach((url) => {
-        // If the file is a PDF, use Google Docs Viewer to force it to display inside the mobile browser
-        // instead of forcing a download (since Android/mobile browsers lack native PDF viewers)
-        if (url.toLowerCase().includes('.pdf')) {
-          window.open(`https://docs.google.com/viewer?url=${encodeURIComponent(url)}`, '_blank')
-        } else {
-          window.open(url, '_blank')
-        }
-      })
+    if (formData.phone.length !== 10) {
+      setPhoneError('Please enter a valid 10-digit number')
+      return
     }
 
+    setIsSubmitting(true)
+    setError('')
+
     try {
+      if (!window.recaptchaVerifier) {
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'download-recaptcha-container', {
+          size: 'invisible',
+        })
+      }
+      
+      const formattedPhone = `+91${formData.phone}`
+      const confirmation = await signInWithPhoneNumber(auth, formattedPhone, window.recaptchaVerifier)
+      setConfirmationResult(confirmation)
+      setStep(2)
+    } catch (err: any) {
+      console.error(err)
+      setError(err.message || 'Failed to send OTP.')
+      if (window.recaptchaVerifier) {
+        window.recaptchaVerifier.clear()
+        window.recaptchaVerifier = null
+      }
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleVerifyOTP = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!confirmationResult || !otp) return
+
+    setIsSubmitting(true)
+    setError('')
+
+    try {
+      // 1. Verify OTP
+      await confirmationResult.confirm(otp)
+
+      // 2. Open documents IMMEDIATELY in a new tab
+      if (urls && urls.length > 0) {
+        urls.forEach((url) => {
+          if (url.toLowerCase().includes('.pdf')) {
+            window.open(`https://docs.google.com/viewer?url=${encodeURIComponent(url)}`, '_blank')
+          } else {
+            window.open(url, '_blank')
+          }
+        })
+      }
+
+      // 3. Save lead
       await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -72,11 +124,13 @@ export function DownloadPopup({ isOpen, onClose, urls, projectName, documentType
           sourcePage: 'Website Document Download',
         }),
       })
-    } catch (error) {
-      console.error('Submission error:', error)
+
+      onClose() // Close the popup immediately after success
+    } catch (err: any) {
+      console.error('Submission error:', err)
+      setError('Invalid OTP or submission error.')
     } finally {
       setIsSubmitting(false)
-      onClose() // Close the popup immediately
     }
   }
 
@@ -103,7 +157,6 @@ export function DownloadPopup({ isOpen, onClose, urls, projectName, documentType
       >
         {/* Header */}
         <div className="bg-[#002935] px-6 py-6 flex flex-col items-center justify-center text-center relative shrink-0">
-          {/* Close button */}
           <button
             onClick={onClose}
             className="absolute top-4 right-4 p-1.5 text-white/60 hover:text-white bg-white/5 hover:bg-white/20 rounded-full transition-all z-10"
@@ -112,7 +165,6 @@ export function DownloadPopup({ isOpen, onClose, urls, projectName, documentType
             <X className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
 
-          {/* Logo */}
           <Image 
             src={logoImg} 
             alt="Bhuwanta" 
@@ -129,84 +181,120 @@ export function DownloadPopup({ isOpen, onClose, urls, projectName, documentType
 
         {/* Form */}
         <div className="px-6 py-6 sm:py-7">
-              <form
-                onSubmit={handleSubmit}
-                className="space-y-4"
-              >
-                <div className="text-center mb-4">
-                  <p className="text-sm text-[#002935]/70">Please enter your details to access this document.</p>
-                </div>
-                <div className="space-y-3">
-                  <input
-                    required
-                    type="text"
-                    placeholder="Full Name *"
-                    aria-label="Full Name"
-                    className="w-full px-4 py-3 bg-[#f8f9fb] border border-[#e8ecf2] rounded-xl text-sm text-[#002935] placeholder:text-[#002935]/40 focus:outline-none focus:ring-2 focus:ring-[#002935]/20 focus:border-[#002935]/50 transition-all"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  />
+          {error && (
+            <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm font-medium mb-4 text-center">
+              {error}
+            </div>
+          )}
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <input
-                        required
-                        type="tel"
-                        placeholder="Phone Number *"
-                        aria-label="Phone Number"
-                        minLength={10}
-                        pattern="[0-9]{10}"
-                        className={`w-full px-4 py-3 bg-[#f8f9fb] border ${phoneError ? 'border-red-500 focus:ring-red-500' : 'border-[#e8ecf2] focus:ring-[#002935]/20'} rounded-xl text-sm text-[#002935] placeholder:text-[#002935]/40 focus:outline-none focus:ring-2 focus:border-[#002935]/50 transition-all`}
-                        value={formData.phone}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          const digitsOnly = val.replace(/\D/g, '');
-                          if (val !== digitsOnly || digitsOnly.length > 10) {
-                            setPhoneError('Please enter 10 digits only');
-                          } else {
-                            setPhoneError('');
-                          }
-                          setFormData({ ...formData, phone: digitsOnly.slice(0, 10) });
-                        }}
-                      />
-                      {phoneError && <p className="text-red-500 text-xs mt-1">{phoneError}</p>}
-                    </div>
+          {step === 1 ? (
+            <form onSubmit={handleSendOTP} className="space-y-4">
+              <div className="text-center mb-4">
+                <p className="text-sm text-[#002935]/70">Please enter your details to access this document.</p>
+              </div>
+              <div className="space-y-3">
+                <input
+                  required
+                  type="text"
+                  placeholder="Full Name *"
+                  className="w-full px-4 py-3 bg-[#f8f9fb] border border-[#e8ecf2] rounded-xl text-sm text-[#002935] placeholder:text-[#002935]/40 focus:outline-none focus:ring-2 focus:ring-[#002935]/20 focus:border-[#002935]/50 transition-all"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                />
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
                     <input
                       required
-                      type="email"
-                      placeholder="Email Address *"
-                      aria-label="Email Address"
-                      className="w-full px-4 py-3 bg-[#f8f9fb] border border-[#e8ecf2] rounded-xl text-sm text-[#002935] placeholder:text-[#002935]/40 focus:outline-none focus:ring-2 focus:ring-[#002935]/20 focus:border-[#002935]/50 transition-all"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      type="tel"
+                      placeholder="Phone Number *"
+                      minLength={10}
+                      pattern="[0-9]{10}"
+                      className={`w-full px-4 py-3 bg-[#f8f9fb] border ${phoneError ? 'border-red-500 focus:ring-red-500' : 'border-[#e8ecf2] focus:ring-[#002935]/20'} rounded-xl text-sm text-[#002935] placeholder:text-[#002935]/40 focus:outline-none focus:ring-2 focus:border-[#002935]/50 transition-all`}
+                      value={formData.phone}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        const digitsOnly = val.replace(/\D/g, '');
+                        if (val !== digitsOnly || digitsOnly.length > 10) {
+                          setPhoneError('Please enter 10 digits only');
+                        } else {
+                          setPhoneError('');
+                        }
+                        setFormData({ ...formData, phone: digitsOnly.slice(0, 10) });
+                      }}
                     />
+                    {phoneError && <p className="text-red-500 text-xs mt-1">{phoneError}</p>}
                   </div>
+                  <input
+                    required
+                    type="email"
+                    placeholder="Email Address *"
+                    className="w-full px-4 py-3 bg-[#f8f9fb] border border-[#e8ecf2] rounded-xl text-sm text-[#002935] placeholder:text-[#002935]/40 focus:outline-none focus:ring-2 focus:ring-[#002935]/20 focus:border-[#002935]/50 transition-all"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  />
                 </div>
+              </div>
 
-                <div className="pt-2">
-                  <button
-                    disabled={isSubmitting}
-                    className="w-full py-3 sm:py-3.5 bg-[#c4a55a] text-white text-sm sm:text-base font-semibold rounded-xl hover:bg-[#b59853] hover:shadow-lg active:scale-[0.98] transition-all disabled:opacity-70 flex items-center justify-center gap-2"
-                  >
-                    {isSubmitting ? (
-                      <span className="flex items-center gap-2">
-                        <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Opening Document...
-                      </span>
-                    ) : (
-                      <>
-                        <Download className="w-4 h-4" /> Get Document
-                      </>
-                    )}
-                  </button>
-                  <p className="text-[11px] text-center text-[#002935]/40 mt-3 font-medium">
-                    Your information is kept 100% confidential.
-                  </p>
-                </div>
-              </form>
+              <div id="download-recaptcha-container"></div>
+
+              <div className="pt-2">
+                <button
+                  disabled={isSubmitting}
+                  className="w-full py-3 sm:py-3.5 bg-[#c4a55a] text-white text-sm sm:text-base font-semibold rounded-xl hover:bg-[#b59853] hover:shadow-lg active:scale-[0.98] transition-all disabled:opacity-70 flex items-center justify-center gap-2"
+                >
+                  {isSubmitting ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Sending OTP...
+                    </span>
+                  ) : (
+                    <>
+                      <Download className="w-4 h-4" /> Verify to Download
+                    </>
+                  )}
+                </button>
+                <p className="text-[11px] text-center text-[#002935]/40 mt-3 font-medium">
+                  Your information is kept 100% confidential.
+                </p>
+              </div>
+            </form>
+          ) : (
+            <form onSubmit={handleVerifyOTP} className="space-y-4">
+              <div className="text-center mb-4">
+                <p className="text-sm text-[#002935]/70">Enter the 6-digit code sent to +91 {formData.phone}</p>
+              </div>
+              
+              <input
+                required
+                type="text"
+                placeholder="000000"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                className="w-full px-4 py-3 bg-[#f8f9fb] border border-[#e8ecf2] rounded-xl text-center tracking-[0.3em] text-lg font-semibold text-[#002935] focus:outline-none focus:ring-2 focus:ring-[#002935]/20 focus:border-[#002935]/50 transition-all"
+              />
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setStep(1)}
+                  disabled={isSubmitting}
+                  className="w-1/3 py-3 sm:py-3.5 bg-[#f8f9fb] border border-[#e8ecf2] text-[#002935] text-sm sm:text-base font-semibold rounded-xl hover:bg-gray-100 transition-all disabled:opacity-70"
+                >
+                  Back
+                </button>
+                <button
+                  disabled={isSubmitting || otp.length < 6}
+                  className="w-2/3 py-3 sm:py-3.5 bg-[#c4a55a] text-white text-sm sm:text-base font-semibold rounded-xl hover:bg-[#b59853] hover:shadow-lg active:scale-[0.98] transition-all disabled:opacity-70 flex items-center justify-center gap-2"
+                >
+                  {isSubmitting ? 'Verifying...' : 'Submit & Download'}
+                </button>
+              </div>
+            </form>
+          )}
         </div>
       </motion.div>
     </div>
