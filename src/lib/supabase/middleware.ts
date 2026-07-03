@@ -37,20 +37,43 @@ export async function updateSession(request: NextRequest) {
   // If no user and trying to access admin dashboard, redirect to login
   if (
     !user &&
-    request.nextUrl.pathname.startsWith('/admin')
+    request.nextUrl.pathname.startsWith('/crm') &&
+    request.nextUrl.pathname !== '/crm/login'
   ) {
     const url = request.nextUrl.clone()
-    url.pathname = '/login'
+    url.pathname = '/crm/login'
     return NextResponse.redirect(url)
   }
 
   // If user is trying to access login or signup but already logged in, redirect to admin
-  if (
+  // Unless they are disabled, in which case we sign them out and redirect to login
+  if (user && user.user_metadata?.is_disabled) {
+    if (request.nextUrl.pathname.startsWith('/crm')) {
+      await supabase.auth.signOut()
+      const url = request.nextUrl.clone()
+      url.pathname = '/crm/login'
+      return NextResponse.redirect(url)
+    }
+  } else if (
     user &&
-    (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup')
+    (request.nextUrl.pathname === '/crm/login' || request.nextUrl.pathname === '/signup')
+  ) {
+    const userRole = user.user_metadata?.role || 'Admin'
+    const url = request.nextUrl.clone()
+    url.pathname = userRole === 'Telecaller' ? '/crm/leads' : '/crm'
+    return NextResponse.redirect(url)
+  }
+
+  // RBAC for Telecallers: Restrict to /crm/leads
+  if (
+    user && 
+    user.user_metadata?.role === 'Telecaller' &&
+    request.nextUrl.pathname.startsWith('/crm') &&
+    !request.nextUrl.pathname.startsWith('/crm/leads') &&
+    request.nextUrl.pathname !== '/crm/login'
   ) {
     const url = request.nextUrl.clone()
-    url.pathname = '/admin'
+    url.pathname = '/crm/leads'
     return NextResponse.redirect(url)
   }
 

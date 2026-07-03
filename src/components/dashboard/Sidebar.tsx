@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { logout } from "@/app/(auth)/crm/login/actions";
 import {
   LayoutDashboard,
   Users,
@@ -14,35 +15,42 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Shield
 } from "lucide-react";
 
 const navigation = [
-  { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-  { name: 'Leads', href: '/admin/leads', icon: Users },
-  { name: 'Areas', href: '/admin/areas', icon: MapPin },
-  { name: 'Projects', href: '/admin/projects', icon: Building2 },
-  { name: 'Brochures', href: '/admin/brochures', icon: FileText },
-  { name: 'Layouts', href: '/admin/layouts', icon: Map },
-  { name: 'Link Documents', href: '/admin/link-documents', icon: LinkIcon },
-  { name: 'Reports', href: '/admin/reports', icon: LineChart },
-  { name: 'Analytics', href: '/admin/analytics', icon: PieChart },
-  { name: 'Settings', href: '/admin/settings', icon: Settings },
+  { name: 'Dashboard', href: '/crm', icon: LayoutDashboard },
+  { name: 'Leads', href: '/crm/leads', icon: Users },
+  { name: 'Areas', href: '/crm/areas', icon: MapPin },
+  { name: 'Projects', href: '/crm/projects', icon: Building2 },
+  { name: 'Brochures', href: '/crm/brochures', icon: FileText },
+  { name: 'Layouts', href: '/crm/layouts', icon: Map },
+  { name: 'Reports', href: '/crm/reports', icon: LineChart },
+  { name: 'Users', href: '/crm/users', icon: Shield },
 ];
 
 interface SidebarProps {
   isCollapsed: boolean;
   toggleCollapse: () => void;
+  userRole?: string;
 }
 
-export function Sidebar({ isCollapsed, toggleCollapse }: SidebarProps) {
+export function Sidebar({ isCollapsed, toggleCollapse, userRole = 'Admin' }: SidebarProps) {
   const pathname = usePathname();
+
+  const filteredNavigation = navigation.filter(item => {
+    if (userRole === 'Telecaller') {
+      return item.name === 'Leads';
+    }
+    return true; // Admin sees everything
+  });
 
   return (
     <div className="flex h-full flex-col overflow-y-auto border-r border-[#e8ecf2] bg-white">
       <div className={cn("flex h-16 shrink-0 items-center border-b border-[#e8ecf2]", isCollapsed ? "px-0 justify-center" : "px-6 justify-between")}>
         {!isCollapsed && (
-          <Link href="/admin" className="flex items-center gap-2 font-bold text-xl tracking-tight text-[#0f1d33]">
+          <Link href="/crm" className="flex items-center gap-2 font-bold text-xl tracking-tight text-[#0f1d33]">
             <Building2 className="h-6 w-6 text-[#c4a55a]" />
             <span>Bhuwanta<span className="text-[#c4a55a]">CRM</span></span>
           </Link>
@@ -56,8 +64,8 @@ export function Sidebar({ isCollapsed, toggleCollapse }: SidebarProps) {
         </button>
       </div>
       <nav className={cn("flex-1 space-y-1 py-4", isCollapsed ? "px-2" : "px-3")}>
-        {navigation.map((item) => {
-          const isActive = item.href === '/admin' 
+        {filteredNavigation.map((item) => {
+          const isActive = item.href === '/crm' 
             ? pathname === item.href 
             : pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (
@@ -87,8 +95,8 @@ export function Sidebar({ isCollapsed, toggleCollapse }: SidebarProps) {
         })}
       </nav>
       <div className={cn("border-t border-[#e8ecf2] p-4 flex", isCollapsed ? "justify-center" : "")}>
-        <Link
-          href="/login"
+        <button
+          onClick={() => logout()}
           className={cn(
             "group flex items-center rounded-md font-medium bg-red-50 text-red-600 hover:bg-red-100 transition-colors",
             isCollapsed ? "p-2.5 justify-center" : "w-full px-3 py-2.5 text-sm"
@@ -97,7 +105,7 @@ export function Sidebar({ isCollapsed, toggleCollapse }: SidebarProps) {
         >
           <LogOut className={cn("flex-shrink-0 text-red-600", isCollapsed ? "h-6 w-6" : "mr-3 h-5 w-5")} aria-hidden="true" />
           {!isCollapsed && <span>Logout</span>}
-        </Link>
+        </button>
       </div>
     </div>
   );

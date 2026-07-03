@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 import { Plus, Edit2, Trash2, X, Search, Globe, FilterX, Download } from 'lucide-react'
 
 
-import { createLead, updateLead, deleteLead, deleteMultipleLeads } from './actions'
+import { createLead, updateLead, deleteLead, deleteMultipleLeads, updateLeadStatus } from './actions'
 import { useRouter } from 'next/navigation'
 
 const LinkedinIcon = (props: any) => (
@@ -31,7 +31,7 @@ const YoutubeIcon = (props: any) => (
   </svg>
 )
 
-export default function LeadsClient({ initialLeads }: { initialLeads: any[] }) {
+export default function LeadsClient({ initialLeads, userRole = 'Admin' }: { initialLeads: any[], userRole?: string }) {
   const router = useRouter()
   const [leads, setLeads] = useState(initialLeads)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -194,6 +194,20 @@ export default function LeadsClient({ initialLeads }: { initialLeads: any[] }) {
     }
   }
 
+  const handleStatusChange = async (id: string, newStatus: string) => {
+    try {
+      const result = await updateLeadStatus(id, newStatus)
+      if (result.error) {
+        alert(result.error)
+      } else {
+        setLeads(leads.map(l => l.id === id ? { ...l, status: newStatus } : l))
+        router.refresh()
+      }
+    } catch (err) {
+      alert('Failed to update status.')
+    }
+  }
+
   const filteredLeads = useMemo(() => {
     let result = leads;
     
@@ -236,7 +250,7 @@ export default function LeadsClient({ initialLeads }: { initialLeads: any[] }) {
               className="block w-full rounded-lg border border-[#e8ecf2] bg-white py-2 pl-10 pr-3 text-sm text-[#0f1d33] placeholder-[#5a6a82] outline-none focus:border-[#1e3a5f] focus:ring-1 focus:ring-[#1e3a5f] transition-shadow"
             />
           </div>
-          {selectedLeadIds.length > 0 && (
+          {selectedLeadIds.length > 0 && userRole !== 'Telecaller' && (
             <button
               onClick={handleBulkDelete}
               className="inline-flex items-center w-full sm:w-auto justify-center rounded-lg bg-red-50 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-100 transition-colors"
@@ -341,7 +355,9 @@ export default function LeadsClient({ initialLeads }: { initialLeads: any[] }) {
                 <th className="px-6 py-4 font-medium">Contact</th>
                 <th className="px-6 py-4 font-medium">Source</th>
                 <th className="px-6 py-4 font-medium">Status</th>
-                <th className="px-6 py-4 font-medium text-right">Actions</th>
+                {userRole !== 'Telecaller' && (
+                  <th className="px-6 py-4 font-medium text-right">Actions</th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-[#e8ecf2]">
@@ -388,36 +404,50 @@ export default function LeadsClient({ initialLeads }: { initialLeads: any[] }) {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize
-                        ${lead.status === 'new' ? 'bg-emerald-50 text-emerald-600' 
-                        : lead.status === 'closed' ? 'bg-red-50 text-red-600'
-                        : 'bg-[#f3f5f8] text-[#1e3a5f]'}`}>
-                        {lead.status || 'new'}
-                      </span>
+                      <select
+                        value={lead.status || 'new'}
+                        onChange={(e) => handleStatusChange(lead.id, e.target.value)}
+                        className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium capitalize appearance-none cursor-pointer border border-transparent focus:border-[#e8ecf2] focus:ring-0 hover:opacity-80 transition-opacity
+                          ${lead.status === 'new' ? 'bg-emerald-50 text-emerald-600' 
+                          : lead.status === 'closed' || lead.status === 'rejected' ? 'bg-red-50 text-red-600'
+                          : lead.status === 'contacted' ? 'bg-blue-50 text-blue-600'
+                          : lead.status === 'uncontacted' ? 'bg-orange-50 text-orange-600'
+                          : lead.status === 'qualified' ? 'bg-purple-50 text-purple-600'
+                          : 'bg-[#f3f5f8] text-[#1e3a5f]'}`}
+                      >
+                        <option value="new">New</option>
+                        <option value="contacted">Contacted</option>
+                        <option value="uncontacted">Uncontacted</option>
+                        <option value="qualified">Qualified</option>
+                        <option value="rejected">Rejected</option>
+                        <option value="closed">Closed</option>
+                      </select>
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end space-x-3">
-                        <button
-                          onClick={() => openEditModal(lead)}
-                          className="text-[#1e3a5f] hover:text-[#0f1d33]"
-                          title="Edit"
-                        >
-                          <Edit2 className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(lead.id)}
-                          className="text-red-500 hover:text-red-700"
-                          title="Delete"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
+                    {userRole !== 'Telecaller' && (
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end space-x-3">
+                          <button
+                            onClick={() => openEditModal(lead)}
+                            className="text-[#1e3a5f] hover:text-[#0f1d33]"
+                            title="Edit"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(lead.id)}
+                            className="text-red-500 hover:text-red-700"
+                            title="Delete"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-[#5a6a82]">
+                  <td colSpan={userRole === 'Telecaller' ? 6 : 7} className="px-6 py-8 text-center text-[#5a6a82]">
                     No leads found.
                   </td>
                 </tr>
@@ -489,7 +519,9 @@ export default function LeadsClient({ initialLeads }: { initialLeads: any[] }) {
                   >
                     <option value="new">New</option>
                     <option value="contacted">Contacted</option>
+                    <option value="uncontacted">Uncontacted</option>
                     <option value="qualified">Qualified</option>
+                    <option value="rejected">Rejected</option>
                     <option value="closed">Closed</option>
                   </select>
                 </div>

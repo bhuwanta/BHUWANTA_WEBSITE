@@ -13,7 +13,7 @@ export async function login(formData: FormData) {
 
   const supabase = await createClient()
 
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   })
@@ -22,5 +22,20 @@ export async function login(formData: FormData) {
     return { error: error.message }
   }
 
-  redirect('/admin')
+  if (data?.user?.user_metadata?.is_disabled) {
+    await supabase.auth.signOut()
+    return { error: 'This account has been disabled by the administrator.' }
+  }
+
+  if (data?.user?.user_metadata?.role === 'Telecaller') {
+    redirect('/crm/leads')
+  } else {
+    redirect('/crm')
+  }
+}
+
+export async function logout() {
+  const supabase = await createClient()
+  await supabase.auth.signOut()
+  redirect('/crm')
 }

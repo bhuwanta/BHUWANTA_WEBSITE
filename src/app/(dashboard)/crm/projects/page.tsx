@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import ProjectsClient from './ProjectsClient'
+import { client } from '@/lib/sanity'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,6 +22,18 @@ export default async function ProjectsPage() {
       )
     `)
     .order('created_at', { ascending: false })
+
+  // Fetch Sanity projects to sync googleMapsUrl
+  const sanityData = await client.fetch(`*[_type == "projects"][0]{ projectEntries[]{ name, googleMapsUrl } }`)
+  
+  if (projects && sanityData?.projectEntries) {
+    projects.forEach(p => {
+      const sp = sanityData.projectEntries.find((s: any) => s.name.trim().toLowerCase() === p.name.trim().toLowerCase())
+      if (sp && sp.googleMapsUrl) {
+        p.google_maps_url = sp.googleMapsUrl
+      }
+    })
+  }
 
   return <ProjectsClient projects={projects || []} areas={areas || []} />
 }

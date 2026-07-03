@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { writeClient } from '@/lib/sanity'
 
 export async function createProject(formData: FormData) {
   const supabase = await createClient()
@@ -49,7 +50,26 @@ export async function createProject(formData: FormData) {
     }
   }
 
-  revalidatePath('/admin/projects')
+  // 3. Sync Google Maps URL to Sanity
+  if (google_maps_url) {
+    try {
+      const docQuery = `*[_type == "projects"][0]{_id, projectEntries[]{_key, name}}`
+      const sanityDoc = await writeClient.fetch(docQuery)
+      if (sanityDoc?._id && sanityDoc.projectEntries) {
+        const projectEntry = sanityDoc.projectEntries.find((p: any) => p.name.trim().toLowerCase() === name.trim().toLowerCase())
+        if (projectEntry) {
+          await writeClient
+            .patch(sanityDoc._id)
+            .set({ [`projectEntries[_key=="${projectEntry._key}"].googleMapsUrl`]: google_maps_url })
+            .commit()
+        }
+      }
+    } catch (e) {
+      console.error("Failed to sync google_maps_url to Sanity", e)
+    }
+  }
+
+  revalidatePath('/crm/projects')
   return { success: true }
 }
 
@@ -106,7 +126,27 @@ export async function updateProject(id: string, formData: FormData) {
     }
   }
 
-  revalidatePath('/admin/projects')
+  // 3. Sync Google Maps URL to Sanity
+  if (google_maps_url) {
+    try {
+      const docQuery = `*[_type == "projects"][0]{_id, projectEntries[]{_key, name}}`
+      const sanityDoc = await writeClient.fetch(docQuery)
+      if (sanityDoc?._id && sanityDoc.projectEntries) {
+        // Here we use the updated 'name' to find the project in Sanity
+        const projectEntry = sanityDoc.projectEntries.find((p: any) => p.name.trim().toLowerCase() === name.trim().toLowerCase())
+        if (projectEntry) {
+          await writeClient
+            .patch(sanityDoc._id)
+            .set({ [`projectEntries[_key=="${projectEntry._key}"].googleMapsUrl`]: google_maps_url })
+            .commit()
+        }
+      }
+    } catch (e) {
+      console.error("Failed to sync google_maps_url to Sanity", e)
+    }
+  }
+
+  revalidatePath('/crm/projects')
   return { success: true }
 }
 
@@ -122,6 +162,6 @@ export async function deleteProject(id: string) {
     return { error: error.message }
   }
 
-  revalidatePath('/admin/projects')
+  revalidatePath('/crm/projects')
   return { success: true }
 }

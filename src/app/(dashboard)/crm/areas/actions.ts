@@ -35,7 +35,7 @@ export async function createArea(formData: FormData) {
     return { error: error.message }
   }
 
-  revalidatePath('/admin/areas')
+  revalidatePath('/crm/areas')
   return { success: true, data }
 }
 
@@ -57,7 +57,7 @@ export async function updateArea(id: string, formData: FormData) {
     return { error: error.message }
   }
 
-  revalidatePath('/admin/areas')
+  revalidatePath('/crm/areas')
   return { success: true, data }
 }
 
@@ -73,6 +73,6 @@ export async function deleteArea(id: string) {
     return { error: error.message }
   }
 
-  revalidatePath('/admin/areas')
+  revalidatePath('/crm/areas')
   return { success: true }
 }

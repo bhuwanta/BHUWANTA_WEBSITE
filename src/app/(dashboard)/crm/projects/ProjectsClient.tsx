@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Edit2, Trash2, X } from 'lucide-react'
+import { Plus, Edit2, Trash2, X, Search } from 'lucide-react'
 import { createProject, updateProject, deleteProject } from './actions'
 
 type Area = {
@@ -29,7 +29,13 @@ export default function ProjectsClient({ projects, areas }: ProjectsClientProps)
   const [editingProject, setEditingProject] = useState<Project | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [searchTerm, setSearchTerm] = useState('')
   
+  const filteredProjects = projects.filter(project => 
+    project.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    (project.location && project.location.toLowerCase().includes(searchTerm.toLowerCase()))
+  )
+
   // Local state for selected areas in the form
   const [selectedAreaIds, setSelectedAreaIds] = useState<string[]>([])
 
@@ -116,11 +122,27 @@ export default function ProjectsClient({ projects, areas }: ProjectsClientProps)
         </button>
       </div>
 
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="relative flex-1">
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+            <Search className="w-5 h-5 text-[#5a6a82]" />
+          </div>
+          <input
+            type="text"
+            className="w-full bg-white border border-[#e8ecf2] rounded-lg pl-10 pr-4 py-2.5 text-sm text-[#0f1d33] focus:outline-none focus:ring-2 focus:ring-[#1e3a5f]"
+            placeholder="Search projects by name or location..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+      </div>
+
       <div className="bg-white border border-[#e8ecf2] shadow-sm rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead className="bg-[#f7f8fa] border-b border-[#e8ecf2]">
               <tr>
+                <th className="px-6 py-4 font-medium text-[#0f1d33] w-16">Sr.No</th>
                 <th className="px-6 py-4 font-medium text-[#0f1d33]">Name</th>
                 <th className="px-6 py-4 font-medium text-[#0f1d33]">Mapped Areas</th>
                 <th className="px-6 py-4 font-medium text-[#0f1d33]">Date Added</th>
@@ -128,15 +150,18 @@ export default function ProjectsClient({ projects, areas }: ProjectsClientProps)
               </tr>
             </thead>
             <tbody className="divide-y divide-[#e8ecf2]">
-              {projects.length === 0 ? (
+              {filteredProjects.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-8 text-center text-[#5a6a82]">
-                    No projects found. Add your first project to get started.
+                    No projects found matching your search.
                   </td>
                 </tr>
               ) : (
-                projects.map((project) => (
+                filteredProjects.map((project, index) => (
                   <tr key={project.id} className="hover:bg-[#f7f8fa]/50 transition-colors">
+                    <td className="px-6 py-4 text-[#5a6a82]">
+                      {index + 1}
+                    </td>
                     <td className="px-6 py-4">
                       <div className="font-medium text-[#1e3a5f]">{project.name}</div>
                       {project.location && (
@@ -160,7 +185,10 @@ export default function ProjectsClient({ projects, areas }: ProjectsClientProps)
                       </div>
                     </td>
                     <td className="px-6 py-4 text-[#5a6a82]">
-                      {new Date(project.created_at).toLocaleDateString()}
+                      {(() => {
+                        const d = new Date(project.created_at)
+                        return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`
+                      })()}
                     </td>
                     <td className="px-6 py-4 text-right space-x-3">
                       <button

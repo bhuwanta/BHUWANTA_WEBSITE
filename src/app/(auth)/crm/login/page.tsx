@@ -89,10 +89,6 @@ export default function AdminLoginPage() {
               {isPending ? 'Signing in...' : 'Sign In'}
             </button>
           </div>
-          
-          <div className="text-center mt-4 text-sm text-[#5a6a82]">
-            Don't have an account? <Link href="/signup" className="text-[#1e3a5f] hover:underline font-medium">Sign up</Link>
-          </div>
         </form>
       </div>
     </div>

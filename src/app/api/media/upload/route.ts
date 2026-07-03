@@ -89,6 +89,40 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true })
     }
 
+    // PDF UPLOAD LOGIC
+    if (type === "pdf") {
+      const file = formData.get("file") as File
+      const projectKey = formData.get("projectKey") as string
+      const targetField = (formData.get("targetField") as string) || "brochure"
+      
+      if (!file) return NextResponse.json({ error: "No file provided" }, { status: 400 })
+      if (!projectKey) return NextResponse.json({ error: "No projectKey provided" }, { status: 400 })
+      if (page !== "projects") return NextResponse.json({ error: "PDF upload currently only supports projects page" }, { status: 400 })
+
+      const arrayBuffer = await file.arrayBuffer()
+      const buffer = Buffer.from(arrayBuffer)
+
+      // Upload file to Sanity Asset CDN
+      const asset = await writeClient.assets.upload('file', buffer, {
+        filename: file.name,
+        contentType: file.type
+      })
+
+      // Patch the specific project in the projectEntries array
+      await writeClient
+        .patch(docId)
+        // Ensure the array exists for this project before appending
+        .setIfMissing({ [`projectEntries[_key=="${projectKey}"].${targetField}`]: [] })
+        .append(`projectEntries[_key=="${projectKey}"].${targetField}`, [{
+          _key: generateKey(),
+          _type: 'file',
+          asset: { _type: "reference", _ref: asset._id }
+        }])
+        .commit()
+
+      return NextResponse.json({ success: true, url: asset.url })
+    }
+
     return NextResponse.json({ error: "Invalid type" }, { status: 400 })
 
   } catch (error: any) {

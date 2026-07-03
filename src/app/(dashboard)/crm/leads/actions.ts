@@ -58,7 +58,7 @@ export async function createLead(formData: FormData) {
     return { error: error.message }
   }
 
-  revalidatePath('/admin/leads')
+  revalidatePath('/crm/leads')
   return { success: true, data }
 }
 
@@ -104,7 +104,7 @@ export async function updateLead(id: string, formData: FormData) {
     return { error: error.message }
   }
 
-  revalidatePath('/admin/leads')
+  revalidatePath('/crm/leads')
   return { success: true, data }
 }
 
@@ -120,7 +120,7 @@ export async function deleteLead(id: string) {
     return { error: error.message }
   }
 
-  revalidatePath('/admin/leads')
+  revalidatePath('/crm/leads')
   return { success: true }
 }
 
@@ -138,6 +138,22 @@ export async function deleteMultipleLeads(ids: string[]) {
     return { error: error.message }
   }
 
-  revalidatePath('/admin/leads')
+  revalidatePath('/crm/leads')
+  return { success: true }
+}
+
+export async function updateLeadStatus(id: string, status: string) {
+  const supabase = await createClient()
+
+  const { error } = await supabase
+    .from('leads')
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq('id', id)
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  revalidatePath('/crm/leads')
   return { success: true }
 }

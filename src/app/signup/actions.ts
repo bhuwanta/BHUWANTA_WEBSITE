@@ -32,5 +32,5 @@ export async function signup(formData: FormData) {
 
 
 
-  redirect('/admin')
+  redirect('/crm')
 }
