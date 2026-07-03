@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { writeClient } from '@/lib/sanity'
+import { randomUUID } from 'crypto'
 
 export async function createProject(formData: FormData) {
   const supabase = await createClient()
@@ -50,23 +51,47 @@ export async function createProject(formData: FormData) {
     }
   }
 
-  // 3. Sync Google Maps URL to Sanity
-  if (google_maps_url) {
-    try {
-      const docQuery = `*[_type == "projects"][0]{_id, projectEntries[]{_key, name}}`
-      const sanityDoc = await writeClient.fetch(docQuery)
-      if (sanityDoc?._id && sanityDoc.projectEntries) {
-        const projectEntry = sanityDoc.projectEntries.find((p: any) => p.name.trim().toLowerCase() === name.trim().toLowerCase())
-        if (projectEntry) {
+  // 3. Sync to Sanity
+  try {
+    const docQuery = `*[_type == "projects"][0]{_id, projectEntries[]{_key, name}}`
+    const sanityDoc = await writeClient.fetch(docQuery)
+    
+    if (sanityDoc?._id) {
+      const projectEntries = sanityDoc.projectEntries || []
+      const projectEntry = projectEntries.find((p: any) => p.name.trim().toLowerCase() === name.trim().toLowerCase())
+      
+      if (projectEntry) {
+        // Project exists, sync google_maps_url if it was provided
+        if (google_maps_url) {
           await writeClient
             .patch(sanityDoc._id)
             .set({ [`projectEntries[_key=="${projectEntry._key}"].googleMapsUrl`]: google_maps_url })
             .commit()
         }
+      } else {
+        // Project does not exist, create a new entry
+        const slugStr = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')
+        const newEntry = {
+          _key: randomUUID(),
+          _type: 'object',
+          name: name,
+          slug: { _type: 'slug', current: slugStr },
+          location: location || undefined,
+          description: description || undefined,
+          googleMapsUrl: google_maps_url || undefined,
+        }
+        
+        await writeClient
+          .patch(sanityDoc._id)
+          .setIfMissing({ projectEntries: [] })
+          .append('projectEntries', [newEntry])
+          .commit()
       }
-    } catch (e) {
-      console.error("Failed to sync google_maps_url to Sanity", e)
+    } else {
+      console.error("Sanity 'projects' document not found. Ensure the singleton document exists in Sanity Studio.")
     }
+  } catch (e) {
+    console.error("Failed to sync project to Sanity", e)
   }
 
   revalidatePath('/crm/projects')
@@ -126,24 +151,50 @@ export async function updateProject(id: string, formData: FormData) {
     }
   }
 
-  // 3. Sync Google Maps URL to Sanity
-  if (google_maps_url) {
-    try {
-      const docQuery = `*[_type == "projects"][0]{_id, projectEntries[]{_key, name}}`
-      const sanityDoc = await writeClient.fetch(docQuery)
-      if (sanityDoc?._id && sanityDoc.projectEntries) {
-        // Here we use the updated 'name' to find the project in Sanity
-        const projectEntry = sanityDoc.projectEntries.find((p: any) => p.name.trim().toLowerCase() === name.trim().toLowerCase())
-        if (projectEntry) {
-          await writeClient
-            .patch(sanityDoc._id)
-            .set({ [`projectEntries[_key=="${projectEntry._key}"].googleMapsUrl`]: google_maps_url })
-            .commit()
+  // 3. Sync to Sanity
+  try {
+    const docQuery = `*[_type == "projects"][0]{_id, projectEntries[]{_key, name}}`
+    const sanityDoc = await writeClient.fetch(docQuery)
+    
+    if (sanityDoc?._id) {
+      const projectEntries = sanityDoc.projectEntries || []
+      // Use the updated 'name' to find the project in Sanity
+      const projectEntry = projectEntries.find((p: any) => p.name.trim().toLowerCase() === name.trim().toLowerCase())
+      
+      if (projectEntry) {
+        // Project exists, update properties
+        await writeClient
+          .patch(sanityDoc._id)
+          .set({
+            [`projectEntries[_key=="${projectEntry._key}"].googleMapsUrl`]: google_maps_url || undefined,
+            [`projectEntries[_key=="${projectEntry._key}"].location`]: location || undefined,
+            [`projectEntries[_key=="${projectEntry._key}"].description`]: description || undefined,
+          })
+          .commit()
+      } else {
+        // Project does not exist, create a new entry
+        const slugStr = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')
+        const newEntry = {
+          _key: randomUUID(),
+          _type: 'object',
+          name: name,
+          slug: { _type: 'slug', current: slugStr },
+          location: location || undefined,
+          description: description || undefined,
+          googleMapsUrl: google_maps_url || undefined,
         }
+        
+        await writeClient
+          .patch(sanityDoc._id)
+          .setIfMissing({ projectEntries: [] })
+          .append('projectEntries', [newEntry])
+          .commit()
       }
-    } catch (e) {
-      console.error("Failed to sync google_maps_url to Sanity", e)
+    } else {
+      console.error("Sanity 'projects' document not found. Ensure the singleton document exists in Sanity Studio.")
     }
+  } catch (e) {
+    console.error("Failed to sync project to Sanity", e)
   }
 
   revalidatePath('/crm/projects')
