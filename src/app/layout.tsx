@@ -4,6 +4,7 @@ import './globals.css'
 import { PostHogProvider } from '@/lib/posthog'
 import { Toaster } from 'sonner'
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import { Analytics } from "@vercel/analytics/next"
 
 const inter = Inter({
   subsets: ['latin'],
@@ -55,6 +56,7 @@ export default function RootLayout({
           {children}
           <Toaster richColors position="top-right" />
           <SpeedInsights />
+          <Analytics />
         </PostHogProvider>
       </body>
     </html>
