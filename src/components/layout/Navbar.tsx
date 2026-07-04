@@ -110,7 +110,7 @@ export function Navbar() {
                   !isDarkContent && "drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]",
                   isDarkContent && "brightness-0"
                 )}
-                style={{ width: 'auto' }}
+                style={{ width: 'auto', height: 'auto' }}
                 sizes="(max-width: 640px) 180px, 250px"
                 priority
               />

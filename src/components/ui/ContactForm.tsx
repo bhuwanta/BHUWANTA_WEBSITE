@@ -84,11 +84,17 @@ export function ContactForm({ projectsList = [], locationNames = [] }: { project
       setConfirmationResult(confirmation)
       setStep(2)
     } catch (err: any) {
-      console.error(err)
+      console.error('Firebase OTP Error:', {
+        code: err.code,
+        message: err.message,
+        fullError: err,
+      })
       setError(err.message || 'Failed to send OTP. Please try again.')
       if (window.recaptchaVerifier) {
         window.recaptchaVerifier.clear()
         window.recaptchaVerifier = null
+        const container = document.getElementById('recaptcha-container')
+        if (container) container.innerHTML = ''
       }
     } finally {
       setLoading(false)
@@ -144,6 +150,8 @@ export function ContactForm({ projectsList = [], locationNames = [] }: { project
       if (window.recaptchaVerifier) {
         window.recaptchaVerifier.clear()
         window.recaptchaVerifier = null
+        const container = document.getElementById('recaptcha-container')
+        if (container) container.innerHTML = ''
       }
     } catch (err: any) {
       console.error(err)

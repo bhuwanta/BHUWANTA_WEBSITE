@@ -48,6 +48,8 @@ export function DownloadPopup({ isOpen, onClose, urls, projectName, documentType
       if (window.recaptchaVerifier) {
         window.recaptchaVerifier.clear()
         window.recaptchaVerifier = null
+        const container = document.getElementById('download-recaptcha-container')
+        if (container) container.innerHTML = ''
       }
     }
     
@@ -84,6 +86,8 @@ export function DownloadPopup({ isOpen, onClose, urls, projectName, documentType
       if (window.recaptchaVerifier) {
         window.recaptchaVerifier.clear()
         window.recaptchaVerifier = null
+        const container = document.getElementById('download-recaptcha-container')
+        if (container) container.innerHTML = ''
       }
     } finally {
       setIsSubmitting(false)
