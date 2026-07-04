@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Plus, Edit2, Trash2, X, Search, Globe, FilterX, Download } from 'lucide-react'
 
 
+import { createClient } from '@/lib/supabase/client'
 import { createLead, updateLead, deleteLead, deleteMultipleLeads, updateLeadStatus } from './actions'
 import { useRouter } from 'next/navigation'
 
@@ -43,6 +44,32 @@ export default function LeadsClient({ initialLeads, userRole = 'Admin' }: { init
   
   // Bulk Selection State
   const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([])
+
+  useEffect(() => {
+    const supabase = createClient()
+    
+    // Subscribe to all changes in the leads table
+    const channel = supabase.channel('leads_changes')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'leads' }, (payload) => {
+        setLeads((currentLeads) => {
+          // Prevent duplicates if local state was updated optimistically
+          if (currentLeads.some(l => l.id === payload.new.id)) return currentLeads
+          return [payload.new, ...currentLeads]
+        })
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'leads' }, (payload) => {
+        setLeads((currentLeads) => currentLeads.map(lead => lead.id === payload.new.id ? payload.new : lead))
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'leads' }, (payload) => {
+        setLeads((currentLeads) => currentLeads.filter(lead => lead.id !== payload.old.id))
+        setSelectedLeadIds((currentIds) => currentIds.filter(id => id !== payload.old.id))
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [])
 
   const toggleSourceFilter = (source: string) => {
     setSelectedSources(prev => 
@@ -372,12 +399,20 @@ export default function LeadsClient({ initialLeads, userRole = 'Admin' }: { init
                         className="rounded border-[#e8ecf2] text-[#1e3a5f] focus:ring-[#1e3a5f]"
                       />
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-[#5a6a82]">
-                      {new Date(lead.created_at).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric'
-                      })}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="font-medium text-[#0f1d33]">
+                        {new Date(lead.created_at).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}
+                      </div>
+                      <div className="text-xs text-[#5a6a82] mt-0.5">
+                        {new Date(lead.created_at).toLocaleTimeString('en-US', {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="font-medium text-[#0f1d33]">{lead.name}</div>
