@@ -13,7 +13,7 @@ function WhatsAppIcon({ className }: { className?: string }) {
     </svg>
   )
 }
-
+//
 export function WhatsAppFloat() {
   const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(DEFAULT_MESSAGE)}`
 
