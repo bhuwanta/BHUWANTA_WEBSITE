@@ -30,11 +30,11 @@ export async function updateSession(request: NextRequest) {
   )
 
   // Refresh session if expired
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // const {
+  //   data: { user },
+  // } = await supabase.auth.getUser()
 
-  const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL
+  // const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL
 
   // Dashboard protection has been removed. Sanity Studio handles its own authentication.
 

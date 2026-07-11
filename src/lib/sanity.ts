@@ -167,6 +167,7 @@ export const blogListQuery = `*[_type == "blog"] | order(publishDate desc){
   title,
   slug,
   excerpt,
+  "mainImage": mainImage.asset->url,
   tags,
   publishDate,
   metaTitle,
@@ -177,11 +178,12 @@ export const blogPostQuery = `*[_type == "blog" && slug.current == $slug][0]{
   title,
   slug,
   body,
+  "mainImage": mainImage.asset->url,
   tags,
   publishDate,
   metaTitle,
   metaDescription,
-  ogImage,
+  "ogImage": ogImage.asset->url,
   canonicalUrl,
   focusKeyword
 }`

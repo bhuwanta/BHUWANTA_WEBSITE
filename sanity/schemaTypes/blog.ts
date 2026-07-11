@@ -29,6 +29,22 @@ export const blogSchema = defineType({
       rows: 3,
     }),
     defineField({
+      name: 'mainImage',
+      type: 'image',
+      title: 'Main Image',
+      options: {
+        hotspot: true,
+      },
+      fields: [
+        {
+          name: 'alt',
+          type: 'string',
+          title: 'Alternative text',
+          description: 'Important for SEO and accessibility.',
+        },
+      ],
+    }),
+    defineField({
       name: 'body',
       type: 'array',
       title: 'Body',
@@ -41,6 +57,10 @@ export const blogSchema = defineType({
             { title: 'H3', value: 'h3' },
             { title: 'H4', value: 'h4' },
             { title: 'Quote', value: 'blockquote' },
+          ],
+          lists: [
+            { title: 'Bullet', value: 'bullet' },
+            { title: 'Numbered', value: 'number' },
           ],
           marks: {
             decorators: [
@@ -99,9 +119,12 @@ export const blogSchema = defineType({
     }),
     defineField({
       name: 'ogImage',
-      type: 'url',
-      title: 'OG Image URL',
-      description: 'URL to image for social sharing',
+      type: 'image',
+      title: 'OG Image',
+      description: 'Upload an image for social sharing',
+      options: {
+        hotspot: true,
+      },
       group: 'seo',
     }),
     defineField({
@@ -114,6 +137,39 @@ export const blogSchema = defineType({
       name: 'focusKeyword',
       type: 'string',
       title: 'Focus Keyword',
+      group: 'seo',
+    }),
+    defineField({
+      name: 'secondaryKeywords',
+      type: 'array',
+      title: 'Secondary Keywords',
+      of: [{ type: 'string' }],
+      group: 'seo',
+    }),
+    defineField({
+      name: 'faqs',
+      type: 'array',
+      title: 'FAQs',
+      description: 'Frequently Asked Questions for SEO',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            {
+              name: 'question',
+              type: 'string',
+              title: 'Question',
+              validation: (Rule) => Rule.required(),
+            },
+            {
+              name: 'answer',
+              type: 'text',
+              title: 'Answer',
+              validation: (Rule) => Rule.required(),
+            },
+          ],
+        },
+      ],
       group: 'seo',
     }),
   ],

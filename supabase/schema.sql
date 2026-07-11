@@ -284,3 +284,18 @@ ON CONFLICT DO NOTHING;
 CREATE POLICY "Public can view media files" ON storage.objects FOR SELECT USING (bucket_id = 'media');
 CREATE POLICY "Authenticated users can upload media" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'media' AND auth.role() = 'authenticated');
 CREATE POLICY "Authenticated users can delete media" ON storage.objects FOR DELETE USING (bucket_id = 'media' AND auth.role() = 'authenticated');
+
+-- ===================
+-- SUBSCRIBERS TABLE
+-- ===================
+CREATE TABLE IF NOT EXISTS subscribers (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  email TEXT UNIQUE NOT NULL,
+  status TEXT DEFAULT 'active' CHECK (status IN ('active', 'unsubscribed')),
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE subscribers ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public can insert subscribers" ON subscribers FOR INSERT WITH CHECK (true);
+CREATE POLICY "Authenticated users manage subscribers" ON subscribers FOR ALL USING (auth.role() = 'authenticated');
