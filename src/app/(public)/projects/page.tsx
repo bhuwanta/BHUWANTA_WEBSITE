@@ -64,7 +64,7 @@ export default async function ProjectsPage() {
       tags: ['projectCategory'],
     })
     
-    if (sanityCategories) categories = sanityCategories
+    if (sanityCategories) categories = sanityCategories.filter((c: any) => c.title.toLowerCase() !== 'farmlands' && c.label.toLowerCase() !== 'farmlands')
     if (sanityData?.projectEntries) projects = sanityData.projectEntries.map((p: any) => ({ ...p, description: p.description || '' }))
     if (sanityData?.pageHeading) pageHeading = sanityData.pageHeading
   } catch { /* fallback */ }
