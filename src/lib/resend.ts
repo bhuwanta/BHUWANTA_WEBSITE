@@ -88,3 +88,32 @@ export async function sendFollowUpEmail(
     html: htmlBody,
   })
 }
+
+// Send credentials to newly created user
+export async function sendUserCredentials(to: string, name: string, role: string, password: string, loginUrl: string) {
+  if (!resend) return null
+
+  return resend.emails.send({
+    from: FROM_EMAIL,
+    to,
+    subject: `Your Bhuwanta CRM ${role} Account Details`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2>Welcome to Bhuwanta CRM, ${name || 'User'}!</h2>
+        <p>An administrator has created a <strong>${role}</strong> account for you.</p>
+        
+        <div style="background-color: #f3f5f8; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <p style="margin: 5px 0;"><strong>Email:</strong> ${to}</p>
+          <p style="margin: 5px 0;"><strong>Password:</strong> ${password}</p>
+        </div>
+
+        <p>You can log in to the CRM at the following link:</p>
+        <p><a href="${loginUrl}" style="display: inline-block; padding: 10px 20px; background-color: #c4a55a; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">Login to CRM</a></p>
+
+        <p style="color: #5a6a82; font-size: 12px; margin-top: 30px;">
+          * Please change your password after logging in for the first time if possible.
+        </p>
+      </div>
+    `,
+  })
+}

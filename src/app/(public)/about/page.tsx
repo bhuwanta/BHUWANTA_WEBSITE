@@ -37,8 +37,8 @@ const defaults = {
   ],
   leadershipHeading: 'The Minds Behind Bhuwanta Developers',
   leaders: [
-    { name: 'Mr. S.Siva Kumar', role: 'Managing Director', bio: 'Driving the vision of Bhuwanta Developers with strong and decisive leadership, Mr. Siva Kumar brings a proven track record of delivering successful real estate projects across Hyderabad. His expertise in identifying strategic locations, securing HMDA & DTCP approvals, and building customer-first developments has been the cornerstone of the company\'s 20+ year journey and rapid growth in Hyderabad\'s competitive real estate market.' },
-    { name: 'Mr. CH.Rama Krishna Reddy', role: 'Managing Director', bio: 'With deep domain knowledge of the Hyderabad real estate market, Mr. Rama Krishna Reddy oversees end-to-end project execution and customer experience at Bhuwanta Developers. His unwavering commitment to quality infrastructure, clear-title documentation, and timely delivery has earned the trust of thousands of satisfied homebuyers, families, and NRI investors across Hyderabad.' },
+    { name: 'Mr. S.Siva Kumar', role: 'Chairman & Managing Director', bio: 'Driving the vision of Bhuwanta Developers with strong and decisive leadership, Mr. Siva Kumar brings a proven track record of delivering successful real estate projects across Hyderabad. His expertise in identifying strategic locations, securing HMDA & DTCP approvals, and building customer-first developments has been the cornerstone of the company\'s 20+ year journey and rapid growth in Hyderabad\'s competitive real estate market.' },
+    { name: 'Mr. CH.Rama Krishna Reddy', role: 'CEO & Managing Director', bio: 'With deep domain knowledge of the Hyderabad real estate market, Mr. Rama Krishna Reddy oversees end-to-end project execution and customer experience at Bhuwanta Developers. His unwavering commitment to quality infrastructure, clear-title documentation, and timely delivery has earned the trust of thousands of satisfied homebuyers, families, and NRI investors across Hyderabad.' },
   ],
   strengthsHeading: 'Why Bhuwanta Developers Stands Out',
   strengths: [
