@@ -12,7 +12,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return generatePageMetadata(
     'about', 
     'About Bhuwanta Developers | HMDA & DTCP Approved Plots in Hyderabad', 
-    'Learn about Bhuwanta Developers — Hyderabad\'s trusted real estate company with 12+ years of experience in HMDA & DTCP approved plots, villa plots, and farmlands.'
+    'Learn about Bhuwanta Developers — Hyderabad\'s trusted real estate company with 20+ years of experience in HMDA & DTCP approved plots, villa plots, and farmlands.'
   )
 }
 
@@ -24,7 +24,7 @@ const defaults = {
   pageSubtitle: '',
   storyHeading: 'The Best Real Estate Service With 20+ Years of Excellence',
   storyParagraphs: [
-    'Bhuwanta Developers is a Hyderabad based real estate company with 12+ years of experience in delivering HMDA & DTCP approved open plots, villa plots and farmlands. Built on trust, transparency and integrity, we simplify the property buying journey for first time buyers, growing families and NRI investors alike — offering premium clear title properties across Hyderabad\'s fastest growing locations.'
+    'Bhuwanta Developers is a Hyderabad based real estate company with 20+ years of experience in delivering HMDA & DTCP approved open plots, villa plots and farmlands. Built on trust, transparency and integrity, we simplify the property buying journey for first time buyers, growing families and NRI investors alike — offering premium clear title properties across Hyderabad\'s fastest growing locations.'
   ],
   missionTitle: 'Our Mission',
   missionBody: 'To empower homebuyers and investors with secure, high-value real estate opportunities across Hyderabad through HMDA & DTCP approved plots, villa plots, and farmlands — ensuring transparency, trust, and excellence in every step of the property-buying journey.',
@@ -43,7 +43,7 @@ const defaults = {
   strengthsHeading: 'Why Bhuwanta Developers Stands Out',
   strengths: [
     { title: 'Strong Vision', description: 'Driven by a long-term commitment towards customers and Hyderabad\'s growing real estate market.' },
-    { title: 'Experienced Leadership', description: 'Management with 12+ years of deep expertise in plots, villa plots, and farmlands across Hyderabad.' },
+    { title: 'Experienced Leadership', description: 'Management with 20+ years of deep expertise in plots, villa plots, and farmlands across Hyderabad.' },
     { title: 'Domain Knowledge', description: 'Deep understanding of HMDA & DTCP approvals, strategic locations, and Hyderabad\'s real estate landscape.' },
     { title: 'Innovative Thinking', description: 'Thinking ahead with strategic and analytical strengths to identify the best investment opportunities for our customers.' },
   ],

@@ -10,7 +10,7 @@ declare global {
   }
 }
 
-export function ContactForm({ projectsList = [], locationNames = [] }: { projectsList?: { name: string, location: string }[], locationNames?: string[] }) {
+export function ContactForm({ projectsList = [], locationNames = [], initialProject }: { projectsList?: { name: string, location: string }[], locationNames?: string[], initialProject?: string }) {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
@@ -18,13 +18,18 @@ export function ContactForm({ projectsList = [], locationNames = [] }: { project
   const [step, setStep] = useState<1 | 2>(1)
   const [otp, setOtp] = useState('')
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null)
-  
+
+  // Only preselect if it's a real project name — otherwise the <select> would
+  // silently show a blank state since no <option> would match the value.
+  const matchedProject = initialProject && projectsList.some(p => p.name === initialProject) ? initialProject : 'Not Sure'
+  const matchedLocation = initialProject ? projectsList.find(p => p.name === initialProject)?.location : undefined
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
-    location: 'All',
-    project: 'Not Sure',
+    location: matchedLocation || 'All',
+    project: matchedProject,
     enquiryType: 'Site Visit',
     message: '',
     agree: false,

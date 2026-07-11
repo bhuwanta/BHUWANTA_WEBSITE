@@ -151,6 +151,28 @@ export const projectsQuery = `*[_type == "projects"][0]{
   }
 }`
 
+export const projectSlugsQuery = `*[_type == "projects"][0].projectEntries[defined(slug.current)][].slug.current`
+
+export const projectBySlugQuery = `*[_type == "projects"][0].projectEntries[slug.current == $slug][0]{
+  name,
+  "category": category->slug.current,
+  "categoryTitle": category->title,
+  slug,
+  location,
+  googleMapsUrl,
+  description,
+  "images": images[].asset->url,
+  "videoUrl": videoFile.asset->url,
+  youtubeUrl,
+  projectHighlights,
+  "brochureUrls": brochure[].asset->url,
+  "layoutUrls": layoutPdf[].asset->url,
+  "reraUrls": reraCertificate[].asset->url,
+  approvalCertificateLabel,
+  "hmdaDtcpUrls": hmdaDtcpCertificate[].asset->url,
+  approvalBadge
+}`
+
 export const projectCategoriesQuery = `*[_type == "projectCategory"] | order(order asc){
   "id": slug.current,
   title,
@@ -185,7 +207,8 @@ export const blogPostQuery = `*[_type == "blog" && slug.current == $slug][0]{
   metaDescription,
   "ogImage": ogImage.asset->url,
   canonicalUrl,
-  focusKeyword
+  focusKeyword,
+  faqs[]{ question, answer }
 }`
 
 export const contactQuery = `*[_type == "contact"][0]{

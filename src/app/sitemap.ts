@@ -1,6 +1,5 @@
 import { MetadataRoute } from 'next'
-import { createServiceClient } from '@/lib/supabase/server'
-import { sanityFetch, blogListQuery } from '@/lib/sanity'
+import { sanityFetch, blogListQuery, projectSlugsQuery } from '@/lib/sanity'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bhuwanta.com'
@@ -11,7 +10,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${siteUrl}/projects`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
     { url: `${siteUrl}/gallery`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
     { url: `${siteUrl}/blog`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
-
+    { url: `${siteUrl}/hmda-vs-dtcp-plots-hyderabad`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
   ]
 
   // Add dynamic blog slugs
@@ -20,7 +19,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       query: blogListQuery,
       tags: ['blog']
     })
-    
+
     if (posts) {
       posts.forEach(post => {
         if (post.slug?.current) {
@@ -31,6 +30,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             priority: 0.7
           })
         }
+      })
+    }
+  } catch { /* Ignore fetching errors for sitemap */ }
+
+  // Add dynamic project slugs
+  try {
+    const projectSlugs = await sanityFetch<string[]>({
+      query: projectSlugsQuery,
+      tags: ['projects']
+    })
+
+    if (projectSlugs) {
+      projectSlugs.forEach(slug => {
+        routes.push({
+          url: `${siteUrl}/projects/${slug}`,
+          lastModified: new Date(),
+          changeFrequency: 'weekly',
+          priority: 0.8
+        })
       })
     }
   } catch { /* Ignore fetching errors for sitemap */ }

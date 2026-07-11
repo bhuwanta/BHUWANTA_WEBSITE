@@ -93,7 +93,8 @@ export default async function ProjectsPage() {
     buildRealEstateListingSchema({
       name: p.name,
       description: p.description || '',
-      url: `${siteUrl}/projects`,
+      url: p.slug?.current ? `${siteUrl}/projects/${p.slug.current}` : `${siteUrl}/projects`,
+      address: p.location,
     })
   )
 

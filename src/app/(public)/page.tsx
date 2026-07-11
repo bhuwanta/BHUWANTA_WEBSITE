@@ -29,7 +29,12 @@ const fallback = {
   // ... (Other fallback data omitted for brevity but remains functionally intact)
 }
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ project?: string }>
+}) {
+  const { project: preselectedProject } = await searchParams
   let data = fallback as any
   let projectsData: any = null
   let categoriesData: any = null
@@ -75,7 +80,7 @@ export default async function HomePage() {
 
   // 1.5 Stats Bar Data
   const statsData = [
-    { label: 'Years of Experience', value: '12+' },
+    { label: 'Years of Experience', value: '20+' },
     { label: 'Projects Completed', value: '15' },
     { label: 'Happy Customers', value: '1000+' },
     { label: 'Ongoing Projects', value: '4+' },
@@ -208,6 +213,15 @@ export default async function HomePage() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ===== SECTION 1.6 — CITABLE COMPANY SUMMARY (for AI/answer engines) ===== */}
+      <section className="bg-white py-10 sm:py-14 border-b border-[#e8ecf2]">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+          <p className="text-sm sm:text-base text-[#5a6a82] leading-relaxed text-center">
+            Bhuwanta Developers is a Hyderabad-based real estate company specializing in HMDA and DTCP approved open plots, villa plots, and farmlands. The company&apos;s current projects span three of Hyderabad&apos;s fastest-growing corridors: S.V. Kanaka Maple Homes on the Warangal Highway near the Yadagirigutta Temple, TJR Township at Sangareddy Junction on the Mumbai Highway, and Vaibhav County in Sadashivpet, also on the Mumbai Highway. Every layout is DTCP, HMDA, or YTDA approved and RERA registered, with clear legal documentation, Vastu-compliant planning, underground drainage, and bank loan eligibility. Bhuwanta is led by Chairman &amp; Managing Director S. Siva Kumar and CEO &amp; Managing Director CH. Rama Krishna Reddy. The company&apos;s headquarters is at Alluri Trade Center, KPHB, Hyderabad, near KPHB Metro Station. Buyers can book a free site visit directly through the website or WhatsApp.
+          </p>
         </div>
       </section>
 
@@ -530,7 +544,7 @@ export default async function HomePage() {
 
             {/* Right Side: Form */}
             <div className="bg-white border border-gray-100 rounded-2xl p-6 sm:p-10 shadow-xl lg:order-2">
-              <ContactForm projectsList={projectsList} locationNames={locationNames} />
+              <ContactForm projectsList={projectsList} locationNames={locationNames} initialProject={preselectedProject} />
             </div>
 
           </div>

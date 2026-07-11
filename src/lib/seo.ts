@@ -72,7 +72,12 @@ export async function generatePageMetadata(
   const global = await getSeoGlobal()
   const settings = await getSeoSettings(pageSlug)
 
-  const title = settings?.meta_title || global.title_template.replace('{page_title}', defaultTitle)
+  // `absolute` bypasses the root layout's `%s | Bhuwanta` title template — this
+  // string already has the site name appended, so without `absolute` Next.js
+  // appends it a second time (e.g. "... | Bhuwanta | Bhuwanta").
+  const title = {
+    absolute: settings?.meta_title || global.title_template.replace('{page_title}', defaultTitle),
+  }
   const description = settings?.meta_description || defaultDescription || global.default_description
   const ogImage = settings?.og_image || global.default_og_image
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bhuwanta.com'

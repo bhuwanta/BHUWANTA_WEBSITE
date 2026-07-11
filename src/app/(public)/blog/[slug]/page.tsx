@@ -4,7 +4,7 @@ import { PortableText } from '@portabletext/react'
 import { ArrowLeft, Calendar, Clock, Tag } from 'lucide-react'
 import Link from 'next/link'
 import { sanityFetch, blogPostQuery } from '@/lib/sanity'
-import { JsonLd, buildBreadcrumbSchema, buildArticleSchema } from '@/components/seo/JsonLd'
+import { JsonLd, buildBreadcrumbSchema, buildArticleSchema, buildFaqSchema } from '@/components/seo/JsonLd'
 import { formatDate, calculateReadingTime } from '@/lib/utils'
 
 interface BlogPostData {
@@ -19,6 +19,7 @@ interface BlogPostData {
   ogImage?: string
   canonicalUrl?: string
   focusKeyword?: string
+  faqs?: { question: string; answer: string }[]
 }
 
 export async function generateMetadata({
@@ -35,6 +36,15 @@ export async function generateMetadata({
     })
     if (!post) return { title: 'Post Not Found' }
 
+    // The Sanity `canonicalUrl` field is a manually-set string that goes stale
+    // whenever a post's slug changes (it isn't derived from the live route).
+    // Only trust it when it actually points at this post's current URL —
+    // otherwise fall back to the live slug so the canonical can never point
+    // at an old/renamed URL.
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bhuwanta.com'
+    const liveUrl = `${siteUrl}/blog/${slug}`
+    const canonical = post.canonicalUrl?.endsWith(`/blog/${slug}`) ? post.canonicalUrl : liveUrl
+
     return {
       title: post.metaTitle || post.title,
       description: post.metaDescription || `Read "${post.title}" on Bhuwanta Blog`,
@@ -44,7 +54,7 @@ export async function generateMetadata({
         type: 'article',
         ...(post.ogImage ? { images: [{ url: post.ogImage }] } : {}),
       },
-      ...(post.canonicalUrl ? { alternates: { canonical: post.canonicalUrl } } : {}),
+      alternates: { canonical },
     }
   } catch {
     return { title: 'Blog Post' }
@@ -94,9 +104,11 @@ export default async function BlogPostPage({
     ...(post.ogImage ? { imageUrl: post.ogImage } : {}),
   })
 
+  const faqSchema = post.faqs?.length ? buildFaqSchema(post.faqs) : null
+
   return (
     <>
-      <JsonLd data={[breadcrumb, articleSchema]} />
+      <JsonLd data={faqSchema ? [breadcrumb, articleSchema, faqSchema] : [breadcrumb, articleSchema]} />
 
       <article className="pt-28 sm:pt-32 section-padding pb-20 bg-[#f7f8fa]">
         <div className="max-w-4xl mx-auto bg-white border border-[#e8ecf2] shadow-sm rounded-xl overflow-hidden">
@@ -147,6 +159,21 @@ export default async function BlogPostPage({
                 />
               )}
             </div>
+
+            {/* FAQs */}
+            {post.faqs && post.faqs.length > 0 && (
+              <div className="mt-16 pt-8 border-t border-[#e8ecf2]">
+                <h2 className="text-2xl font-bold text-[#1e3a5f] mb-6">Frequently Asked Questions</h2>
+                <div className="space-y-6">
+                  {post.faqs.map((faq, i) => (
+                    <div key={i}>
+                      <h3 className="text-lg font-bold text-[#0f1d33] mb-2">{faq.question}</h3>
+                      <p className="text-[#5a6a82] leading-relaxed">{faq.answer}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Footer */}
             <footer className="mt-16 pt-8 border-t border-[#e8ecf2] flex flex-wrap items-center justify-between gap-4">

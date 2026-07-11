@@ -153,6 +153,15 @@
   animation-play-state: paused;
 }
 
+/* Stats counter entrance (pure CSS — no JS dependency for content to render) */
+@keyframes counter-in {
+  0% { opacity: 0; transform: scale(0.85); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.animate-counter-in {
+  animation: counter-in 0.7s ease-out both;
+}
+
 /* Gallery slow scroll */
 @keyframes scroll-left {
   0% { transform: translateX(0); }

@@ -1,7 +1,7 @@
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { DynamicClientComponents } from '@/components/ui/DynamicClientComponents'
-import { JsonLd, buildWebSiteSchema, buildOrganizationSchema } from '@/components/seo/JsonLd'
+import { JsonLd, buildWebSiteSchema, buildLocalBusinessSchema } from '@/components/seo/JsonLd'
 import Script from 'next/script'
 import { sanityFetch, siteSettingsQuery, projectsQuery } from '@/lib/sanity'
 
@@ -32,15 +32,28 @@ export default async function PublicLayout({
     url: siteUrl,
   })
 
-  const orgSchema = buildOrganizationSchema({
-    name: 'Bhuwanta',
-    url: siteUrl,
-    description: 'Premium real estate solutions by Bhuwanta',
+  const localBusinessSchema = buildLocalBusinessSchema({
+    name: settings?.siteName || 'Bhuwanta Developers',
+    type: 'RealEstateAgent',
+    streetAddress: settings?.footerAddress || 'Alluri Trade Center, Floor #5, Unit #406, KPHB, Near KPHB Metro Station',
+    city: 'Hyderabad',
+    state: 'Telangana',
+    postalCode: '500072',
+    country: 'IN',
+    ...(settings?.footerPhone && settings.footerPhone !== '+91 XXXXX XXXXX' ? { phone: settings.footerPhone } : {}),
+    email: settings?.footerEmail || 'info@bhuwanta.com',
+    website: siteUrl,
+    sameAsLinks: [
+      settings?.socialLinks?.linkedin || 'https://www.linkedin.com/in/bhuwanta-developer-043591405/',
+      settings?.socialLinks?.facebook || 'https://www.facebook.com/bhuwantadevelopers',
+      settings?.socialLinks?.instagram || 'https://www.instagram.com/bhuwantadevelopers/',
+      settings?.socialLinks?.youtube || 'https://www.youtube.com/@BhuwantaDevelopers',
+    ],
   })
 
   return (
     <>
-      <JsonLd data={[websiteSchema, orgSchema]} />
+      <JsonLd data={[websiteSchema, localBusinessSchema]} />
 
       {/* Google Analytics — uses Sanity setting with hardcoded fallback */}
       {(() => {
