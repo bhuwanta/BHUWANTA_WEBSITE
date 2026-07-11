@@ -11,6 +11,7 @@ interface BlogPostData {
   title: string
   slug: { current: string }
   body: any[]
+  mainImage?: string
   tags?: string[]
   publishDate: string
   metaTitle?: string
@@ -97,50 +98,73 @@ export default async function BlogPostPage({
     <>
       <JsonLd data={[breadcrumb, articleSchema]} />
 
-      <article className="pt-28 sm:pt-32 section-padding">
-        <div className="max-w-3xl mx-auto">
-          {/* Back link */}
-          <Link
-            href="/blog"
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-8 transition-premium"
-          >
-            <ArrowLeft className="w-4 h-4" /> Back to Blog
-          </Link>
-
-          {/* Header */}
-          <header className="mb-12">
-            {post.tags && post.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-4">
-                {post.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="px-3 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary border border-primary/20"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground leading-tight mb-6">
-              {post.title}
-            </h1>
-
-            <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1.5">
-                <Calendar className="w-4 h-4" />
-                {formatDate(post.publishDate)}
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Clock className="w-4 h-4" />
-                {readingTime} min read
-              </span>
+      <article className="pt-28 sm:pt-32 section-padding pb-20 bg-[#f7f8fa]">
+        <div className="max-w-4xl mx-auto bg-white border border-[#e8ecf2] shadow-sm rounded-xl overflow-hidden">
+          
+          {/* Hero Image */}
+          {post.mainImage && (
+            <div className="w-full aspect-[16/9] relative bg-[#f3f5f8]">
+              <img src={post.mainImage} alt={post.title} className="w-full h-full object-cover" />
             </div>
-          </header>
+          )}
 
-          {/* Body */}
-          <div className="prose prose-lg max-w-none prose-headings:font-bold prose-p:text-[#5a6a82] prose-a:text-[#003d4f] prose-a:no-underline hover:prose-a:underline prose-strong:text-[#002935] prose-blockquote:border-[#B69A4E]/50 prose-blockquote:text-[#5a6a82]">
-            {post.body && <PortableText value={post.body} />}
+          <div className="p-8 md:p-12">
+            {/* Header / Meta */}
+            <header className="mb-10">
+              <div className="flex flex-wrap items-center gap-3 text-sm text-[#5a6a82] mb-6 font-medium">
+                <span className="flex items-center gap-1.5 text-[#c4a55a]"><Calendar className="w-4 h-4" /> <span className="text-[#5a6a82]">{formatDate(post.publishDate)}</span></span>
+                <span className="text-[#e8ecf2]">•</span>
+                <span className="flex items-center gap-1.5 text-[#c4a55a] font-semibold text-[#5a6a82]">Bhuwanta Team</span>
+                {post.tags && post.tags.length > 0 && (
+                  <>
+                    <span className="text-[#e8ecf2]">•</span>
+                    <span className="flex items-center gap-1.5 text-[#c4a55a]"><Tag className="w-4 h-4" /> <span className="text-[#5a6a82]">{post.tags[0]}</span></span>
+                  </>
+                )}
+              </div>
+
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#1e3a5f] leading-tight mb-8">
+                {post.title}
+              </h1>
+            </header>
+
+            {/* Body */}
+            <div className="prose prose-lg max-w-none prose-headings:text-[#1e3a5f] prose-h3:text-[#1e3a5f] prose-h4:text-[#c4a55a] prose-h4:font-bold prose-p:text-[#5a6a82] prose-a:text-[#1e3a5f] prose-a:font-semibold hover:prose-a:text-[#c4a55a] prose-strong:text-[#0f1d33] prose-blockquote:bg-[#fef9f0] prose-blockquote:border-l-4 prose-blockquote:border-[#c4a55a] prose-blockquote:py-4 prose-blockquote:px-6 prose-blockquote:rounded-r-lg prose-blockquote:text-[#5a6a82] prose-blockquote:not-italic prose-li:text-[#5a6a82] prose-ul:text-[#5a6a82] prose-ol:text-[#5a6a82]">
+              {post.body && (
+                <PortableText 
+                  value={post.body} 
+                  components={{
+                    block: {
+                      normal: ({ children }: any) => {
+                        // If the user hit enter to create an empty line, force it to take up vertical space
+                        if (!children || children.length === 0 || (children.length === 1 && children[0] === '')) {
+                          return <p className="h-6"><br /></p>
+                        }
+                        return <p>{children}</p>
+                      }
+                    }
+                  }}
+                />
+              )}
+            </div>
+
+            {/* Footer */}
+            <footer className="mt-16 pt-8 border-t border-[#e8ecf2] flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-3 text-sm text-[#5a6a82]">
+                Share this article:
+                <div className="flex gap-2">
+                  <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(`${siteUrl}/blog/${slug}`)}`} target="_blank" rel="noopener noreferrer" className="w-6 h-6 rounded-full bg-[#1e3a5f]/10 flex items-center justify-center text-[#1e3a5f] hover:bg-[#1e3a5f] hover:text-white transition-colors text-xs font-bold">f</a>
+                  <a href={`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(`${siteUrl}/blog/${slug}`)}&title=${encodeURIComponent(post.title)}`} target="_blank" rel="noopener noreferrer" className="w-6 h-6 rounded-full bg-[#1e3a5f]/10 flex items-center justify-center text-[#1e3a5f] hover:bg-[#1e3a5f] hover:text-white transition-colors text-[10px] font-bold">in</a>
+                  <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(`${siteUrl}/blog/${slug}`)}&text=${encodeURIComponent(post.title)}`} target="_blank" rel="noopener noreferrer" className="w-6 h-6 rounded-full bg-[#1e3a5f]/10 flex items-center justify-center text-[#1e3a5f] hover:bg-[#1e3a5f] hover:text-white transition-colors text-xs font-bold">x</a>
+                </div>
+              </div>
+              <Link
+                href="/blog"
+                className="inline-flex items-center gap-2 text-sm font-bold text-[#c4a55a] hover:text-[#a38743] transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" /> Back to all blogs
+              </Link>
+            </footer>
           </div>
         </div>
       </article>

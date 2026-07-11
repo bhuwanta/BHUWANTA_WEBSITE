@@ -168,7 +168,7 @@ export default async function HomePage() {
       `}} />
 
       {/* ===== SECTION 1 — HERO BANNER ===== */}
-      <section className="relative min-h-screen flex flex-col overflow-hidden" id="hero">
+      <section className="relative min-h-[100svh] flex flex-col overflow-hidden" id="hero">
         <HeroSlider images={mappedHeroImages} />
 
         {/* Center Content */}
@@ -180,7 +180,7 @@ export default async function HomePage() {
             <Link
               href="/#book-visit"
               id="hero-cta-primary"
-              className="w-full sm:w-auto group inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-semibold rounded-xl gradient-gold text-white transition-premium hover:scale-105 glow-gold shadow-2xl"
+              className="w-[90%] max-w-sm sm:max-w-none sm:w-auto group inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-semibold rounded-xl gradient-gold text-white transition-premium hover:scale-105 glow-gold shadow-2xl"
             >
               Book a Free Site Visit
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />

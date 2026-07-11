@@ -9,22 +9,19 @@ import { cn } from '@/lib/utils'
 import { client, urlFor } from '@/lib/sanity'
 import logoFallback from '@/images/logo.png'
 
-const defaultNavLinks = [
+const navLinks = [
   { href: '/', label: 'Home' },
-  { href: '/about', label: 'About Us' },
+  { href: '/about', label: 'About' },
   { href: '/projects', label: 'Projects' },
   { href: '#', label: 'Reviews' },
   { href: '/gallery', label: 'Gallery' },
-  { href: '/blog', label: 'Blogs' },
-  { href: '/forms', label: 'Forms' },
-  { href: '/contact', label: 'Enquire Now' },
+  { href: '/blog', label: 'Blog' },
 ]
 
 interface SiteSettings {
   siteName?: string
   tagline?: string
   logo?: any
-  navLinks?: { label: string; href: string }[]
   ctaButtonText?: string
   ctaButtonLink?: string
 }
@@ -60,25 +57,11 @@ export function Navbar() {
 
   useEffect(() => {
     client.fetch(`*[_type == "siteSettings"][0]{
-      siteName, tagline, logo, navLinks[]{ label, href }, ctaButtonText, ctaButtonLink
+      siteName, tagline, logo, ctaButtonText, ctaButtonLink
     }`).then((data: SiteSettings) => {
       if (data) setSettings(data)
     }).catch(() => {})
   }, [])
-
-  let navLinks = settings.navLinks?.length ? settings.navLinks : defaultNavLinks
-  
-  // Inject "Reviews" beside "Projects" in case navLinks are coming from Sanity CMS
-  if (!navLinks.find((l: any) => l.label.toLowerCase().includes('review'))) {
-    const projectIdx = navLinks.findIndex((l: any) => l.label.toLowerCase() === 'projects')
-    if (projectIdx !== -1) {
-      navLinks = [
-        ...navLinks.slice(0, projectIdx + 1),
-        { href: '#', label: 'Reviews' },
-        ...navLinks.slice(projectIdx + 1)
-      ]
-    }
-  }
   const siteName = settings.siteName || 'BHUWANTA'
   const tagline = settings.tagline || 'Land Today. Landmark Tomorrow.'
   const ctaText = settings.ctaButtonText || 'Book Site Visit'
@@ -110,7 +93,7 @@ export function Navbar() {
                   !isDarkContent && "drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]",
                   isDarkContent && "brightness-0"
                 )}
-                style={{ width: 'auto' }}
+                style={{ width: 'auto', height: 'auto' }}
                 sizes="(max-width: 640px) 180px, 250px"
                 priority
               />
