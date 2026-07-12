@@ -224,3 +224,20 @@ CREATE TABLE IF NOT EXISTS subscribers (
 ALTER TABLE subscribers ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Public can insert subscribers" ON subscribers FOR INSERT WITH CHECK (true);
 CREATE POLICY "Authenticated users manage subscribers" ON subscribers FOR ALL USING (auth.role() = 'authenticated');
+
+-- ===================
+-- META FORMS TABLE
+-- ===================
+CREATE TABLE IF NOT EXISTS meta_forms (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  form_id TEXT UNIQUE NOT NULL,
+  name TEXT,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE meta_forms ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Authenticated users manage meta_forms" ON meta_forms FOR ALL USING (auth.role() = 'authenticated');
+
+-- Add provider_id to leads
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS provider_id TEXT UNIQUE;

@@ -173,3 +173,45 @@ export async function getLeadActivities(leadId: string) {
 
   return { data, error: null }
 }
+
+// Meta Forms Server Actions
+export async function getMetaForms() {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('meta_forms')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching meta forms:', error)
+    return { data: [], error: error.message }
+  }
+
+  return { data, error: null }
+}
+
+export async function addMetaForm(form_id: string, name: string = '') {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('meta_forms')
+    .insert([{ form_id, name }])
+    .select()
+
+  if (error) {
+    return { error: error.message }
+  }
+  return { success: true, data }
+}
+
+export async function deleteMetaForm(id: string) {
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('meta_forms')
+    .delete()
+    .eq('id', id)
+
+  if (error) {
+    return { error: error.message }
+  }
+  return { success: true }
+}
