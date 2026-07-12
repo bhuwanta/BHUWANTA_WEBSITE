@@ -67,6 +67,7 @@ CREATE TABLE IF NOT EXISTS leads (
   project TEXT,
   enquiry_type TEXT,
   downloaded_item TEXT,
+  bot_interactions_count INTEGER DEFAULT 1,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
 );
@@ -80,6 +81,23 @@ DROP POLICY IF EXISTS "Authenticated users can update leads" ON leads;
 CREATE POLICY "Authenticated users can update leads" ON leads FOR UPDATE USING (auth.role() = 'authenticated');
 DROP POLICY IF EXISTS "Authenticated users can delete leads" ON leads;
 CREATE POLICY "Authenticated users can delete leads" ON leads FOR DELETE USING (auth.role() = 'authenticated');
+
+-- ===================
+-- LEAD ACTIVITIES TABLE
+-- ===================
+CREATE TABLE IF NOT EXISTS lead_activities (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  lead_id UUID NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
+  activity_type TEXT NOT NULL,
+  details TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE lead_activities ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Anyone can insert lead activities" ON lead_activities;
+CREATE POLICY "Anyone can insert lead activities" ON lead_activities FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "Authenticated users can view lead activities" ON lead_activities;
+CREATE POLICY "Authenticated users can view lead activities" ON lead_activities FOR SELECT USING (auth.role() = 'authenticated');
 
 -- ===================
 -- AREAS TABLE

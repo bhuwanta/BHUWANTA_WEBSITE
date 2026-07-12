@@ -179,11 +179,24 @@ export async function POST(request: Request) {
         // 1. Get or Create Session
         let session = await getSession(senderPhone, profileName)
 
+        // --- Global Navigation Interceptors ---
+        if (userInput === 'action_main_menu' || userInput === 'action_back_to_areas' || userInput === 'start_over') {
+          isGreeting = true
+        }
+
+        if (userInput.startsWith('action_back_to_projects_')) {
+          const areaName = userInput.replace('action_back_to_projects_', '')
+          userInput = `area_${areaName}`
+          session.step = 'AWAITING_AREA'
+        }
+        // --------------------------------------
+
         // 2. Restart flow if user says "hi" or it's a completely new session
         if (isGreeting || session.step === 'INIT') {
           console.log('🔄 Starting greeting flow for', senderPhone)
           
           const leadResult = await upsertWhatsAppLead(senderPhone, profileName)
+          await logLeadActivity(senderPhone, 'Bot Started', 'User initiated chat or sent greeting')
           console.log('💾 Lead upsert result:', leadResult ? 'OK' : 'FAILED (but continuing)')
           
           const areas = await getActiveAreas()
@@ -215,6 +228,7 @@ export async function POST(request: Request) {
         // 3. Handle Area Selection
         if (session.step === 'AWAITING_AREA' && userInput.startsWith('area_')) {
           const selectedArea = userInput.replace('area_', '')
+          await logLeadActivity(senderPhone, 'Area Selected', selectedArea)
           const projects = await getProjectsByArea(selectedArea)
 
           if (projects.length === 0) {
@@ -223,6 +237,8 @@ export async function POST(request: Request) {
           }
 
           const options = projects.map((p: any) => ({ id: `proj_${p.name}`, title: p.name, description: p.location }))
+          options.push({ id: `action_back_to_areas`, title: '⬅️ Back to Areas' })
+          
           await sendListMenu(
             senderPhone,
             `${selectedArea} Projects`,
@@ -240,17 +256,30 @@ export async function POST(request: Request) {
         // 4. Handle Project Selection
         if (session.step === 'AWAITING_PROJECT' && userInput.startsWith('proj_')) {
           const selectedProjectName = userInput.replace('proj_', '')
+          await logLeadActivity(senderPhone, 'Project Selected', selectedProjectName)
+          const projectDetails = await getProjectDetails(selectedProjectName)
           
-          const buttons = [
+          const options = [
             { id: `action_brochure_${selectedProjectName}`, title: "📄 Brochure" },
-            { id: `action_layout_${selectedProjectName}`, title: "🏗 Layout" },
-            { id: `action_callback_${selectedProjectName}`, title: "📞 Request Callback" }
+            { id: `action_layout_${selectedProjectName}`, title: "🏗 Layout" }
           ]
+          
+          if (projectDetails?.googleMapsUrl) {
+            options.push({ id: `action_location_${selectedProjectName}`, title: "📍 Location Map" })
+          }
+          
+          options.push(
+            { id: `action_callback_${selectedProjectName}`, title: "📞 Request Callback" },
+            { id: `action_back_to_projects_${session.selectedArea}`, title: "⬅️ Back to Projects" },
+            { id: `action_main_menu`, title: "🏠 Main Menu" }
+          )
 
-          await sendButtonsMenu(
+          await sendListMenu(
             senderPhone,
+            `Project Details`,
             `You selected *${selectedProjectName}*.\n\nWhat would you like to do next?`,
-            buttons
+            "Select Option",
+            options
           )
 
           session.selectedProject = selectedProjectName
@@ -270,6 +299,15 @@ export async function POST(request: Request) {
             await sendTextMessage(senderPhone, "Thank you! A sales executive will contact you shortly regarding " + projectName + ".\n\nType 'Hi' anytime to start over.")
             await clearSession(senderPhone)
           } 
+          else if (action === 'location') {
+            const projectDetails = await getProjectDetails(projectName)
+            if (projectDetails?.googleMapsUrl) {
+              await sendTextMessage(senderPhone, `📍 Here is the Google Maps location for *${projectName}*:\n\n${projectDetails.googleMapsUrl}`)
+              await logLeadActivity(senderPhone, 'Viewed Location', projectName)
+            } else {
+              await sendTextMessage(senderPhone, `Sorry, we don't have a Google Maps link for ${projectName} at the moment.`)
+            }
+          }
           else if (action === 'brochure' || action === 'layout') {
             const projectDetails = await getProjectDetails(projectName)
             
@@ -283,14 +321,8 @@ export async function POST(request: Request) {
               await sendTextMessage(senderPhone, "Sorry, this document is currently unavailable.")
             }
             
-            // Allow them to choose another action for the same project
-            setTimeout(async () => {
-              const buttons = [
-                { id: `action_callback_${projectName}`, title: "📞 Request Callback" },
-                { id: `start_over`, title: "🔄 Start Over" }
-              ]
-              await sendButtonsMenu(senderPhone, "Is there anything else I can help you with?", buttons)
-            }, 2000)
+            // Let them know they can reuse the menu
+            await sendTextMessage(senderPhone, "💡 Tip: You can open the 'Select Option' menu above again to view other documents or go back.")
           }
           return new NextResponse('EVENT_RECEIVED', { status: 200 })
         }

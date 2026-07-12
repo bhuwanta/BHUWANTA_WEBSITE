@@ -11,11 +11,21 @@ export async function upsertWhatsAppLead(phone: string, name: string) {
     // Try to find existing lead with this phone
     const { data: existingLead } = await supabase
       .from('leads')
-      .select('id')
+      .select('id, bot_interactions_count')
       .eq('phone', phone)
       .single()
 
     if (existingLead) {
+      // Increment interaction count
+      const newCount = (existingLead.bot_interactions_count || 1) + 1
+      await supabase
+        .from('leads')
+        .update({ 
+          bot_interactions_count: newCount,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', existingLead.id)
+        
       // Lead already exists, just return it
       return existingLead
     }
@@ -52,10 +62,13 @@ export async function logLeadActivity(phone: string, action: string, details: st
       .single()
 
     if (lead) {
-      // If we have an activities or notes table, we'd insert here. 
-      // For now, we update the status or a specific field if necessary.
-      // E.g., we could append to a "notes" column if it exists.
-      console.log(`[CRM] Logged activity for ${phone}: ${action} - ${details}`)
+      await supabase
+        .from('lead_activities')
+        .insert({
+          lead_id: lead.id,
+          activity_type: action,
+          details: details
+        })
     }
   } catch (error) {
     console.error('Error in logLeadActivity:', error)
