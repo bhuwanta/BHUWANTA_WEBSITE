@@ -21,6 +21,7 @@ interface SeoGlobal {
   google_verification: string | null
   bing_verification: string | null
 }
+//
 
 // Fallback values when Supabase tables aren't set up yet
 const DEFAULT_GLOBAL: SeoGlobal = {
