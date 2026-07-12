@@ -30,7 +30,17 @@ export const projectsSchema = defineType({
               name: 'slug',
               type: 'slug',
               title: 'URL Slug',
-              options: { source: 'name', maxLength: 96 },
+              options: { 
+                source: (doc, options: any) => {
+                  const name = options?.parent?.name || '';
+                  return name;
+                },
+                slugify: (input: string) => input
+                  .toLowerCase()
+                  .replace(/[^a-z0-9]+/g, '-')
+                  .replace(/(^-|-$)+/g, ''),
+                maxLength: 96 
+              },
             }),
             defineField({ name: 'location', type: 'string', title: 'Location' }),
             defineField({ name: 'googleMapsUrl', type: 'url', title: 'Google Maps Link', description: 'Link to the project location on Google Maps' }),
