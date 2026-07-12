@@ -55,7 +55,7 @@ export async function POST(request: Request) {
 
             // Meta only sends the lead ID in the webhook payload for security. 
             // We have to securely fetch the actual lead details using our access token.
-            const url = `https://graph.facebook.com/v18.0/${leadgenId}?access_token=${META_ACCESS_TOKEN}&fields=created_time,id,field_data`
+            const url = `https://graph.facebook.com/v18.0/${leadgenId}?access_token=${META_ACCESS_TOKEN}&fields=created_time,id,field_data,campaign_name,ad_name`
             const response = await fetch(url)
             const leadData = await response.json()
 
@@ -80,6 +80,10 @@ export async function POST(request: Request) {
               })
             }
 
+            const campaign = leadData.campaign_name ? ` | Campaign: ${leadData.campaign_name}` : ''
+            const ad = leadData.ad_name ? ` | Ad: ${leadData.ad_name}` : ''
+            const sourceText = `Meta: ${formName}${campaign}${ad}`
+
             // Insert immediately into Supabase
             const { error: insertError } = await supabase
               .from('leads')
@@ -89,7 +93,7 @@ export async function POST(request: Request) {
                 email: email,
                 phone: phone || null,
                 message: `Lead imported via Real-Time Webhook (Form: ${formName})`,
-                source_page: `Meta: ${formName}`,
+                source_page: sourceText,
                 status: 'new',
                 created_at: leadData.created_time
               }, {

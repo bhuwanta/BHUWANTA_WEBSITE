@@ -26,7 +26,7 @@ export async function GET(request: Request) {
 
     // 2. Loop through forms and fetch leads
     for (const form of forms) {
-      const url = `https://graph.facebook.com/v18.0/${form.form_id}/leads?access_token=${META_ACCESS_TOKEN}&fields=created_time,id,field_data`
+      const url = `https://graph.facebook.com/v18.0/${form.form_id}/leads?access_token=${META_ACCESS_TOKEN}&fields=created_time,id,field_data,campaign_name,ad_name`
       
       const response = await fetch(url)
       const data = await response.json()
@@ -56,6 +56,10 @@ export async function GET(request: Request) {
           else if (name.includes('phone')) phone = val
         })
 
+        const campaign = lead.campaign_name ? ` | Campaign: ${lead.campaign_name}` : ''
+        const ad = lead.ad_name ? ` | Ad: ${lead.ad_name}` : ''
+        const sourceText = `Meta: ${form.name || form.form_id}${campaign}${ad}`
+
         // Upsert lead using provider_id
         const { error: insertError } = await supabase
           .from('leads')
@@ -65,7 +69,7 @@ export async function GET(request: Request) {
             email: email,
             phone: phone || null,
             message: `Lead imported from Meta (Form: ${form.name || form.form_id})`,
-            source_page: `Meta: ${form.name || form.form_id}`,
+            source_page: sourceText,
             status: 'new',
             created_at: lead.created_time
           }, {
