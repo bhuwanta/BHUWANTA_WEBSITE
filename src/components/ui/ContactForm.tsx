@@ -308,7 +308,7 @@ export function ContactForm({ projectsList = [], locationNames = [] }: { project
             </div>
           </div>
 
-          <div className="flex items-start gap-2 pt-1">
+          <div className="flex items-center gap-2 pt-1">
             <input 
               type="checkbox" 
               id="agree" 
@@ -316,7 +316,7 @@ export function ContactForm({ projectsList = [], locationNames = [] }: { project
               checked={formData.agree}
               onChange={handleChange}
               required
-              className="mt-1 w-4 h-4 rounded border-[#e8ecf2] text-[#1e3a5f] focus:ring-[#c4a55a]"
+              className="w-4 h-4 rounded border-[#e8ecf2] text-[#1e3a5f] focus:ring-[#c4a55a]"
             />
             <label htmlFor="agree" className="text-xs text-[#5a6a82] leading-tight">
               By submitting, I agree to the Terms & Conditions and Privacy Policy.
