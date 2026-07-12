@@ -69,7 +69,7 @@ export default function AreasClient({ initialAreas }: { initialAreas: Area[] }) 
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-[#0f1d33]">Areas</h1>
           <p className="mt-2 text-sm text-[#5a6a82]">
@@ -78,7 +78,7 @@ export default function AreasClient({ initialAreas }: { initialAreas: Area[] }) 
         </div>
         <button
           onClick={openCreateModal}
-          className="bg-gradient-to-r from-[#c4a55a] to-[#d6b76c] text-white font-semibold rounded-lg shadow-lg shadow-[#c4a55a]/20 px-4 py-2 hover:opacity-90 transition-opacity"
+          className="w-full sm:w-auto bg-gradient-to-r from-[#c4a55a] to-[#d6b76c] text-white font-semibold rounded-lg shadow-lg shadow-[#c4a55a]/20 px-4 py-2 hover:opacity-90 transition-opacity"
         >
           + Add Area
         </button>
@@ -99,10 +99,11 @@ export default function AreasClient({ initialAreas }: { initialAreas: Area[] }) 
         </div>
       </div>
 
-      <div className="bg-white border border-[#e8ecf2] shadow-sm rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-[#f7f8fa] border-b border-[#e8ecf2]">
+      <div className="rounded-xl border border-[#e8ecf2] bg-white shadow-sm flex flex-col overflow-hidden h-[65vh] md:h-[75vh]">
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-auto">
+          <table className="w-full text-sm text-left relative">
+            <thead className="bg-[#f7f8fa] text-[#5a6a82] sticky top-0 z-10 border-b border-[#e8ecf2]">
               <tr>
                 <th className="px-6 py-4 font-medium text-[#0f1d33] w-16">Sr.No.</th>
                 <th className="px-6 py-4 font-medium text-[#0f1d33]">Name</th>
@@ -148,6 +149,45 @@ export default function AreasClient({ initialAreas }: { initialAreas: Area[] }) 
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Card View */}
+        <div className="md:hidden flex flex-col divide-y divide-[#e8ecf2] overflow-y-auto">
+          {filteredAreas.length === 0 ? (
+            <div className="p-8 text-center text-[#5a6a82]">
+              No areas found matching your search.
+            </div>
+          ) : (
+            filteredAreas.map((area, index) => (
+              <div key={`mobile-area-${area.id}`} className="p-4 flex flex-col gap-3 hover:bg-[#f7f8fa]/50 transition-colors">
+                <div className="flex justify-between items-center">
+                  <div className="font-semibold text-[#1e3a5f] text-base">{area.name}</div>
+                  <div className="text-xs text-[#5a6a82]">
+                    {new Date(area.created_at).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric'
+                    })}
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-4 mt-1 pt-3 border-t border-[#e8ecf2]">
+                  <button
+                    onClick={() => openEditModal(area)}
+                    className="text-[#1e3a5f] hover:underline font-medium text-sm"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(area.id)}
+                    className="text-red-600 hover:underline font-medium text-sm"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
 

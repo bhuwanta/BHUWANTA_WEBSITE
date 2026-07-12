@@ -1,11 +1,11 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
-import { Plus, Edit2, Trash2, X, Search, Globe, FilterX, Download, MessageCircle, Megaphone, Settings } from 'lucide-react'
+import { Plus, Edit2, Trash2, X, Search, Globe, FilterX, Download, MessageCircle, Megaphone, Settings, ArrowUp, ArrowDown, ArrowUpDown, Check } from 'lucide-react'
 
 
 import { createClient } from '@/lib/supabase/client'
-import { createLead, updateLead, deleteLead, deleteMultipleLeads, updateLeadStatus, getLeadActivities, getMetaForms, addMetaForm, deleteMetaForm } from './actions'
+import { createLead, updateLead, deleteLead, deleteMultipleLeads, updateLeadStatus, getLeadActivities, getMetaForms, addMetaForm, deleteMetaForm, updateMetaFormName } from './actions'
 import { useRouter } from 'next/navigation'
 
 const LinkedinIcon = (props: any) => (
@@ -41,6 +41,9 @@ export default function LeadsClient({ initialLeads, userRole = 'Admin' }: { init
   const [error, setError] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedSources, setSelectedSources] = useState<string[]>([])
+  const [dateFilterType, setDateFilterType] = useState<'single' | 'range'>('single')
+  const [startDate, setStartDate] = useState<string>('')
+  const [endDate, setEndDate] = useState<string>('')
   
   // WhatsApp History State
   const [isWhatsappHistoryOpen, setIsWhatsappHistoryOpen] = useState(false)
@@ -57,8 +60,15 @@ export default function LeadsClient({ initialLeads, userRole = 'Admin' }: { init
   const [metaForms, setMetaForms] = useState<any[]>([])
   const [newFormId, setNewFormId] = useState('')
   const [newFormName, setNewFormName] = useState('')
+  const [editingMetaFormId, setEditingMetaFormId] = useState<string | null>(null)
+  const [editingMetaFormName, setEditingMetaFormName] = useState('')
   const [isMetaLoading, setIsMetaLoading] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
+  
+  // Sort State
+  type SortField = 'created_at' | 'name' | 'phone' | 'source_page' | 'status'
+  const [sortField, setSortField] = useState<SortField>('created_at')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
 
   useEffect(() => {
     const supabase = createClient()
@@ -92,6 +102,22 @@ export default function LeadsClient({ initialLeads, userRole = 'Admin' }: { init
         ? prev.filter(s => s !== source)
         : [...prev, source]
     )
+  }
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortField(field)
+      setSortOrder('asc')
+    }
+  }
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) return <ArrowUpDown className="w-3 h-3 ml-1 text-[#5a6a82] opacity-50" />
+    return sortOrder === 'asc' 
+      ? <ArrowUp className="w-3 h-3 ml-1 text-[#1e3a5f]" />
+      : <ArrowDown className="w-3 h-3 ml-1 text-[#1e3a5f]" />
   }
 
   const openAddModal = () => {
@@ -152,6 +178,19 @@ export default function LeadsClient({ initialLeads, userRole = 'Admin' }: { init
       alert(res.error)
     } else {
       setMetaForms(metaForms.filter(f => f.id !== id))
+    }
+    setIsMetaLoading(false)
+  }
+
+  const handleUpdateMetaFormName = async (id: string) => {
+    if (!editingMetaFormId) return
+    setIsMetaLoading(true)
+    const res = await updateMetaFormName(id, editingMetaFormName)
+    if (res.error) {
+      alert(res.error)
+    } else {
+      setMetaForms(metaForms.map(f => f.id === id ? { ...f, name: editingMetaFormName } : f))
+      setEditingMetaFormId(null)
     }
     setIsMetaLoading(false)
   }
@@ -337,15 +376,59 @@ export default function LeadsClient({ initialLeads, userRole = 'Admin' }: { init
       });
     }
     
-    if (!searchQuery.trim()) return result;
+    if (!searchQuery.trim() && !startDate && !endDate) return result;
+    
+    if (dateFilterType === 'single' && startDate) {
+      const start = new Date(startDate)
+      start.setHours(0, 0, 0, 0)
+      const end = new Date(startDate)
+      end.setHours(23, 59, 59, 999)
+      result = result.filter(lead => {
+        const d = new Date(lead.created_at)
+        return d >= start && d <= end
+      })
+    } else if (dateFilterType === 'range') {
+      if (startDate) {
+        const start = new Date(startDate)
+        start.setHours(0, 0, 0, 0)
+        result = result.filter(lead => new Date(lead.created_at) >= start)
+      }
+      if (endDate) {
+        const end = new Date(endDate)
+        end.setHours(23, 59, 59, 999)
+        result = result.filter(lead => new Date(lead.created_at) <= end)
+      }
+    }
+
     const lowerQuery = searchQuery.toLowerCase();
-    return result.filter(lead => 
-      (lead.name && lead.name.toLowerCase().includes(lowerQuery)) ||
-      (lead.email && lead.email.toLowerCase().includes(lowerQuery)) ||
-      (lead.phone && lead.phone.toLowerCase().includes(lowerQuery)) ||
-      (lead.project && lead.project.toLowerCase().includes(lowerQuery))
-    );
-  }, [leads, searchQuery, selectedSources]);
+    if (lowerQuery) {
+      result = result.filter(lead => 
+        (lead.name && lead.name.toLowerCase().includes(lowerQuery)) ||
+        (lead.email && lead.email.toLowerCase().includes(lowerQuery)) ||
+        (lead.phone && lead.phone.toLowerCase().includes(lowerQuery)) ||
+        (lead.project && lead.project.toLowerCase().includes(lowerQuery))
+      );
+    }
+    
+    result.sort((a, b) => {
+      let aVal = a[sortField] || ''
+      let bVal = b[sortField] || ''
+      
+      if (sortField === 'created_at') {
+         aVal = new Date(a.created_at).getTime()
+         bVal = new Date(b.created_at).getTime()
+      } else {
+         aVal = String(aVal).toLowerCase()
+         bVal = String(bVal).toLowerCase()
+      }
+
+      if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    return result;
+  }, [leads, searchQuery, selectedSources, startDate, endDate, sortField, sortOrder]);
 
   return (
     <div className="space-y-6">
@@ -446,13 +529,64 @@ export default function LeadsClient({ initialLeads, userRole = 'Admin' }: { init
         </button>
 
 
-        <div className="flex items-center gap-2 ml-auto">
-          {selectedSources.length > 0 && (
+        <div className="w-full h-px bg-[#e8ecf2] my-1 sm:hidden lg:block lg:w-full" />
+        
+        <div className="flex items-center gap-2 mt-2 sm:mt-0">
+          <div className="flex bg-[#f3f5f8] rounded-lg p-0.5 border border-[#e8ecf2]">
             <button
-              onClick={() => setSelectedSources([])}
+              onClick={() => {
+                setDateFilterType('single')
+                setEndDate('')
+              }}
+              className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                dateFilterType === 'single'
+                  ? 'bg-[#0f1d33] text-white shadow-sm'
+                  : 'text-[#5a6a82] hover:text-[#0f1d33]'
+              }`}
+            >
+              Single Date
+            </button>
+            <button
+              onClick={() => setDateFilterType('range')}
+              className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                dateFilterType === 'range'
+                  ? 'bg-[#0f1d33] text-white shadow-sm'
+                  : 'text-[#5a6a82] hover:text-[#0f1d33]'
+              }`}
+            >
+              Date Range
+            </button>
+          </div>
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            className="rounded-lg border border-[#e8ecf2] bg-[#f3f5f8] px-3 py-1.5 text-sm text-[#0f1d33] outline-none focus:border-[#1e3a5f]"
+          />
+          {dateFilterType === 'range' && (
+            <>
+              <span className="text-[#5a6a82] text-sm">to</span>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="rounded-lg border border-[#e8ecf2] bg-[#f3f5f8] px-3 py-1.5 text-sm text-[#0f1d33] outline-none focus:border-[#1e3a5f]"
+              />
+            </>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 ml-auto mt-2 sm:mt-0">
+          {(selectedSources.length > 0 || startDate || endDate) && (
+            <button
+              onClick={() => {
+                setSelectedSources([])
+                setStartDate('')
+                setEndDate('')
+              }}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium text-[#5a6a82] hover:text-[#0f1d33] transition-colors"
             >
-              <FilterX className="w-4 h-4" /> Clear Filter
+              <FilterX className="w-4 h-4" /> Clear Filters
             </button>
           )}
           {userRole !== 'Telecaller' && (
@@ -474,10 +608,11 @@ export default function LeadsClient({ initialLeads, userRole = 'Admin' }: { init
         </div>
       </div>
 
-      <div className="rounded-xl border border-[#e8ecf2] bg-white shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="bg-[#f7f8fa] text-[#5a6a82]">
+      <div className="rounded-xl border border-[#e8ecf2] bg-white shadow-sm flex flex-col overflow-hidden h-[65vh] md:h-[75vh]">
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-auto">
+          <table className="w-full text-sm text-left relative">
+            <thead className="bg-[#f7f8fa] text-[#5a6a82] sticky top-0 z-10">
               <tr>
                 <th className="px-6 py-4 font-medium w-10">
                   <input
@@ -487,11 +622,21 @@ export default function LeadsClient({ initialLeads, userRole = 'Admin' }: { init
                     className="rounded border-[#e8ecf2] text-[#1e3a5f] focus:ring-[#1e3a5f]"
                   />
                 </th>
-                <th className="px-6 py-4 font-medium">Date</th>
-                <th className="px-6 py-4 font-medium">Name</th>
-                <th className="px-6 py-4 font-medium">Contact</th>
-                <th className="px-6 py-4 font-medium">Source</th>
-                <th className="px-6 py-4 font-medium">Status</th>
+                <th className="px-6 py-4 font-medium cursor-pointer hover:bg-[#e8ecf2] transition-colors" onClick={() => handleSort('created_at')}>
+                  <div className="flex items-center">Date <SortIcon field="created_at" /></div>
+                </th>
+                <th className="px-6 py-4 font-medium cursor-pointer hover:bg-[#e8ecf2] transition-colors" onClick={() => handleSort('name')}>
+                  <div className="flex items-center">Name <SortIcon field="name" /></div>
+                </th>
+                <th className="px-6 py-4 font-medium cursor-pointer hover:bg-[#e8ecf2] transition-colors" onClick={() => handleSort('phone')}>
+                  <div className="flex items-center">Contact <SortIcon field="phone" /></div>
+                </th>
+                <th className="px-6 py-4 font-medium cursor-pointer hover:bg-[#e8ecf2] transition-colors" onClick={() => handleSort('source_page')}>
+                  <div className="flex items-center">Source <SortIcon field="source_page" /></div>
+                </th>
+                <th className="px-6 py-4 font-medium cursor-pointer hover:bg-[#e8ecf2] transition-colors" onClick={() => handleSort('status')}>
+                  <div className="flex items-center">Status <SortIcon field="status" /></div>
+                </th>
                 {userRole !== 'Telecaller' && (
                   <th className="px-6 py-4 font-medium text-right">Actions</th>
                 )}
@@ -615,6 +760,98 @@ export default function LeadsClient({ initialLeads, userRole = 'Admin' }: { init
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Card View */}
+        <div className="md:hidden flex flex-col divide-y divide-[#e8ecf2] overflow-y-auto">
+          {filteredLeads && filteredLeads.length > 0 ? (
+            filteredLeads.map((lead: any) => (
+              <div key={`mobile-${lead.id}`} className="p-4 flex flex-col gap-3 hover:bg-[#f7f8fa] transition-colors">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedLeadIds.includes(lead.id)}
+                      onChange={() => toggleSelect(lead.id)}
+                      className="mt-1 rounded border-[#e8ecf2] text-[#1e3a5f] focus:ring-[#1e3a5f]"
+                    />
+                    <div>
+                      <div className="font-semibold text-[#0f1d33] text-base">{lead.name}</div>
+                      <div className="text-sm text-[#5a6a82] mt-0.5">
+                        {new Date(lead.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(lead.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    </div>
+                  </div>
+                  {lead.bot_interactions_count > 1 && (
+                    <span className="shrink-0 inline-flex items-center rounded bg-[#c4a55a]/10 px-1.5 py-0.5 text-[10px] font-bold text-[#c4a55a] border border-[#c4a55a]/20">
+                      {lead.bot_interactions_count}x
+                    </span>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-sm ml-7">
+                  <div className="flex flex-col">
+                    <span className="text-xs text-[#5a6a82] mb-0.5">Contact</span>
+                    <span className="text-[#0f1d33] font-medium">{lead.phone || '-'}</span>
+                    <span className="text-xs text-[#5a6a82] truncate block max-w-full overflow-hidden" title={lead.email}>{lead.email}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-xs text-[#5a6a82] mb-0.5">Source</span>
+                    <div className="flex flex-wrap gap-1">
+                      <span className="inline-flex items-center rounded-full bg-[#f3f5f8] px-2 py-0.5 text-[10px] font-medium text-[#1e3a5f]">
+                        {lead.source_page || 'contact'}
+                      </span>
+                      {lead.enquiry_type && <span className="text-[10px] text-[#5a6a82]">{lead.enquiry_type}</span>}
+                      {lead.downloaded_item && <span className="text-[10px] font-semibold text-[#c4a55a]">Doc: {lead.downloaded_item}</span>}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between ml-7 mt-2 pt-3 border-t border-[#e8ecf2]">
+                  <select
+                    value={lead.status || 'new'}
+                    onChange={(e) => handleStatusChange(lead.id, e.target.value)}
+                    className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium capitalize appearance-none cursor-pointer border border-transparent focus:border-[#e8ecf2] focus:ring-0 hover:opacity-80 transition-opacity
+                      ${lead.status === 'new' ? 'bg-emerald-50 text-emerald-600' 
+                      : lead.status === 'closed' || lead.status === 'rejected' ? 'bg-red-50 text-red-600'
+                      : lead.status === 'contacted' ? 'bg-blue-50 text-blue-600'
+                      : lead.status === 'uncontacted' ? 'bg-orange-50 text-orange-600'
+                      : lead.status === 'qualified' ? 'bg-purple-50 text-purple-600'
+                      : 'bg-[#f3f5f8] text-[#1e3a5f]'}`}
+                  >
+                    <option value="new">New</option>
+                    <option value="contacted">Contacted</option>
+                    <option value="uncontacted">Uncontacted</option>
+                    <option value="qualified">Qualified</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="closed">Closed</option>
+                  </select>
+
+                  {userRole !== 'Telecaller' && (
+                    <div className="flex items-center space-x-3">
+                      {lead.source_page?.toLowerCase().includes('whatsapp') && (
+                        <button
+                          onClick={() => openWhatsappHistory(lead)}
+                          className="text-green-600 hover:text-green-700 bg-green-50 p-1.5 rounded-full"
+                          title="WhatsApp History"
+                        >
+                          <MessageCircle className="h-4 w-4" />
+                        </button>
+                      )}
+                      <button onClick={() => openEditModal(lead)} className="text-[#1e3a5f] hover:text-[#0f1d33] p-1.5 hover:bg-[#f3f5f8] rounded-full">
+                        <Edit2 className="h-4 w-4" />
+                      </button>
+                      <button onClick={() => handleDelete(lead.id)} className="text-red-500 hover:text-red-700 p-1.5 hover:bg-red-50 rounded-full">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="p-8 text-center text-[#5a6a82]">No leads found.</div>
+          )}
         </div>
       </div>
 
@@ -897,17 +1134,50 @@ export default function LeadsClient({ initialLeads, userRole = 'Admin' }: { init
                     <ul className="space-y-2">
                       {metaForms.map((form) => (
                         <li key={form.id} className="flex items-center justify-between bg-white border border-[#e8ecf2] p-3 rounded-lg shadow-sm">
-                          <div>
-                            <div className="text-sm font-medium text-[#0f1d33]">{form.form_id}</div>
-                            {form.name && <div className="text-xs text-[#5a6a82] mt-0.5">{form.name}</div>}
-                          </div>
-                          <button
-                            onClick={() => handleDeleteMetaForm(form.id)}
-                            className="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded-md"
-                            title="Remove Form"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          {editingMetaFormId === form.id ? (
+                            <div className="flex-1 flex gap-2 mr-3">
+                              <input
+                                type="text"
+                                autoFocus
+                                value={editingMetaFormName}
+                                onChange={(e) => setEditingMetaFormName(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') handleUpdateMetaFormName(form.id)
+                                  if (e.key === 'Escape') setEditingMetaFormId(null)
+                                }}
+                                className="w-full rounded border border-[#e8ecf2] px-2 py-1 text-sm outline-none focus:border-[#1e3a5f]"
+                              />
+                              <button onClick={() => handleUpdateMetaFormName(form.id)} className="p-1.5 text-green-600 hover:bg-green-50 rounded" title="Save"><Check className="w-4 h-4" /></button>
+                              <button onClick={() => setEditingMetaFormId(null)} className="p-1.5 text-[#5a6a82] hover:bg-[#f3f5f8] rounded" title="Cancel"><X className="w-4 h-4" /></button>
+                            </div>
+                          ) : (
+                            <div className="flex-1 flex items-center justify-between mr-3">
+                              <div>
+                                <div className="text-sm font-medium text-[#0f1d33]">{form.form_id}</div>
+                                {form.name && <div className="text-xs text-[#5a6a82] mt-0.5">{form.name}</div>}
+                              </div>
+                              <button
+                                onClick={() => {
+                                  setEditingMetaFormId(form.id)
+                                  setEditingMetaFormName(form.name || '')
+                                }}
+                                className="text-[#5a6a82] hover:text-[#0f1d33] p-1.5 hover:bg-[#f3f5f8] rounded-md transition-colors"
+                                title="Edit Name"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          )}
+                          
+                          {editingMetaFormId !== form.id && (
+                            <button
+                              onClick={() => handleDeleteMetaForm(form.id)}
+                              className="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded-md transition-colors"
+                              title="Remove Form"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                         </li>
                       ))}
                     </ul>

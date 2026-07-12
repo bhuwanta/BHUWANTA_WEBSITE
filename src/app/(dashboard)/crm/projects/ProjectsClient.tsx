@@ -106,7 +106,7 @@ export default function ProjectsClient({ projects, areas }: ProjectsClientProps)
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-[#0f1d33]">Projects</h1>
           <p className="mt-2 text-sm text-[#5a6a82]">
@@ -115,7 +115,7 @@ export default function ProjectsClient({ projects, areas }: ProjectsClientProps)
         </div>
         <button
           onClick={openAddModal}
-          className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-[#c4a55a] to-[#b3954c] px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-[#c4a55a]/20 hover:opacity-90 transition-opacity"
+          className="w-full sm:w-auto inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-[#c4a55a] to-[#b3954c] px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-[#c4a55a]/20 hover:opacity-90 transition-opacity"
         >
           <Plus className="mr-2 h-4 w-4" />
           Add Project
@@ -138,7 +138,7 @@ export default function ProjectsClient({ projects, areas }: ProjectsClientProps)
       </div>
 
       <div className="bg-white border border-[#e8ecf2] shadow-sm rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead className="bg-[#f7f8fa] border-b border-[#e8ecf2]">
               <tr>
@@ -209,6 +209,68 @@ export default function ProjectsClient({ projects, areas }: ProjectsClientProps)
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Card View */}
+        <div className="md:hidden flex flex-col divide-y divide-[#e8ecf2]">
+          {filteredProjects.length === 0 ? (
+            <div className="p-8 text-center text-[#5a6a82]">
+              No projects found matching your search.
+            </div>
+          ) : (
+            filteredProjects.map((project, index) => (
+              <div key={`mobile-project-${project.id}`} className="p-4 flex flex-col gap-3 hover:bg-[#f7f8fa]/50 transition-colors">
+                <div className="flex justify-between items-start gap-2">
+                  <div className="flex-1">
+                    <div className="font-semibold text-[#1e3a5f] text-base">{project.name}</div>
+                    {project.location && (
+                      <div className="text-xs font-semibold text-[#c4a55a] mt-0.5">{project.location}</div>
+                    )}
+                  </div>
+                  <div className="text-[10px] text-[#5a6a82] shrink-0 mt-1">
+                    {(() => {
+                      const d = new Date(project.created_at)
+                      return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`
+                    })()}
+                  </div>
+                </div>
+
+                {project.description && (
+                  <div className="text-sm text-[#5a6a82] line-clamp-2">{project.description}</div>
+                )}
+
+                <div className="flex flex-col gap-1.5 mt-1">
+                  <span className="text-xs text-[#5a6a82]">Mapped Areas:</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {project.project_areas && project.project_areas.length > 0 ? (
+                      project.project_areas.map((pa, i) => (
+                        <span key={i} className="inline-flex items-center rounded bg-[#f3f5f8] px-2 py-0.5 text-[10px] font-medium text-[#0f1d33] border border-[#e8ecf2]">
+                          {pa.area.name}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-[10px] text-[#5a6a82] italic">No areas mapped</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-4 mt-2 pt-3 border-t border-[#e8ecf2]">
+                  <button
+                    onClick={() => openEditModal(project)}
+                    className="text-[#1e3a5f] hover:underline font-medium text-sm"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(project.id)}
+                    className="text-red-600 hover:underline font-medium text-sm"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
 

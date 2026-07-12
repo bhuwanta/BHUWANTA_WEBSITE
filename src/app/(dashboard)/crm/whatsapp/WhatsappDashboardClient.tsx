@@ -72,18 +72,18 @@ export default function WhatsappDashboardClient({ initialLeads, userRole }: { in
 
   return (
     <div className="flex flex-col h-full bg-[#f7f8fa] overflow-hidden">
-      <div className="p-8 pb-4 flex-shrink-0">
-        <div className="flex items-center justify-between mb-8">
+      <div className="p-4 md:p-8 pb-4 md:pb-4 flex-shrink-0">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 md:mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-[#0f1d33] flex items-center gap-2">
-              <MessageCircle className="h-6 w-6 text-green-600" />
+            <h1 className="text-xl md:text-2xl font-bold text-[#0f1d33] flex items-center gap-2">
+              <MessageCircle className="h-5 w-5 md:h-6 md:w-6 text-green-600" />
               WhatsApp Command Center
             </h1>
-            <p className="text-[#5a6a82] mt-1">Detailed tracking and analytics for all WhatsApp bot interactions.</p>
+            <p className="text-sm md:text-base text-[#5a6a82] mt-1">Detailed tracking and analytics for all WhatsApp bot interactions.</p>
           </div>
           <button
             onClick={exportToCSV}
-            className="gradient-gold text-white font-semibold px-4 py-2.5 rounded-lg shadow-lg shadow-[#c4a55a]/20 flex items-center gap-2 hover:opacity-90 transition-opacity"
+            className="w-full sm:w-auto justify-center gradient-gold text-white font-semibold px-4 py-2.5 rounded-lg shadow-lg shadow-[#c4a55a]/20 flex items-center gap-2 hover:opacity-90 transition-opacity"
           >
             <Download className="h-4 w-4" />
             Export Data
@@ -91,42 +91,43 @@ export default function WhatsappDashboardClient({ initialLeads, userRole }: { in
         </div>
 
         {/* Analytics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-xl p-6 border border-[#e8ecf2] shadow-sm flex items-center gap-4">
-            <div className="bg-blue-50 p-3 rounded-lg text-blue-600">
-              <MessageCircle className="h-6 w-6" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-4 md:mb-8">
+          <div className="bg-white rounded-xl p-4 md:p-6 border border-[#e8ecf2] shadow-sm flex items-center gap-4">
+            <div className="bg-blue-50 p-2 md:p-3 rounded-lg text-blue-600">
+              <MessageCircle className="h-5 w-5 md:h-6 md:w-6" />
             </div>
             <div>
-              <p className="text-sm text-[#5a6a82] font-medium">Total WhatsApp Leads</p>
-              <h3 className="text-2xl font-bold text-[#0f1d33]">{totalLeads}</h3>
+              <p className="text-xs md:text-sm text-[#5a6a82] font-medium">Total WhatsApp Leads</p>
+              <h3 className="text-xl md:text-2xl font-bold text-[#0f1d33]">{totalLeads}</h3>
             </div>
           </div>
-          <div className="bg-white rounded-xl p-6 border border-[#e8ecf2] shadow-sm flex items-center gap-4">
-            <div className="bg-purple-50 p-3 rounded-lg text-purple-600">
-              <Activity className="h-6 w-6" />
+          <div className="bg-white rounded-xl p-4 md:p-6 border border-[#e8ecf2] shadow-sm flex items-center gap-4">
+            <div className="bg-purple-50 p-2 md:p-3 rounded-lg text-purple-600">
+              <Activity className="h-5 w-5 md:h-6 md:w-6" />
             </div>
             <div>
-              <p className="text-sm text-[#5a6a82] font-medium">Total Interactions</p>
-              <h3 className="text-2xl font-bold text-[#0f1d33]">{totalInteractions}</h3>
+              <p className="text-xs md:text-sm text-[#5a6a82] font-medium">Total Interactions</p>
+              <h3 className="text-xl md:text-2xl font-bold text-[#0f1d33]">{totalInteractions}</h3>
             </div>
           </div>
-          <div className="bg-white rounded-xl p-6 border border-[#e8ecf2] shadow-sm flex items-center gap-4">
-            <div className="bg-orange-50 p-3 rounded-lg text-orange-600">
-              <PhoneCall className="h-6 w-6" />
+          <div className="bg-white rounded-xl p-4 md:p-6 border border-[#e8ecf2] shadow-sm flex items-center gap-4">
+            <div className="bg-orange-50 p-2 md:p-3 rounded-lg text-orange-600">
+              <PhoneCall className="h-5 w-5 md:h-6 md:w-6" />
             </div>
             <div>
-              <p className="text-sm text-[#5a6a82] font-medium">Callbacks Requested</p>
-              <h3 className="text-2xl font-bold text-[#0f1d33]">{totalCallbacks}</h3>
+              <p className="text-xs md:text-sm text-[#5a6a82] font-medium">Callbacks Requested</p>
+              <h3 className="text-xl md:text-2xl font-bold text-[#0f1d33]">{totalCallbacks}</h3>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto px-8 pb-8">
-        <div className="bg-white rounded-xl border border-[#e8ecf2] shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-[#5a6a82]">
-              <thead className="bg-[#f3f5f8] text-xs uppercase font-semibold text-[#1e3a5f]">
+      <div className="flex-1 px-4 md:px-8 pb-4 md:pb-8 flex flex-col min-h-0">
+        <div className="bg-white rounded-xl border border-[#e8ecf2] shadow-sm flex flex-col overflow-hidden h-[65vh] md:h-full">
+          {/* Desktop Table View */}
+          <div className="hidden md:block overflow-auto">
+            <table className="w-full text-left text-sm text-[#5a6a82] relative">
+              <thead className="bg-[#f3f5f8] text-xs uppercase font-semibold text-[#1e3a5f] sticky top-0 z-10">
                 <tr>
                   <th className="px-6 py-4">Lead Info</th>
                   <th className="px-6 py-4">Latest Area</th>
@@ -216,6 +217,87 @@ export default function WhatsappDashboardClient({ initialLeads, userRole }: { in
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Card View */}
+          <div className="md:hidden flex flex-col divide-y divide-[#e8ecf2] overflow-y-auto">
+            {processedLeads.length > 0 ? (
+              processedLeads.map((lead) => (
+                <div key={`mobile-lead-${lead.id}`} className="p-4 flex flex-col gap-3 hover:bg-[#f8fafc] transition-colors">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="font-semibold text-[#0f1d33] text-base">{lead.name}</div>
+                      <div className="text-sm text-[#5a6a82] font-medium">{lead.phone}</div>
+                      {lead.bot_interactions_count > 1 && (
+                        <span className="inline-flex mt-1 items-center rounded bg-[#c4a55a]/10 px-1.5 py-0.5 text-[10px] font-bold text-[#c4a55a] border border-[#c4a55a]/20">
+                          {lead.bot_interactions_count}x Returns
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      {lead.requestedCallback ? (
+                        <div className="inline-flex items-center gap-1 bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs font-bold shadow-sm">
+                          <PhoneCall className="h-3 w-3" /> YES
+                        </div>
+                      ) : (
+                        <div className="inline-flex items-center gap-1 bg-gray-100 text-gray-500 px-2 py-0.5 rounded text-xs font-medium">
+                          <X className="h-3 w-3" /> NO
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 mt-1">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs text-[#5a6a82]">Latest Area</span>
+                      <span className="inline-flex items-center gap-1 bg-gray-50 px-2 py-1 rounded text-[#1e3a5f] text-xs font-medium border border-[#e8ecf2]">
+                        <MapPin className="h-3 w-3 text-gray-400" />
+                        <span className="truncate">{lead.latestArea}</span>
+                      </span>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs text-[#5a6a82]">Latest Project</span>
+                      <span className="inline-flex items-center gap-1 bg-[#f3f5f8] px-2 py-1 rounded text-[#1e3a5f] text-xs font-medium border border-[#e8ecf2]">
+                        <span className="truncate">{lead.latestProject}</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1 mt-1">
+                    <span className="text-xs text-[#5a6a82]">Downloads</span>
+                    {lead.downloads.length > 0 ? (
+                      <div className="flex flex-wrap gap-1.5">
+                        {lead.downloads.map((d: any, idx: number) => (
+                          <div key={idx} className="flex items-center gap-1 text-[10px] bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded border border-blue-100 max-w-full">
+                            <Download className="h-3 w-3 flex-shrink-0" />
+                            <span className="truncate">{d.type.replace('Downloaded ', '')} ({d.project})</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-gray-400 italic text-xs">None</span>
+                    )}
+                  </div>
+
+                  <div className="flex justify-between items-center mt-2 pt-3 border-t border-[#e8ecf2]">
+                    <div className="flex items-center gap-1.5 text-xs text-[#5a6a82]">
+                      <Clock className="h-3 w-3" />
+                      {new Date(lead.lastActive).toLocaleString()}
+                    </div>
+                    <button
+                      onClick={() => setSelectedLead(lead)}
+                      className="inline-flex items-center gap-1 bg-[#1e3a5f] text-white px-3 py-1.5 rounded-lg hover:bg-[#0f1d33] transition-colors text-xs font-medium shadow-sm"
+                    >
+                      View History <ArrowRight className="h-3 w-3" />
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="p-8 text-center text-[#5a6a82]">
+                No WhatsApp leads found.
+              </div>
+            )}
           </div>
         </div>
       </div>

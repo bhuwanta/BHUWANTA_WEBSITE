@@ -215,3 +215,16 @@ export async function deleteMetaForm(id: string) {
   }
   return { success: true }
 }
+
+export async function updateMetaFormName(id: string, name: string) {
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('meta_forms')
+    .update({ name })
+    .eq('id', id)
+
+  if (error) {
+    return { error: error.message }
+  }
+  return { success: true }
+}

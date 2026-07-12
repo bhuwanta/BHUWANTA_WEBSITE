@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { client } from '@/lib/sanity'
-import { FileText, Upload, Loader2, ExternalLink, Search } from 'lucide-react'
+import { FileText, Upload, Loader2, ExternalLink, Search, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
@@ -188,15 +188,17 @@ export default function BrochuresPage() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-[#e8ecf2] bg-white shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-[#e8ecf2] bg-white shadow-sm flex flex-col overflow-hidden h-[65vh] md:h-[75vh]">
         {isLoading ? (
           <div className="p-12 flex justify-center items-center">
             <Loader2 className="w-8 h-8 animate-spin text-[#c4a55a]" />
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="bg-[#f7f8fa] text-[#5a6a82]">
+          <>
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-auto">
+            <table className="w-full text-sm text-left relative">
+              <thead className="bg-[#f7f8fa] text-[#5a6a82] sticky top-0 z-10">
                 <tr>
                   <th className="px-6 py-4 font-medium w-16">Sr.No</th>
                   <th className="px-6 py-4 font-medium">Project Name</th>
@@ -307,7 +309,103 @@ export default function BrochuresPage() {
                 )}
               </tbody>
             </table>
-          </div>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden flex flex-col divide-y divide-[#e8ecf2] overflow-y-auto">
+              {filteredProjects.length === 0 ? (
+                <div className="p-8 text-center text-[#5a6a82]">
+                  No projects found matching your search.
+                </div>
+              ) : (
+                filteredProjects.map((project, index) => (
+                  <div key={`mobile-project-${project._key}`} className="p-4 flex flex-col gap-3 hover:bg-[#f7f8fa]/50 transition-colors">
+                    <div className="flex justify-between items-start gap-2">
+                      <div className="font-semibold text-[#1e3a5f] text-base">{project.name}</div>
+                      <div className="text-xs text-[#5a6a82] shrink-0">{project.location || '-'}</div>
+                    </div>
+
+                    <div className="flex flex-col gap-1.5 mt-1">
+                      <span className="text-xs text-[#5a6a82]">Mapped Areas:</span>
+                      <div className="flex flex-wrap gap-1">
+                        {project.mappedAreas && project.mappedAreas.length > 0 ? (
+                          project.mappedAreas.map((area, i) => (
+                            <span key={i} className="inline-flex items-center rounded bg-[#f3f5f8] px-2 py-0.5 text-[10px] font-medium text-[#0f1d33] border border-[#e8ecf2]">
+                              {area.name}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-[#5a6a82] italic text-[10px]">Unmapped</span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-1.5 mt-1">
+                      <span className="text-xs text-[#5a6a82]">Current Brochures:</span>
+                      {project.brochures && project.brochures.length > 0 ? (
+                        <div className="flex flex-col gap-2">
+                          {project.brochures.map((brochure, index) => (
+                            <div key={brochure._key} className="flex items-center justify-between gap-2 group w-full bg-[#f3f5f8] p-2 rounded-lg border border-[#e8ecf2]">
+                              <a 
+                                href={brochure.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 text-sm font-medium text-[#1e3a5f] hover:text-[#c4a55a] transition-colors flex-1 min-w-0"
+                                title={brochure.originalFilename || `Brochure ${index + 1}`}
+                              >
+                                <FileText className="w-4 h-4 flex-shrink-0" />
+                                <span className="truncate text-xs">
+                                  {brochure.originalFilename || `Brochure ${index + 1}`}
+                                </span>
+                                <ExternalLink className="w-3 h-3 ml-1 flex-shrink-0" />
+                              </a>
+                              <button
+                                onClick={() => handleDeleteBrochure(project._key, brochure._key)}
+                                disabled={deletingKey === brochure._key}
+                                className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-all disabled:opacity-50 flex-shrink-0"
+                                title="Delete brochure"
+                              >
+                                {deletingKey === brochure._key ? (
+                                  <Loader2 className="w-3 h-3 animate-spin" />
+                                ) : (
+                                  <Trash2 className="w-3 h-3" />
+                                )}
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-[#5a6a82] italic text-xs">No brochures</span>
+                      )}
+                    </div>
+
+                    <div className="mt-2 pt-3 border-t border-[#e8ecf2]">
+                      <label className={`w-full inline-flex items-center justify-center rounded-lg border border-[#e8ecf2] px-3 py-2 text-sm font-medium cursor-pointer transition-colors ${uploadingKey === project._key ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-[#1e3a5f] hover:bg-gray-50'}`}>
+                        {uploadingKey === project._key ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Uploading...
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-4 h-4 mr-2 text-[#5a6a82]" />
+                            Add PDF
+                          </>
+                        )}
+                        <input 
+                          type="file" 
+                          accept=".pdf" 
+                          className="hidden" 
+                          disabled={uploadingKey === project._key}
+                          onChange={(e) => handleFileUpload(e, project._key)}
+                        />
+                      </label>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </>
         )}
       </div>
     </div>
