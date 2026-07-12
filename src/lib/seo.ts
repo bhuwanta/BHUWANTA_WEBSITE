@@ -12,7 +12,7 @@ interface SeoSettings {
   focus_keyword: string | null
   secondary_keywords: string | null
 }
-
+// 
 interface SeoGlobal {
   site_name: string
   title_template: string
