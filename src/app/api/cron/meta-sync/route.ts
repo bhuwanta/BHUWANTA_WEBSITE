@@ -66,7 +66,8 @@ export async function GET(request: Request) {
             phone: phone || null,
             message: `Lead imported from Meta (Form: ${form.name || form.form_id})`,
             source_page: `Meta: ${form.name || form.form_id}`,
-            status: 'new'
+            status: 'new',
+            created_at: lead.created_time
           }, {
             onConflict: 'provider_id',
             ignoreDuplicates: true
