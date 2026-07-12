@@ -1,11 +1,11 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
-import { Plus, Edit2, Trash2, X, Search, Globe, FilterX, Download, MessageCircle, Megaphone } from 'lucide-react'
+import { Plus, Edit2, Trash2, X, Search, Globe, FilterX, Download, MessageCircle, Megaphone, Settings } from 'lucide-react'
 
 
 import { createClient } from '@/lib/supabase/client'
-import { createLead, updateLead, deleteLead, deleteMultipleLeads, updateLeadStatus, getLeadActivities } from './actions'
+import { createLead, updateLead, deleteLead, deleteMultipleLeads, updateLeadStatus, getLeadActivities, getMetaForms, addMetaForm, deleteMetaForm } from './actions'
 import { useRouter } from 'next/navigation'
 
 const LinkedinIcon = (props: any) => (
@@ -49,7 +49,16 @@ export default function LeadsClient({ initialLeads, userRole = 'Admin' }: { init
   const [isLoadingActivities, setIsLoadingActivities] = useState(false)
   
   // Bulk Selection State
+  // Bulk Selection State
   const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([])
+  
+  // Meta Settings State
+  const [isMetaSettingsOpen, setIsMetaSettingsOpen] = useState(false)
+  const [metaForms, setMetaForms] = useState<any[]>([])
+  const [newFormId, setNewFormId] = useState('')
+  const [newFormName, setNewFormName] = useState('')
+  const [isMetaLoading, setIsMetaLoading] = useState(false)
+  const [isSyncing, setIsSyncing] = useState(false)
 
   useEffect(() => {
     const supabase = createClient()
@@ -109,6 +118,63 @@ export default function LeadsClient({ initialLeads, userRole = 'Admin' }: { init
     const { data } = await getLeadActivities(lead.id)
     setWhatsappActivities(data || [])
     setIsLoadingActivities(false)
+  }
+
+  const openMetaSettings = async () => {
+    setIsMetaSettingsOpen(true)
+    setIsMetaLoading(true)
+    const { data } = await getMetaForms()
+    setMetaForms(data || [])
+    setIsMetaLoading(false)
+  }
+
+  const handleAddMetaForm = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newFormId.trim()) return
+    setIsMetaLoading(true)
+    const res = await addMetaForm(newFormId, newFormName)
+    if (res.error) {
+      alert(res.error)
+    } else {
+      setNewFormId('')
+      setNewFormName('')
+      const { data } = await getMetaForms()
+      setMetaForms(data || [])
+    }
+    setIsMetaLoading(false)
+  }
+
+  const handleDeleteMetaForm = async (id: string) => {
+    if (!confirm('Remove this Form ID?')) return
+    setIsMetaLoading(true)
+    const res = await deleteMetaForm(id)
+    if (res.error) {
+      alert(res.error)
+    } else {
+      setMetaForms(metaForms.filter(f => f.id !== id))
+    }
+    setIsMetaLoading(false)
+  }
+
+  const handleManualSync = async () => {
+    setIsSyncing(true)
+    try {
+      const res = await fetch('/api/cron/meta-sync')
+      const data = await res.json()
+      if (data.error) {
+        alert('Sync error: ' + data.error)
+      } else {
+        let msg = `Sync complete! Pulled ${data.processed || 0} new leads.`
+        if (data.errors && data.errors.length > 0) {
+          msg += '\n\nHowever, some forms had errors:\n' + data.errors.join('\n')
+        }
+        alert(msg)
+        router.refresh()
+      }
+    } catch (err) {
+      alert('Failed to sync leads.')
+    }
+    setIsSyncing(false)
   }
 
   const closeWhatsappHistory = () => {
@@ -262,7 +328,12 @@ export default function LeadsClient({ initialLeads, userRole = 'Admin' }: { init
     if (selectedSources.length > 0) {
       result = result.filter(lead => {
         const source = lead.source_page?.toLowerCase() || '';
-        return selectedSources.some(s => source.includes(s));
+        return selectedSources.some(s => {
+          if (s === 'meta') {
+            return source.includes('meta') || source.includes('facebook') || source.includes('instagram');
+          }
+          return source.includes(s);
+        });
       });
     }
     
@@ -322,21 +393,12 @@ export default function LeadsClient({ initialLeads, userRole = 'Admin' }: { init
         <span className="text-sm font-medium text-[#5a6a82] mr-2">Filter by Source:</span>
         
         <button
-          onClick={() => toggleSourceFilter('instagram')}
+          onClick={() => toggleSourceFilter('meta')}
           className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors border ${
-            selectedSources.includes('instagram') ? 'bg-pink-50 border-pink-200 text-pink-600' : 'bg-[#f3f5f8] border-transparent text-[#5a6a82] hover:bg-[#e8ecf2]'
+            selectedSources.includes('meta') ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-[#f3f5f8] border-transparent text-[#5a6a82] hover:bg-[#e8ecf2]'
           }`}
         >
-          <InstagramIcon className="w-4 h-4" /> Instagram
-        </button>
-        
-        <button
-          onClick={() => toggleSourceFilter('facebook')}
-          className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors border ${
-            selectedSources.includes('facebook') ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-[#f3f5f8] border-transparent text-[#5a6a82] hover:bg-[#e8ecf2]'
-          }`}
-        >
-          <FacebookIcon className="w-4 h-4" /> Facebook
+          <FacebookIcon className="w-4 h-4" /> Meta
         </button>
         
         <button
@@ -391,6 +453,15 @@ export default function LeadsClient({ initialLeads, userRole = 'Admin' }: { init
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium text-[#5a6a82] hover:text-[#0f1d33] transition-colors"
             >
               <FilterX className="w-4 h-4" /> Clear Filter
+            </button>
+          )}
+          {userRole !== 'Telecaller' && (
+            <button
+              onClick={openMetaSettings}
+              className="inline-flex items-center gap-1.5 justify-center rounded-full bg-[#f3f5f8] border border-[#e8ecf2] px-4 py-1.5 text-sm font-semibold text-[#1e3a5f] hover:bg-[#e8ecf2] transition-colors"
+            >
+              <Settings className="h-4 w-4" />
+              Meta Setup
             </button>
           )}
           <button
@@ -758,6 +829,103 @@ export default function LeadsClient({ initialLeads, userRole = 'Admin' }: { init
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Meta Settings Modal */}
+      {isMetaSettingsOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0f1d33]/50 p-4">
+          <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between mb-6 pb-4 border-b border-[#e8ecf2]">
+              <div className="flex items-center gap-3">
+                <div className="bg-blue-100 p-2 rounded-full text-blue-600">
+                  <FacebookIcon className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-[#0f1d33]">Meta Lead Ads Sync</h2>
+                  <p className="text-sm text-[#5a6a82]">Manage Form IDs to fetch leads automatically</p>
+                </div>
+              </div>
+              <button onClick={() => setIsMetaSettingsOpen(false)} className="text-[#5a6a82] hover:text-[#0f1d33]">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto pr-2 space-y-6">
+              <form onSubmit={handleAddMetaForm} className="bg-[#f7f8fa] p-4 rounded-lg border border-[#e8ecf2]">
+                <h3 className="text-sm font-semibold text-[#0f1d33] mb-3">Add New Form ID</h3>
+                <div className="space-y-3">
+                  <div>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Form ID (e.g. 10129381239)"
+                      value={newFormId}
+                      onChange={(e) => setNewFormId(e.target.value)}
+                      className="w-full rounded-lg border border-[#e8ecf2] bg-white px-3 py-2 text-sm text-[#0f1d33] outline-none focus:border-[#1e3a5f]"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Form Name (Optional)"
+                      value={newFormName}
+                      onChange={(e) => setNewFormName(e.target.value)}
+                      className="flex-1 rounded-lg border border-[#e8ecf2] bg-white px-3 py-2 text-sm text-[#0f1d33] outline-none focus:border-[#1e3a5f]"
+                    />
+                    <button
+                      type="submit"
+                      disabled={isMetaLoading}
+                      className="inline-flex items-center justify-center rounded-lg bg-[#1e3a5f] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0f1d33] disabled:opacity-50"
+                    >
+                      {isMetaLoading ? 'Adding...' : 'Add'}
+                    </button>
+                  </div>
+                </div>
+              </form>
+
+              <div>
+                <h3 className="text-sm font-semibold text-[#0f1d33] mb-3">Active Form IDs</h3>
+                {isMetaLoading && metaForms.length === 0 ? (
+                  <div className="text-sm text-[#5a6a82]">Loading forms...</div>
+                ) : metaForms.length === 0 ? (
+                  <div className="text-sm text-[#5a6a82] bg-[#f3f5f8] p-3 rounded-lg text-center">No active forms added yet.</div>
+                ) : (
+                  <div className="space-y-4">
+                    <ul className="space-y-2">
+                      {metaForms.map((form) => (
+                        <li key={form.id} className="flex items-center justify-between bg-white border border-[#e8ecf2] p-3 rounded-lg shadow-sm">
+                          <div>
+                            <div className="text-sm font-medium text-[#0f1d33]">{form.form_id}</div>
+                            {form.name && <div className="text-xs text-[#5a6a82] mt-0.5">{form.name}</div>}
+                          </div>
+                          <button
+                            onClick={() => handleDeleteMetaForm(form.id)}
+                            className="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded-md"
+                            title="Remove Form"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                    
+                    <button
+                      onClick={handleManualSync}
+                      disabled={isSyncing}
+                      className="w-full inline-flex items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-200 px-4 py-2 text-sm font-semibold hover:bg-emerald-100 disabled:opacity-50 transition-colors"
+                    >
+                      {isSyncing ? 'Syncing...' : 'Sync Leads Now'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div className="mt-6 border-t border-[#e8ecf2] pt-4 text-xs text-[#5a6a82]">
+              The system will automatically sync leads from these forms every 15 minutes.
             </div>
           </div>
         </div>
