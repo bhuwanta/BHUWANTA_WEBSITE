@@ -1,11 +1,11 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
-import { Plus, Edit2, Trash2, X, Search, Globe, FilterX, Download } from 'lucide-react'
+import { Plus, Edit2, Trash2, X, Search, Globe, FilterX, Download, MessageCircle, Megaphone } from 'lucide-react'
 
 
 import { createClient } from '@/lib/supabase/client'
-import { createLead, updateLead, deleteLead, deleteMultipleLeads, updateLeadStatus } from './actions'
+import { createLead, updateLead, deleteLead, deleteMultipleLeads, updateLeadStatus, getLeadActivities } from './actions'
 import { useRouter } from 'next/navigation'
 
 const LinkedinIcon = (props: any) => (
@@ -41,6 +41,12 @@ export default function LeadsClient({ initialLeads, userRole = 'Admin' }: { init
   const [error, setError] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedSources, setSelectedSources] = useState<string[]>([])
+  
+  // WhatsApp History State
+  const [isWhatsappHistoryOpen, setIsWhatsappHistoryOpen] = useState(false)
+  const [whatsappLead, setWhatsappLead] = useState<any | null>(null)
+  const [whatsappActivities, setWhatsappActivities] = useState<any[]>([])
+  const [isLoadingActivities, setIsLoadingActivities] = useState(false)
   
   // Bulk Selection State
   const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([])
@@ -94,6 +100,21 @@ export default function LeadsClient({ initialLeads, userRole = 'Admin' }: { init
   const closeModal = () => {
     setIsModalOpen(false)
     setEditingLead(null)
+  }
+
+  const openWhatsappHistory = async (lead: any) => {
+    setWhatsappLead(lead)
+    setIsWhatsappHistoryOpen(true)
+    setIsLoadingActivities(true)
+    const { data } = await getLeadActivities(lead.id)
+    setWhatsappActivities(data || [])
+    setIsLoadingActivities(false)
+  }
+
+  const closeWhatsappHistory = () => {
+    setIsWhatsappHistoryOpen(false)
+    setWhatsappLead(null)
+    setWhatsappActivities([])
   }
 
   const toggleSelectAll = () => {
@@ -344,6 +365,24 @@ export default function LeadsClient({ initialLeads, userRole = 'Admin' }: { init
         >
           <LinkedinIcon className="w-4 h-4" /> LinkedIn
         </button>
+        <button
+          onClick={() => toggleSourceFilter('whatsapp')}
+          className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors border ${
+            selectedSources.includes('whatsapp') ? 'bg-green-50 border-green-200 text-green-600' : 'bg-[#f3f5f8] border-transparent text-[#5a6a82] hover:bg-[#e8ecf2]'
+          }`}
+        >
+          <MessageCircle className="w-4 h-4" /> WhatsApp
+        </button>
+
+        <button
+          onClick={() => toggleSourceFilter('google ads')}
+          className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors border ${
+            selectedSources.includes('google ads') ? 'bg-amber-50 border-amber-200 text-amber-600' : 'bg-[#f3f5f8] border-transparent text-[#5a6a82] hover:bg-[#e8ecf2]'
+          }`}
+        >
+          <Megaphone className="w-4 h-4" /> Google Ads
+        </button>
+
 
         <div className="flex items-center gap-2 ml-auto">
           {selectedSources.length > 0 && (
@@ -415,7 +454,14 @@ export default function LeadsClient({ initialLeads, userRole = 'Admin' }: { init
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="font-medium text-[#0f1d33]">{lead.name}</div>
+                      <div className="flex items-center gap-2">
+                        <div className="font-medium text-[#0f1d33]">{lead.name}</div>
+                        {lead.bot_interactions_count > 1 && (
+                          <span className="inline-flex items-center rounded bg-[#c4a55a]/10 px-1.5 py-0.5 text-[10px] font-bold text-[#c4a55a] border border-[#c4a55a]/20" title={`Interacted with bot ${lead.bot_interactions_count} times`}>
+                            {lead.bot_interactions_count}x Returns
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-[#0f1d33]">{lead.phone || '-'}</div>
@@ -461,6 +507,15 @@ export default function LeadsClient({ initialLeads, userRole = 'Admin' }: { init
                     {userRole !== 'Telecaller' && (
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end space-x-3">
+                          {lead.source_page?.toLowerCase().includes('whatsapp') && (
+                            <button
+                              onClick={() => openWhatsappHistory(lead)}
+                              className="text-green-600 hover:text-green-700 bg-green-50 p-1.5 rounded-full"
+                              title="WhatsApp History"
+                            >
+                              <MessageCircle className="h-4 w-4" />
+                            </button>
+                          )}
                           <button
                             onClick={() => openEditModal(lead)}
                             className="text-[#1e3a5f] hover:text-[#0f1d33]"
@@ -651,6 +706,59 @@ export default function LeadsClient({ initialLeads, userRole = 'Admin' }: { init
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* WhatsApp History Modal */}
+      {isWhatsappHistoryOpen && whatsappLead && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0f1d33]/50 p-4">
+          <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between mb-6 pb-4 border-b border-[#e8ecf2]">
+              <div className="flex items-center gap-3">
+                <div className="bg-green-100 p-2 rounded-full text-green-600">
+                  <MessageCircle className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-[#0f1d33]">Chat History</h2>
+                  <p className="text-sm text-[#5a6a82]">{whatsappLead.name} ({whatsappLead.phone})</p>
+                </div>
+              </div>
+              <button onClick={closeWhatsappHistory} className="text-[#5a6a82] hover:text-[#0f1d33]">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto pr-2 space-y-4">
+              {isLoadingActivities ? (
+                <div className="text-center py-8 text-[#5a6a82]">Loading history...</div>
+              ) : whatsappActivities.length === 0 ? (
+                <div className="text-center py-8 text-[#5a6a82]">No recorded bot interactions yet.</div>
+              ) : (
+                <div className="relative border-l-2 border-[#e8ecf2] ml-3 pl-4 space-y-6">
+                  {whatsappActivities.map((activity, idx) => (
+                    <div key={idx} className="relative">
+                      {/* Timeline dot */}
+                      <div className="absolute -left-[23px] top-1.5 w-3 h-3 rounded-full bg-[#c4a55a] border-2 border-white"></div>
+                      
+                      <div className="bg-[#f3f5f8] rounded-lg p-3 inline-block min-w-[200px]">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-semibold text-[#1e3a5f] text-sm">
+                            {activity.activity_type.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())}
+                          </span>
+                        </div>
+                        {activity.details && (
+                          <p className="text-sm text-[#5a6a82]">{activity.details}</p>
+                        )}
+                        <span className="text-[10px] text-[#5a6a82] mt-2 block">
+                          {new Date(activity.created_at).toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

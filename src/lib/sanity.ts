@@ -13,6 +13,19 @@ export function urlFor(source: any) {
   return builder.image(source)
 }
 
+import type { ImageLoaderProps } from 'next/image'
+export const sanityImageLoader = ({ src, width, quality }: ImageLoaderProps) => {
+  // If it's already a sanity URL, use its transform API
+  if (src.includes('cdn.sanity.io')) {
+    const url = new URL(src)
+    url.searchParams.set('auto', 'format')
+    url.searchParams.set('w', width.toString())
+    url.searchParams.set('q', (quality || 75).toString())
+    return url.href
+  }
+  return src
+}
+
 // Client for secured API mutations
 export const writeClient = createClient({
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID!,
@@ -118,13 +131,23 @@ export const aboutQuery = `*[_type == "about"][0]{
   ctaDescription
 }`
 
-export const galleryQuery = `*[_type == "projects"][0]{
-  projectEntries[]{
-    name,
-    "categoryTitle": category->title,
-    "images": images[].asset->url,
-    "videoUrl": videoFile.asset->url,
-    youtubeUrl
+export const galleryQuery = `{
+  "projectsData": *[_type == "projects"][0]{
+    projectEntries[]{
+      name,
+      "categoryTitle": category->title,
+      "images": images[].asset->url,
+      "videoUrl": videoFile.asset->url,
+      "videoUrls": videoFiles[].asset->url,
+      youtubeUrl,
+      youtubeUrls
+    }
+  },
+  "galleryData": *[_type == "gallery"][0]{
+    pageHeading,
+    "generalImages": generalImages[].asset->url,
+    "generalVideos": generalVideos[].asset->url,
+    generalYoutubeUrls
   }
 }`
 
@@ -140,7 +163,9 @@ export const projectsQuery = `*[_type == "projects"][0]{
     description,
     "images": images[].asset->url,
     "videoUrl": videoFile.asset->url,
+    "videoUrls": videoFiles[].asset->url,
     youtubeUrl,
+    youtubeUrls,
     projectHighlights,
     "brochureUrls": brochure[].asset->url,
     "layoutUrls": layoutPdf[].asset->url,
@@ -211,15 +236,6 @@ export const blogPostQuery = `*[_type == "blog" && slug.current == $slug][0]{
   faqs[]{ question, answer }
 }`
 
-export const contactQuery = `*[_type == "contact"][0]{
-  pageHeading,
-  pageSubheading,
-  formLabels,
-  queryOptions,
-  thankYouMessage,
-  whatsappLink,
-  googleMapsEmbed
-}`
 
 export const siteSettingsQuery = `*[_type == "siteSettings"][0]{
   siteName,

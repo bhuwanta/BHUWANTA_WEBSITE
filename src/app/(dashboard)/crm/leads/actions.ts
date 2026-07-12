@@ -157,3 +157,19 @@ export async function updateLeadStatus(id: string, status: string) {
   revalidatePath('/crm/leads')
   return { success: true }
 }
+
+export async function getLeadActivities(leadId: string) {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('lead_activities')
+    .select('*')
+    .eq('lead_id', leadId)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching lead activities:', error)
+    return { data: [], error: 'Failed to fetch activities' }
+  }
+
+  return { data, error: null }
+}

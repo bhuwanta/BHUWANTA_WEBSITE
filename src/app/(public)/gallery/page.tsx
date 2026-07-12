@@ -19,6 +19,15 @@ interface ProjectEntry {
   images?: string[]
   videoUrl?: string
   youtubeUrl?: string
+  videoUrls?: string[]
+  youtubeUrls?: string[]
+}
+
+interface GalleryData {
+  pageHeading?: string
+  generalImages?: string[]
+  generalVideos?: string[]
+  generalYoutubeUrls?: string[]
 }
 
 export default async function GalleryPage() {
@@ -26,25 +35,50 @@ export default async function GalleryPage() {
     name: string
     categoryTitle: string | null
     images: string[]
-    videoUrl: string | null
-    youtubeId: string | null
+    videoUrls: string[]
+    youtubeIds: string[]
   }> = []
+
+  let gallerySingleton: GalleryData | null = null
 
   try {
     const sanityData = await sanityFetch<{
-      projectEntries?: ProjectEntry[]
-    }>({ query: galleryQuery, tags: ['projects'] })
+      projectsData?: { projectEntries?: ProjectEntry[] }
+      galleryData?: GalleryData
+    }>({ query: galleryQuery, tags: ['projects', 'gallery'] })
 
-    if (sanityData?.projectEntries) {
-      projects = sanityData.projectEntries
+    if (sanityData?.galleryData) {
+      gallerySingleton = sanityData.galleryData
+    }
+
+    if (sanityData?.projectsData?.projectEntries) {
+      projects = sanityData.projectsData.projectEntries
         .filter((p) => p.name)
-        .map((p) => ({
-          name: p.name || 'Untitled Project',
-          categoryTitle: p.categoryTitle || null,
-          images: (p.images || []).filter(Boolean),
-          videoUrl: p.videoUrl || null,
-          youtubeId: p.youtubeUrl ? extractYouTubeId(p.youtubeUrl) || null : null,
-        }))
+        .map((p) => {
+          const videoUrls = []
+          if (p.videoUrl) videoUrls.push(p.videoUrl)
+          if (p.videoUrls) videoUrls.push(...p.videoUrls)
+
+          const youtubeIds = []
+          if (p.youtubeUrl) {
+            const id = extractYouTubeId(p.youtubeUrl)
+            if (id) youtubeIds.push(id)
+          }
+          if (p.youtubeUrls) {
+            p.youtubeUrls.forEach(url => {
+              const id = extractYouTubeId(url)
+              if (id) youtubeIds.push(id)
+            })
+          }
+
+          return {
+            name: p.name || 'Untitled Project',
+            categoryTitle: p.categoryTitle || null,
+            images: (p.images || []).filter(Boolean),
+            videoUrls,
+            youtubeIds,
+          }
+        })
     }
   } catch (error) {
     console.error("Gallery fetch error:", error)
@@ -56,7 +90,10 @@ export default async function GalleryPage() {
     { name: 'Gallery', url: `${siteUrl}/gallery` },
   ])
 
-  const allImages = projects.flatMap((p) => p.images)
+  const projectImages = projects.flatMap((p) => p.images)
+  const generalImages = gallerySingleton?.generalImages || []
+  const allImages = [...projectImages, ...generalImages]
+
   const gallerySchema = allImages.length > 0
     ? buildImageGallerySchema(allImages.map(url => ({ url, caption: '' })))
     : null
@@ -70,7 +107,7 @@ export default async function GalleryPage() {
       />
 
       <div className="flex-1 bg-[#f7f8fa]">
-        <GalleryGrid projects={projects} />
+        <GalleryGrid projects={projects} gallerySingleton={gallerySingleton} />
       </div>
 
       <CtaSection />

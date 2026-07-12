@@ -1,13 +1,14 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
+import { SanityImage } from '@/components/ui/SanityImage'
 import { 
   ArrowRight, Phone, MessageCircle, Check, ShieldCheck, 
   FileCheck, MapPin, IndianRupee, Compass, Hammer, Building2, 
   BadgeCheck, Landmark, Download, Send
 } from 'lucide-react'
 import { generatePageMetadata } from '@/lib/seo'
-import { sanityFetch, homeQuery, projectsQuery, projectCategoriesQuery } from '@/lib/sanity'
+import { sanityFetch, homeQuery, projectsQuery, projectCategoriesQuery, sanityImageLoader } from '@/lib/sanity'
 import { extractYouTubeId } from '@/lib/utils'
 import dynamic from 'next/dynamic'
 
@@ -101,9 +102,9 @@ export default async function HomePage({
         let previewImage = fallbackImage
 
         if (categoryData?.image?.asset?.url) {
-          previewImage = `${categoryData.image.asset.url}?w=800&q=75&auto=format`
+          previewImage = categoryData.image.asset.url
         } else if (p.images && p.images.length > 0) {
-          previewImage = `${p.images[0]}?w=800&q=75&auto=format`
+          previewImage = p.images[0]
         } else if (p.youtubeUrl) {
           const ytId = extractYouTubeId(p.youtubeUrl)
           if (ytId) {
@@ -310,7 +311,7 @@ export default async function HomePage({
             {premiumCategories.map((category, index) => (
               <Link href="/projects" key={index} className="group block">
                 <div className="relative overflow-hidden rounded-2xl shadow-md aspect-[4/3] border border-[#e8ecf2] transition-all duration-500 hover:shadow-xl hover:-translate-y-1 hover:border-[#c4a55a]/50">
-                  <Image 
+                  <SanityImage 
                     src={category.image} 
                     alt={category.name} 
                     fill

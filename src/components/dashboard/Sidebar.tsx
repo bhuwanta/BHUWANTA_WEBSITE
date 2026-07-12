@@ -16,12 +16,14 @@ import {
   ChevronLeft,
   ChevronRight,
   Link as LinkIcon,
-  Shield
+  Shield,
+  MessageCircle
 } from "lucide-react";
 
 const navigation = [
   { name: 'Dashboard', href: '/crm', icon: LayoutDashboard },
   { name: 'Leads', href: '/crm/leads', icon: Users },
+  { name: 'WhatsApp', href: '/crm/whatsapp', icon: MessageCircle },
   { name: 'Areas', href: '/crm/areas', icon: MapPin },
   { name: 'Projects', href: '/crm/projects', icon: Building2 },
   { name: 'Brochures', href: '/crm/brochures', icon: FileText },
