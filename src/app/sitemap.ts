@@ -12,7 +12,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${siteUrl}/gallery`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
     { url: `${siteUrl}/blog`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
     { url: `${siteUrl}/policies`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.3 },
-    { url: `${siteUrl}/thank-you`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.2 },
+    // /thank-you is intentionally excluded — it's disallowed in robots.txt
+    // (a conversion-tracking utility page, not something to index), and
+    // listing a disallowed URL in the sitemap just produces a
+    // "blocked by robots.txt" warning in Search Console for no benefit.
 
     // ── Money pages (location landing pages) ──
     { url: `${siteUrl}/shabad-open-plots`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.9 },
