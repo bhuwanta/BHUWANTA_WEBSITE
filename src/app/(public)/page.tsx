@@ -11,7 +11,6 @@ import { sanityFetch, homeQuery, projectsQuery, projectCategoriesQuery } from '@
 import { extractYouTubeId } from '@/lib/utils'
 import dynamic from 'next/dynamic'
 
-const ReviewsSection = dynamic(() => import('@/components/ui/ReviewsSection').then(mod => mod.ReviewsSection))
 const ContactForm = dynamic(() => import('@/components/ui/ContactForm').then(mod => mod.ContactForm))
 const AnimatedCounter = dynamic(() => import('@/components/ui/AnimatedCounter').then(mod => mod.AnimatedCounter))
 import { HeroSlider } from '@/components/ui/HeroSlider'
@@ -137,12 +136,13 @@ export default async function HomePage({
     { icon: FileCheck, title: 'Verified Documentation' },
   ]
 
-  // 6. Google Reviews
-  const googleReviews = [
-    { name: 'Ramesh Kumar', role: 'Property Buyer', rating: 5, content: 'Excellent transparent process and very professional team. Highly recommend BHUWANTA for anyone looking for HMDA approved plots in Hyderabad.' },
-    { name: 'Srinivas Reddy', role: 'Investor', rating: 5, content: 'Good appreciation for their projects. All documents were clear and the registration was completed without any hassle.' },
-    { name: 'Priya Sharma', role: 'First-time Buyer', rating: 5, content: 'They helped us find the perfect Vastu-compliant plot. The team is very patient and explains all the legalities clearly.' },
-  ]
+  // 6. Real site photos — used instead of testimonials until real, sourced
+  // client reviews/videos are available. Placeholder quotes with generic
+  // names would be unverifiable and are worse than showing real project photos.
+  const sitePhotos = ((projectsData?.projectEntries || []) as any[])
+    .filter((p) => p.images && p.images.length > 0)
+    .map((p) => ({ url: `${p.images[0]}?w=800&q=75&auto=format`, name: p.name, location: p.categoryTitle }))
+    .slice(0, 6)
 
   // Support both old format (direct asset) and new format (object with image + text)
   const mappedHeroImages = (data.heroImages || [])
@@ -177,6 +177,9 @@ export default async function HomePage({
 
         {/* Center Content */}
         <div className="relative z-20 w-full max-w-5xl mx-auto px-4 text-center flex-grow flex flex-col justify-center pt-20">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white tracking-tight drop-shadow-lg">
+            HMDA &amp; DTCP Approved Plots in <span className="text-[#c4a55a]">Hyderabad</span>
+          </h1>
         </div>
 
         {/* Bottom Actions Container */}
@@ -482,27 +485,46 @@ export default async function HomePage({
         </div>
       </section>
 
-      {/* ===== SECTION 7 — WHAT OUR CUSTOMERS SAY (BLUE) ===== */}
+      {/* ===== SECTION 7 — REAL SITES, REAL APPROVALS (BLUE) ===== */}
+      {sitePhotos.length > 0 && (
       <section className="bg-[#022F3A] py-20 sm:py-28" id="testimonials">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-14">
             <div className="flex justify-center mb-5">
               <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#B69A4E]/10 text-[#B69A4E] text-xs font-semibold uppercase tracking-widest border border-[#B69A4E]/20">
                 <MessageCircle className="w-3.5 h-3.5" />
-                Reviews
+                See For Yourself
               </span>
             </div>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-5 tracking-tight">
-              What Our <span className="text-[#c4a55a]">Customers Say</span>
+              Real Sites, <span className="text-[#c4a55a]">Real Approvals</span>
             </h2>
             <p className="text-base sm:text-lg text-white/80 max-w-3xl mx-auto leading-relaxed">
-              Our customers trust us for delivering legally secure, well-planned, and value-driven land investments.
+              No stock photos, no stand-ins — these are our actual layouts. Book a free site visit and verify everything yourself before you decide.
             </p>
           </div>
 
-          <ReviewsSection reviews={googleReviews} />
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+            {sitePhotos.map((photo, i) => (
+              <div key={i} className="relative aspect-[4/3] rounded-xl overflow-hidden border border-white/10 group">
+                <Image
+                  src={photo.url}
+                  alt={`${photo.name} — real site photo, ${photo.location || 'Hyderabad'}`}
+                  fill
+                  sizes="(max-width: 768px) 50vw, 33vw"
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0f1d33] via-[#0f1d33]/20 to-transparent" />
+                <div className="absolute bottom-0 left-0 w-full p-3 sm:p-4">
+                  <p className="text-white text-xs sm:text-sm font-bold leading-tight">{photo.name}</p>
+                  {photo.location && <p className="text-white/70 text-[10px] sm:text-xs">{photo.location}</p>}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
+      )}
 
       {/* ===== SECTION 8 — BOOK YOUR FREE SITE VISIT TODAY (WHITE/GRAY-50) ===== */}
       <section className="bg-gray-50 pt-10 pb-20 sm:pt-16 sm:pb-28" id="book-visit">

@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { PortableText } from '@portabletext/react'
 import { ArrowLeft, Calendar, Clock, Tag } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { sanityFetch, blogPostQuery } from '@/lib/sanity'
 import { JsonLd, buildBreadcrumbSchema, buildArticleSchema, buildFaqSchema } from '@/components/seo/JsonLd'
 import { formatDate, calculateReadingTime } from '@/lib/utils'
@@ -116,7 +117,14 @@ export default async function BlogPostPage({
           {/* Hero Image */}
           {post.mainImage && (
             <div className="w-full aspect-[16/9] relative bg-[#f3f5f8]">
-              <img src={post.mainImage} alt={post.title} className="w-full h-full object-cover" />
+              <Image
+                src={post.mainImage}
+                alt={`${post.title} — cover image`}
+                fill
+                sizes="(max-width: 768px) 100vw, 900px"
+                priority
+                className="object-cover"
+              />
             </div>
           )}
 

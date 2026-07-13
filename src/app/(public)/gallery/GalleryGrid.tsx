@@ -19,7 +19,7 @@ interface GalleryGridProps {
 
 export function GalleryGrid({ projects = [] }: GalleryGridProps) {
   const [activeTab, setActiveTab] = useState<'social_media' | 'photos' | 'videos'>('photos')
-  const [lightboxImage, setLightboxImage] = useState<string | null>(null)
+  const [lightboxImage, setLightboxImage] = useState<{ url: string; alt: string } | null>(null)
 
   // Filter projects that have images
   const projectsWithImages = projects.filter((p) => p.images.length > 0)
@@ -154,16 +154,18 @@ export function GalleryGrid({ projects = [] }: GalleryGridProps) {
                             className={`flex gap-4 sm:gap-6 w-max px-4 sm:px-6 ${pIdx % 2 === 0 ? 'animate-scroll-left' : 'animate-scroll-right'} group-hover/marquee:[animation-play-state:paused]`}
                           >
                             {/* Duplicate images twice for seamless loop */}
-                            {[...project.images, ...project.images].map((url, i) => (
-                              <div 
-                                key={i} 
+                            {[...project.images, ...project.images].map((url, i) => {
+                              const imageAlt = `${project.name} open plot layout in ${category} — site photo ${(i % project.images.length) + 1}`
+                              return (
+                              <div
+                                key={i}
                                 className="flex-shrink-0 w-64 sm:w-72 md:w-80 cursor-pointer group/card"
-                                onClick={() => setLightboxImage(url)}
+                                onClick={() => setLightboxImage({ url, alt: imageAlt })}
                               >
                                 <div className="aspect-[4/3] bg-white border border-[#e8ecf2] shadow-sm rounded-xl overflow-hidden relative transition-premium group-hover/card:border-[#c4a55a]/30 group-hover/card:shadow-md">
-                                  <Image 
-                                    src={url} 
-                                    alt={`${project.name} - Image ${(i % project.images.length) + 1}`}
+                                  <Image
+                                    src={url}
+                                    alt={imageAlt}
                                     fill
                                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                     className="object-cover transition-transform duration-500 group-hover/card:scale-105"
@@ -171,7 +173,8 @@ export function GalleryGrid({ projects = [] }: GalleryGridProps) {
                                   <div className="absolute inset-0 bg-[#1e3a5f]/5 group-hover/card:bg-transparent transition-colors"></div>
                                 </div>
                               </div>
-                            ))}
+                              )
+                            })}
                           </div>
                         </div>
                       </div>
@@ -215,7 +218,7 @@ export function GalleryGrid({ projects = [] }: GalleryGridProps) {
                               />
                             </div>
                             <div className="p-4 sm:p-6">
-                              <h4 className="text-lg font-bold text-[#0f1d33]">{project.name}</h4>
+                              <h3 className="text-lg font-bold text-[#0f1d33]">{project.name}</h3>
                               <p className="text-sm text-[#5a6a82] mt-1">YouTube</p>
                             </div>
                           </div>
@@ -233,7 +236,7 @@ export function GalleryGrid({ projects = [] }: GalleryGridProps) {
                               />
                             </div>
                             <div className="p-4 sm:p-6">
-                              <h4 className="text-lg font-bold text-[#0f1d33]">{project.name}</h4>
+                              <h3 className="text-lg font-bold text-[#0f1d33]">{project.name}</h3>
                               <p className="text-sm text-[#5a6a82] mt-1">Project Video</p>
                             </div>
                           </div>
@@ -262,9 +265,9 @@ export function GalleryGrid({ projects = [] }: GalleryGridProps) {
             <X className="w-5 h-5" />
           </button>
           <div className="relative w-full h-full max-w-5xl mx-auto max-h-[90vh]">
-            <Image 
-              src={lightboxImage} 
-              alt="Gallery Image"
+            <Image
+              src={lightboxImage.url}
+              alt={lightboxImage.alt}
               fill
               className="object-contain rounded-lg"
               onClick={(e) => e.stopPropagation()}
