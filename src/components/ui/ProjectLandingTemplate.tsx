@@ -14,7 +14,9 @@ interface ProjectData {
   description: string
   images?: string[]
   videoUrl?: string
+  videoUrls?: string[]
   youtubeUrl?: string
+  youtubeUrls?: string[]
   projectHighlights?: string[]
   brochureUrls?: string[]
   layoutUrls?: string[]
@@ -79,11 +81,21 @@ export async function buildProjectPageMetadata(
 }
 
 export async function ProjectLandingTemplate({ config }: { config: ProjectLandingConfig }) {
-  const project = await sanityFetch<ProjectData | null>({
+  // Some Sanity entries have trailing whitespace in their name field.
+  // Try exact match first, then retry with a trailing space appended.
+  let project = await sanityFetch<ProjectData | null>({
     query: projectByNameQuery,
     params: { name: config.sanityName },
     tags: ['projects'],
   }).catch(() => null)
+
+  if (!project) {
+    project = await sanityFetch<ProjectData | null>({
+      query: projectByNameQuery,
+      params: { name: config.sanityName + ' ' },
+      tags: ['projects'],
+    }).catch(() => null)
+  }
 
   const siteUrl = 'https://bhuwanta.com'
   const pageUrl = `${siteUrl}/projects/${config.slug}`
@@ -117,8 +129,8 @@ export async function ProjectLandingTemplate({ config }: { config: ProjectLandin
             <ProjectDetailActions
               name={config.displayName}
               images={project?.images}
-              videoUrl={project?.videoUrl}
-              youtubeUrl={project?.youtubeUrl}
+              videoUrl={project?.videoUrl || project?.videoUrls?.[0]}
+              youtubeUrl={project?.youtubeUrl || project?.youtubeUrls?.[0]}
               googleMapsUrl={project?.googleMapsUrl}
               brochureUrls={project?.brochureUrls}
               layoutUrls={project?.layoutUrls}

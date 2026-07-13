@@ -160,12 +160,7 @@ export function Footer() {
               Contact
             </h3>
             <ul className="space-y-4">
-              {phone && (
-                <li className="flex items-center gap-3 group">
-                  <Phone className="w-4 h-4 text-[#B69A4E] shrink-0" />
-                  <a href={`tel:${phone.replace(/\s/g, '')}`} className="text-sm text-white/70 group-hover:text-white transition-colors">{phone}</a>
-                </li>
-              )}
+
               <li className="flex items-center gap-3 group">
                 <Mail className="w-4 h-4 text-[#B69A4E] shrink-0" />
                 <a href={`mailto:${email}`} className="text-sm text-white/70 group-hover:text-white transition-colors">{email}</a>

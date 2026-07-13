@@ -16,7 +16,7 @@ const config: ProjectLandingConfig = {
   slug: 'sv-kanaka-maple-homes',
   displayName: 'S.V. Kanaka Maple Homes',
   corridorLabel: 'Warangal Highway, near Yadagirigutta',
-  h1: <>S.V. Kanaka Maple Homes — <span className="text-[#c4a55a]">Warangal Highway</span></>,
+  h1: <>S.V. Kanaka Maple Homes</>,
   opportunityParagraphs: [
     'S.V. Kanaka Maple Homes sits on the Warangal Highway corridor, close to Yadagirigutta — home to the Sri Lakshmi Narasimha Swamy Temple, one of the most significant temple redevelopment and tourism-infrastructure efforts in the region. Growth corridors anchored by major temple towns tend to see sustained visitor traffic and connectivity investment over the long term, independent of any single project.',
     'This is a DTCP and RERA approved layout, built for buyers who want a clear-titled, Vastu-compliant plot with room to grow as the surrounding corridor develops.',

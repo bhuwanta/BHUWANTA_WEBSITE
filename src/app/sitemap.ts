@@ -5,21 +5,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bhuwanta.com'
 
   const routes: MetadataRoute.Sitemap = [
+    // ── Core pages ──
     { url: `${siteUrl}`, lastModified: new Date(), changeFrequency: 'daily', priority: 1 },
     { url: `${siteUrl}/about`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
     { url: `${siteUrl}/projects`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
     { url: `${siteUrl}/gallery`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
     { url: `${siteUrl}/blog`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
-    { url: `${siteUrl}/hmda-vs-dtcp-plots-hyderabad`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
-    { url: `${siteUrl}/shabad-open-plots`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
-    { url: `${siteUrl}/shadnagar-open-plots`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${siteUrl}/policies`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.3 },
+    { url: `${siteUrl}/thank-you`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.2 },
+
+    // ── Money pages (location landing pages) ──
+    { url: `${siteUrl}/shabad-open-plots`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.9 },
+    { url: `${siteUrl}/shadnagar-open-plots`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.9 },
+    { url: `${siteUrl}/hmda-vs-dtcp-plots-hyderabad`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.8 },
+
+    // ── Resources (gated content landing pages) ──
+    { url: `${siteUrl}/resources/hyderabad-plot-buyer-legal-checklist`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${siteUrl}/resources/nh44-growth-corridor-investment-map`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
+
+    // ── Static blog articles ──
+    { url: `${siteUrl}/blog/verify-hmda-dtcp-approval-telangana`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.8 },
     { url: `${siteUrl}/blog/open-plots-shabad-hyderabad-hmda-approved-guide`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
     { url: `${siteUrl}/blog/dtcp-vs-hmda-plots-shadnagar-buyer-guide`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
     { url: `${siteUrl}/blog/shabad-vs-shadnagar-investment-comparison`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
     { url: `${siteUrl}/blog/open-plots-shadnagar-growth-story-2026`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
-    { url: `${siteUrl}/blog/verify-hmda-dtcp-approval-telangana`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.8 },
-    { url: `${siteUrl}/resources/hyderabad-plot-buyer-legal-checklist`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
-    { url: `${siteUrl}/resources/nh44-growth-corridor-investment-map`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
   ]
 
   // Hand-authored /projects/<slug> pages that exist as static routes today,

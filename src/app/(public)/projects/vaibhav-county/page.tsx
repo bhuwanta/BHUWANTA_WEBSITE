@@ -16,7 +16,7 @@ const config: ProjectLandingConfig = {
   slug: 'vaibhav-county',
   displayName: 'Vaibhav County',
   corridorLabel: 'Sadashivpet, Mumbai Highway',
-  h1: <>Vaibhav County — <span className="text-[#c4a55a]">Sadashivpet</span></>,
+  h1: <>Vaibhav County</>,
   opportunityParagraphs: [
     'Vaibhav County sits in Sadashivpet, on the Mumbai Highway (NH 65) between Hyderabad and Sangareddy — a corridor that has seen growing industrial and residential development pushed outward from the city along this highway. DTCP-approved layouts in this belt typically offer a more affordable entry point than HMDA-jurisdiction land closer to the city, with room to appreciate as infrastructure catches up.',
     'This is a DTCP approved and RERA registered layout, built for buyers prioritizing affordability and long-term growth along an established highway corridor.',

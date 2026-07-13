@@ -21,7 +21,7 @@ export function PageBanner({ title, subtitle }: PageBannerProps) {
             {title}
           </h1>
           {subtitle && (
-            <p className="text-base text-white/70 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-base text-[#c4a55a] font-semibold max-w-2xl mx-auto leading-relaxed tracking-wide uppercase">
               {subtitle}
             </p>
           )}

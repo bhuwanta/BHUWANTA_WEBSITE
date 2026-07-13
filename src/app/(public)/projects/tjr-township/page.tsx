@@ -16,7 +16,7 @@ const config: ProjectLandingConfig = {
   slug: 'tjr-township',
   displayName: 'TJR Township',
   corridorLabel: 'Sangareddy Junction, Mumbai Highway',
-  h1: <>TJR Township — <span className="text-[#c4a55a]">Sangareddy Junction</span></>,
+  h1: <>TJR Township</>,
   opportunityParagraphs: [
     'TJR Township sits at Sangareddy Junction on the Mumbai Highway (NH 65) — the district headquarters of Sangareddy and a well-established connectivity point between Hyderabad and Maharashtra. As a district headquarters town on a national highway, Sangareddy carries durable administrative and commercial activity that supports long-term land value.',
     'This is an HMDA approved and RERA registered layout — the stricter infrastructure and approval standards that come with HMDA jurisdiction, in one of the corridor\'s more established junction towns.',

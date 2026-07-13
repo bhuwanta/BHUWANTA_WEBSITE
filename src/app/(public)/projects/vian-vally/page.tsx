@@ -16,7 +16,7 @@ const config: ProjectLandingConfig = {
   slug: 'vian-vally',
   displayName: 'Vian Vally',
   corridorLabel: 'Shabad, NH-44 Bangalore Highway',
-  h1: <>Vian Vally — <span className="text-[#c4a55a]">Shabad</span></>,
+  h1: <>Vian Vally</>,
   opportunityParagraphs: [
     'Vian Vally sits in Shabad, directly on the NH-44 Bangalore Highway corridor southwest of Hyderabad. This corridor benefits from durable highway connectivity to the city, independent of any single project or developer.',
     'This is an HMDA approved and RERA registered layout, offering the stricter infrastructure standards that come with HMDA jurisdiction, in a corridor that has drawn growing investor attention.',
