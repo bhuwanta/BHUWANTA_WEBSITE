@@ -56,9 +56,13 @@ export default async function PublicLayout({
     <>
       <JsonLd data={[websiteSchema, localBusinessSchema]} />
 
-      {/* Google Analytics — uses Sanity setting with hardcoded fallback */}
+      {/* Google Analytics + Google Ads — one gtag.js loader shared by both
+          IDs, per Google's own guidance ("don't add more than one Google
+          tag" means don't load gtag.js twice, not that you can't config
+          multiple products through the same loader). */}
       {(() => {
         const gaId = settings?.googleAnalyticsId || 'G-98QJJZ5DCG';
+        const googleAdsId = 'AW-18267535069';
         return (
           <>
             <Script
@@ -71,6 +75,7 @@ export default async function PublicLayout({
                 function gtag(){window.dataLayer.push(arguments);}
                 gtag('js', new Date());
                 gtag('config', '${gaId}');
+                gtag('config', '${googleAdsId}');
               `}
             </Script>
           </>
