@@ -1,12 +1,15 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { ArticleLayout } from '@/components/ui/ArticleLayout'
+import { buildStaticOgMetadata } from '@/lib/seo'
 
-export const metadata: Metadata = {
-  title: { absolute: 'DTCP vs HMDA Approved Plots in Shadnagar: Complete Buyer\'s Guide (2026) | Bhuwanta Developers' },
+export const metadata: Metadata = buildStaticOgMetadata({
+  title: 'DTCP vs HMDA Approved Plots in Shadnagar: Complete Buyer\'s Guide (2026) | Bhuwanta Developers',
   description: 'DTCP vs HMDA approved plots in the Shadnagar area — what applies where, how to verify either approval type, and where Bhuwanta\'s nearest verified project fits in.',
-  alternates: { canonical: 'https://bhuwanta.com/blog/dtcp-vs-hmda-plots-shadnagar-buyer-guide' },
-}
+  url: 'https://bhuwanta.com/blog/dtcp-vs-hmda-plots-shadnagar-buyer-guide',
+  ogTitle: 'DTCP vs HMDA Plots in Shadnagar',
+  ogSubtitle: "Complete Buyer's Guide (2026)",
+})
 
 const faqs = [
   {

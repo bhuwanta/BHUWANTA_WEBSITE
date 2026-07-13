@@ -1,12 +1,14 @@
 import { Metadata } from 'next'
-import { ProjectLandingTemplate, ProjectLandingConfig } from '@/components/ui/ProjectLandingTemplate'
+import { ProjectLandingTemplate, ProjectLandingConfig, buildProjectPageMetadata } from '@/components/ui/ProjectLandingTemplate'
 
 export const revalidate = 60
 
-export const metadata: Metadata = {
-  title: { absolute: 'S.V. Kanaka Maple Homes — Warangal Highway, Near Yadagirigutta | Bhuwanta Developers' },
-  description: 'S.V. Kanaka Maple Homes — DTCP & RERA approved open plots on the Warangal Highway near the Yadagirigutta temple corridor. A curated, investor-grade land asset by Bhuwanta Developers.',
-  alternates: { canonical: 'https://bhuwanta.com/projects/sv-kanaka-maple-homes' },
+export async function generateMetadata(): Promise<Metadata> {
+  return buildProjectPageMetadata(
+    config,
+    'S.V. Kanaka Maple Homes — Warangal Highway, Near Yadagirigutta | Bhuwanta Developers',
+    'S.V. Kanaka Maple Homes — DTCP & RERA approved open plots on the Warangal Highway near the Yadagirigutta temple corridor. A curated, investor-grade land asset by Bhuwanta Developers.'
+  )
 }
 
 const config: ProjectLandingConfig = {

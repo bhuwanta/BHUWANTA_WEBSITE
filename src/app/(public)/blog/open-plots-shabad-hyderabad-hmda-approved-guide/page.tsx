@@ -1,12 +1,15 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { ArticleLayout } from '@/components/ui/ArticleLayout'
+import { buildStaticOgMetadata } from '@/lib/seo'
 
-export const metadata: Metadata = {
-  title: { absolute: 'Open Plots in Shabad, Hyderabad: HMDA Approved Plots Near Bangalore Highway (2026 Guide) | Bhuwanta Developers' },
+export const metadata: Metadata = buildStaticOgMetadata({
+  title: 'Open Plots in Shabad, Hyderabad: HMDA Approved Plots Near Bangalore Highway (2026 Guide) | Bhuwanta Developers',
   description: 'A complete 2026 guide to open plots in Shabad, Hyderabad — HMDA approval, what drives value on the NH-44 Bangalore Highway corridor, and how to verify a plot before you buy.',
-  alternates: { canonical: 'https://bhuwanta.com/blog/open-plots-shabad-hyderabad-hmda-approved-guide' },
-}
+  url: 'https://bhuwanta.com/blog/open-plots-shabad-hyderabad-hmda-approved-guide',
+  ogTitle: 'Open Plots in Shabad, Hyderabad',
+  ogSubtitle: 'HMDA Approved Plots Near Bangalore Highway — 2026 Guide',
+})
 
 const faqs = [
   {

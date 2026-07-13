@@ -1,12 +1,14 @@
 import { Metadata } from 'next'
-import { ProjectLandingTemplate, ProjectLandingConfig } from '@/components/ui/ProjectLandingTemplate'
+import { ProjectLandingTemplate, ProjectLandingConfig, buildProjectPageMetadata } from '@/components/ui/ProjectLandingTemplate'
 
 export const revalidate = 60
 
-export const metadata: Metadata = {
-  title: { absolute: 'Vaibhav County — Sadashivpet, Mumbai Highway | Bhuwanta Developers' },
-  description: 'Vaibhav County — DTCP & RERA approved open plots in Sadashivpet on the Mumbai Highway (NH 65). A curated, investor-grade land asset by Bhuwanta Developers.',
-  alternates: { canonical: 'https://bhuwanta.com/projects/vaibhav-county' },
+export async function generateMetadata(): Promise<Metadata> {
+  return buildProjectPageMetadata(
+    config,
+    'Vaibhav County — Sadashivpet, Mumbai Highway | Bhuwanta Developers',
+    'Vaibhav County — DTCP & RERA approved open plots in Sadashivpet on the Mumbai Highway (NH 65). A curated, investor-grade land asset by Bhuwanta Developers.'
+  )
 }
 
 const config: ProjectLandingConfig = {

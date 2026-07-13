@@ -1,3 +1,4 @@
+import { Metadata } from 'next'
 import Link from 'next/link'
 import { Check, Download } from 'lucide-react'
 import { sanityFetch, projectByNameQuery } from '@/lib/sanity'
@@ -35,6 +36,46 @@ export interface ProjectLandingConfig {
   locationAdvantages: string[]
   faqs: { question: string; answer: string }[]
   relatedLinks: { href: string; label: string }[]
+}
+
+// Shared by each /projects/<slug>/page.tsx so the OG/Twitter image is the
+// project's real photo (falls back to the branded /api/og generator when
+// no photo is set yet) instead of every project page sharing one generic
+// preview image on WhatsApp/social.
+export async function buildProjectPageMetadata(
+  config: ProjectLandingConfig,
+  title: string,
+  description: string
+): Promise<Metadata> {
+  const siteUrl = 'https://bhuwanta.com'
+  const pageUrl = `${siteUrl}/projects/${config.slug}`
+  const project = await sanityFetch<ProjectData | null>({
+    query: projectByNameQuery,
+    params: { name: config.sanityName },
+    tags: ['projects'],
+  }).catch(() => null)
+
+  const ogImage = project?.images?.[0]
+    || `${siteUrl}/api/og?title=${encodeURIComponent(config.displayName)}&subtitle=${encodeURIComponent(config.corridorLabel)}`
+
+  return {
+    title: { absolute: title },
+    description,
+    alternates: { canonical: pageUrl },
+    openGraph: {
+      title,
+      description,
+      url: pageUrl,
+      type: 'website',
+      images: [{ url: ogImage, width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [ogImage],
+    },
+  }
 }
 
 export async function ProjectLandingTemplate({ config }: { config: ProjectLandingConfig }) {

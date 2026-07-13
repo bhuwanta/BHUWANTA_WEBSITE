@@ -19,10 +19,38 @@ interface ProjectData {
 
 export const revalidate = 60
 
-export const metadata: Metadata = {
-  title: { absolute: 'Plots Near Shadnagar / NH-44 — Curated HMDA & DTCP Options | Bhuwanta Developers' },
-  description: 'Exploring open plots near Shadnagar on the NH-44 corridor? See Vian Vally — Bhuwanta\'s HMDA & RERA approved project nearby in Shabad, on the same highway corridor. Enquire for investor pricing.',
-  alternates: { canonical: 'https://bhuwanta.com/shadnagar-open-plots' },
+const PAGE_TITLE = 'Plots Near Shadnagar / NH-44 — Curated HMDA & DTCP Options | Bhuwanta Developers'
+const PAGE_DESCRIPTION = 'Exploring open plots near Shadnagar on the NH-44 corridor? See Vian Vally — Bhuwanta\'s HMDA & RERA approved project nearby in Shabad, on the same highway corridor. Enquire for investor pricing.'
+const PAGE_URL = 'https://bhuwanta.com/shadnagar-open-plots'
+
+export async function generateMetadata(): Promise<Metadata> {
+  const project = await sanityFetch<ProjectData | null>({
+    query: projectByNameQuery,
+    params: { name: PROJECT_NAME },
+    tags: ['projects'],
+  }).catch(() => null)
+
+  const ogImage = project?.images?.[0]
+    || `https://bhuwanta.com/api/og?title=${encodeURIComponent('Plots Near Shadnagar')}&subtitle=${encodeURIComponent('Nearest verified option: Vian Vally in Shabad')}`
+
+  return {
+    title: { absolute: PAGE_TITLE },
+    description: PAGE_DESCRIPTION,
+    alternates: { canonical: PAGE_URL },
+    openGraph: {
+      title: PAGE_TITLE,
+      description: PAGE_DESCRIPTION,
+      url: PAGE_URL,
+      type: 'website',
+      images: [{ url: ogImage, width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: PAGE_TITLE,
+      description: PAGE_DESCRIPTION,
+      images: [ogImage],
+    },
+  }
 }
 
 const faqs = [

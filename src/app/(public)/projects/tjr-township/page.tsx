@@ -1,12 +1,14 @@
 import { Metadata } from 'next'
-import { ProjectLandingTemplate, ProjectLandingConfig } from '@/components/ui/ProjectLandingTemplate'
+import { ProjectLandingTemplate, ProjectLandingConfig, buildProjectPageMetadata } from '@/components/ui/ProjectLandingTemplate'
 
 export const revalidate = 60
 
-export const metadata: Metadata = {
-  title: { absolute: 'TJR Township — Sangareddy Junction, Mumbai Highway | Bhuwanta Developers' },
-  description: 'TJR Township — HMDA & RERA approved open plots at Sangareddy Junction on the Mumbai Highway (NH 65). A curated, investor-grade land asset by Bhuwanta Developers.',
-  alternates: { canonical: 'https://bhuwanta.com/projects/tjr-township' },
+export async function generateMetadata(): Promise<Metadata> {
+  return buildProjectPageMetadata(
+    config,
+    'TJR Township — Sangareddy Junction, Mumbai Highway | Bhuwanta Developers',
+    'TJR Township — HMDA & RERA approved open plots at Sangareddy Junction on the Mumbai Highway (NH 65). A curated, investor-grade land asset by Bhuwanta Developers.'
+  )
 }
 
 const config: ProjectLandingConfig = {

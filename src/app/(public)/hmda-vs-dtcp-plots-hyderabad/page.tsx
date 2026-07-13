@@ -4,12 +4,15 @@ import { Check } from 'lucide-react'
 import { JsonLd, buildBreadcrumbSchema, buildFaqSchema } from '@/components/seo/JsonLd'
 import { PageBanner } from '@/components/ui/PageBanner'
 import { CtaSection } from '@/components/ui/CtaSection'
+import { buildStaticOgMetadata } from '@/lib/seo'
 
-export const metadata: Metadata = {
-  title: { absolute: 'HMDA vs DTCP Approved Plots in Hyderabad: Complete 2026 Comparison | Bhuwanta Developers' },
+export const metadata: Metadata = buildStaticOgMetadata({
+  title: 'HMDA vs DTCP Approved Plots in Hyderabad: Complete 2026 Comparison | Bhuwanta Developers',
   description: 'HMDA vs DTCP approved plots in Hyderabad — compare pricing, infrastructure, approval process, and appreciation potential to choose the right plot for your investment goals.',
-  alternates: { canonical: 'https://bhuwanta.com/hmda-vs-dtcp-plots-hyderabad' },
-}
+  url: 'https://bhuwanta.com/hmda-vs-dtcp-plots-hyderabad',
+  ogTitle: 'HMDA vs DTCP Approved Plots',
+  ogSubtitle: 'Complete 2026 Comparison',
+})
 
 const faqs = [
   {

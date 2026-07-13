@@ -1,6 +1,45 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 
+// Builds full title/description/canonical/OG/Twitter metadata for hand-authored
+// static pages (articles, comparison pages, lead magnets) that have no
+// per-page photo of their own — falls back to the branded /api/og generator
+// so every page still gets a real preview image on WhatsApp/social shares.
+export function buildStaticOgMetadata({
+  title,
+  description,
+  url,
+  ogTitle,
+  ogSubtitle,
+}: {
+  title: string
+  description: string
+  url: string
+  ogTitle: string
+  ogSubtitle: string
+}): Metadata {
+  const ogImage = `https://bhuwanta.com/api/og?title=${encodeURIComponent(ogTitle)}&subtitle=${encodeURIComponent(ogSubtitle)}`
+
+  return {
+    title: { absolute: title },
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      title,
+      description,
+      url,
+      type: 'article',
+      images: [{ url: ogImage, width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [ogImage],
+    },
+  }
+}
+
 // Types for SEO settings
 interface SeoSettings {
   page_slug: string

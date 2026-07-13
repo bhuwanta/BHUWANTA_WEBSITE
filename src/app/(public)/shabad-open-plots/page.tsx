@@ -24,10 +24,38 @@ interface ProjectData {
 
 export const revalidate = 60
 
-export const metadata: Metadata = {
-  title: { absolute: 'Exclusive Open Plots in Shabad — HMDA & RERA Approved | Vian Vally | Bhuwanta Developers' },
-  description: 'Curated, HMDA & RERA approved open plots in Shabad on the NH-44 Bangalore Highway corridor. Vian Vally by Bhuwanta Developers — reserve a private consultation, no public pricing.',
-  alternates: { canonical: 'https://bhuwanta.com/shabad-open-plots' },
+const PAGE_TITLE = 'Exclusive Open Plots in Shabad — HMDA & RERA Approved | Vian Vally | Bhuwanta Developers'
+const PAGE_DESCRIPTION = 'Curated, HMDA & RERA approved open plots in Shabad on the NH-44 Bangalore Highway corridor. Vian Vally by Bhuwanta Developers — reserve a private consultation, no public pricing.'
+const PAGE_URL = 'https://bhuwanta.com/shabad-open-plots'
+
+export async function generateMetadata(): Promise<Metadata> {
+  const project = await sanityFetch<ProjectData | null>({
+    query: projectByNameQuery,
+    params: { name: PROJECT_NAME },
+    tags: ['projects'],
+  }).catch(() => null)
+
+  const ogImage = project?.images?.[0]
+    || `https://bhuwanta.com/api/og?title=${encodeURIComponent('Open Plots in Shabad')}&subtitle=${encodeURIComponent('Vian Vally — HMDA & RERA Approved')}`
+
+  return {
+    title: { absolute: PAGE_TITLE },
+    description: PAGE_DESCRIPTION,
+    alternates: { canonical: PAGE_URL },
+    openGraph: {
+      title: PAGE_TITLE,
+      description: PAGE_DESCRIPTION,
+      url: PAGE_URL,
+      type: 'website',
+      images: [{ url: ogImage, width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: PAGE_TITLE,
+      description: PAGE_DESCRIPTION,
+      images: [ogImage],
+    },
+  }
 }
 
 const faqs = [

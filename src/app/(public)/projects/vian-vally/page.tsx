@@ -1,12 +1,14 @@
 import { Metadata } from 'next'
-import { ProjectLandingTemplate, ProjectLandingConfig } from '@/components/ui/ProjectLandingTemplate'
+import { ProjectLandingTemplate, ProjectLandingConfig, buildProjectPageMetadata } from '@/components/ui/ProjectLandingTemplate'
 
 export const revalidate = 60
 
-export const metadata: Metadata = {
-  title: { absolute: 'Vian Vally — Shabad, NH-44 Bangalore Highway | Bhuwanta Developers' },
-  description: 'Vian Vally — HMDA & RERA approved open plots in Shabad, on the NH-44 Bangalore Highway corridor. A curated, investor-grade land asset by Bhuwanta Developers.',
-  alternates: { canonical: 'https://bhuwanta.com/projects/vian-vally' },
+export async function generateMetadata(): Promise<Metadata> {
+  return buildProjectPageMetadata(
+    config,
+    'Vian Vally — Shabad, NH-44 Bangalore Highway | Bhuwanta Developers',
+    'Vian Vally — HMDA & RERA approved open plots in Shabad, on the NH-44 Bangalore Highway corridor. A curated, investor-grade land asset by Bhuwanta Developers.'
+  )
 }
 
 const config: ProjectLandingConfig = {

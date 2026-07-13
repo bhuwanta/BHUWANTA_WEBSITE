@@ -1,12 +1,15 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { ArticleLayout } from '@/components/ui/ArticleLayout'
+import { buildStaticOgMetadata } from '@/lib/seo'
 
-export const metadata: Metadata = {
-  title: { absolute: 'Shabad vs Shadnagar: Which Growth Corridor Should You Invest In? | Bhuwanta Developers' },
+export const metadata: Metadata = buildStaticOgMetadata({
+  title: 'Shabad vs Shadnagar: Which Growth Corridor Should You Invest In? | Bhuwanta Developers',
   description: 'Shabad vs Shadnagar — a straight comparison of Hyderabad\'s NH-44 growth corridor towns, who should choose which, and where verified, HMDA-approved inventory is available today.',
-  alternates: { canonical: 'https://bhuwanta.com/blog/shabad-vs-shadnagar-investment-comparison' },
-}
+  url: 'https://bhuwanta.com/blog/shabad-vs-shadnagar-investment-comparison',
+  ogTitle: 'Shabad vs Shadnagar',
+  ogSubtitle: 'Which Growth Corridor Should You Invest In?',
+})
 
 const faqs = [
   {

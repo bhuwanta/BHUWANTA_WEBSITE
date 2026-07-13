@@ -5,12 +5,15 @@ import { JsonLd, buildBreadcrumbSchema } from '@/components/seo/JsonLd'
 import { PageBanner } from '@/components/ui/PageBanner'
 import { GatedResource } from '@/components/ui/GatedResource'
 import { CtaSection } from '@/components/ui/CtaSection'
+import { buildStaticOgMetadata } from '@/lib/seo'
 
-export const metadata: Metadata = {
-  title: { absolute: 'NH-44 Growth Corridor Investment Guide | Bhuwanta Developers' },
+export const metadata: Metadata = buildStaticOgMetadata({
+  title: 'NH-44 Growth Corridor Investment Guide | Bhuwanta Developers',
   description: 'A structured guide to the NH-44 Bangalore Highway growth corridor southwest of Hyderabad — key towns, infrastructure drivers, and where Bhuwanta has verified inventory.',
-  alternates: { canonical: 'https://bhuwanta.com/resources/nh44-growth-corridor-investment-map' },
-}
+  url: 'https://bhuwanta.com/resources/nh44-growth-corridor-investment-map',
+  ogTitle: 'NH-44 Growth Corridor',
+  ogSubtitle: 'Free Investment Guide — Shabad & Shadnagar',
+})
 
 const waypoints = [
   { name: 'Shabad', note: 'Bhuwanta\'s live, HMDA & RERA approved project — Vian Vally', hasInventory: true },
