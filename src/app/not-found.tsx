@@ -1,9 +1,11 @@
 import Link from 'next/link'
 import { Home, Building2, BookOpen } from 'lucide-react'
+import { NotFoundTracker } from '@/components/ui/NotFoundTracker'
 
 export default function NotFound() {
   return (
     <main className="min-h-[80vh] flex items-center justify-center bg-white px-4">
+      <NotFoundTracker />
       <div className="max-w-lg w-full text-center">
         <p className="text-sm font-bold uppercase tracking-widest text-[#c4a55a] mb-4">404</p>
         <h1 className="text-3xl sm:text-4xl font-bold text-[#0f1d33] mb-4">Page Not Found</h1>
