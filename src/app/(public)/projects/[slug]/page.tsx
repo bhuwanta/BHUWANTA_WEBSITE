@@ -105,10 +105,6 @@ export default async function ProjectDetailPage({
       answer: `Yes. ${project.name} is ${project.approvalBadge || 'HMDA/DTCP'} approved and RERA registered, with clear legal documentation available for verification.`,
     },
     {
-      question: `Is bank loan financing available for ${project.name}?`,
-      answer: `Yes, plots at ${project.name} are eligible for bank loan financing, subject to the lender's standard approval process.`,
-    },
-    {
       question: `How do I book a site visit to ${project.name}?`,
       answer: `You can book a free site visit to ${project.name} by filling out the enquiry form on this page, or via WhatsApp, and our team will arrange a convenient time.`,
     },
@@ -162,10 +158,6 @@ export default async function ProjectDetailPage({
                 <div>
                   <h3 className="font-bold text-[#0f1d33] mb-1">Is {project.name} RERA registered?</h3>
                   <p className="text-sm text-[#5a6a82]">Yes. {project.name} is {project.approvalBadge || 'HMDA/DTCP'} approved and RERA registered, with clear legal documentation available for verification.</p>
-                </div>
-                <div>
-                  <h3 className="font-bold text-[#0f1d33] mb-1">Is bank loan financing available?</h3>
-                  <p className="text-sm text-[#5a6a82]">Yes, plots at {project.name} are eligible for bank loan financing, subject to the lender&apos;s standard approval process.</p>
                 </div>
                 <div>
                   <h3 className="font-bold text-[#0f1d33] mb-1">How do I book a site visit?</h3>

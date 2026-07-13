@@ -43,7 +43,6 @@ export default function HmdaVsDtcpPage() {
     { label: 'Infrastructure Standards', hmda: 'Wider roads, stricter civic infrastructure norms', dtcp: 'Developer-provided infrastructure per approved layout' },
     { label: 'Typical Entry Price', hmda: 'Higher', dtcp: 'More affordable' },
     { label: 'Appreciation Profile', hmda: 'Faster near-term appreciation', dtcp: 'Strong long-term appreciation as infrastructure catches up' },
-    { label: 'Bank Loan Eligibility', hmda: 'Yes, when RERA registered', dtcp: 'Yes, when RERA registered' },
   ]
 
   return (

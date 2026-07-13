@@ -1,9 +1,8 @@
-import { ShieldCheck, Landmark, Users, Award } from 'lucide-react'
+import { ShieldCheck, Users, Award } from 'lucide-react'
 
 const items = [
   { icon: ShieldCheck, label: 'RERA Registered' },
   { icon: Award, label: 'HMDA/DTCP Approved' },
-  { icon: Landmark, label: 'Bank Loan Support' },
   { icon: Users, label: '1000+ Happy Customers' },
   { icon: ShieldCheck, label: '20+ Years' },
 ]

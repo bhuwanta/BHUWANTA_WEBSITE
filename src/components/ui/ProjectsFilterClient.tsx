@@ -179,7 +179,7 @@ export function ProjectsFilterClient({ projects, categories = [], pageHeading }:
                             </div>
                             <div className="mt-4 pt-4 border-t border-[#e8ecf2] flex items-center gap-2 text-xs font-semibold text-[#5a6a82]">
                              <CreditCard className="w-4 h-4 text-[#5a6a82]" />
-                             Bank Loan Available <span className="text-[#e8ecf2]">|</span> Ready for Construction
+                             Ready for Construction
                            </div>
                          </div>
                       </div>
