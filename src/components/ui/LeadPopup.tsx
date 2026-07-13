@@ -1,30 +1,51 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, CheckCircle2 } from 'lucide-react'
 import Image from 'next/image'
 import logoImg from '@/images/logo.png'
 
-export function LeadPopup({ projectsList = [], locationNames = [] }: { projectsList?: { name: string, location: string }[], locationNames?: string[] }) {
+const WHATSAPP_NUMBER = '919666504405'
+const SESSION_KEY = 'bhuwanta_lead_popup_shown'
+
+export function LeadPopup() {
   const [isOpen, setIsOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [phoneError, setPhoneError] = useState('')
-  const [formData, setFormData] = useState({
-    name: '',
-    phone: '',
-    email: '',
-    location: 'All',
-    project: 'Not Sure',
-    enquiryType: 'Site Visit',
-    message: '',
-  })
+  const [formData, setFormData] = useState({ name: '', phone: '' })
 
-  useEffect(() => {
-    const timer = setTimeout(() => setIsOpen(true), 2000)
-    return () => clearTimeout(timer)
+  const trigger = useCallback(() => {
+    if (sessionStorage.getItem(SESSION_KEY)) return
+    sessionStorage.setItem(SESSION_KEY, '1')
+    setIsOpen(true)
   }, [])
+
+  // One popup per session, triggered by exit-intent (desktop) or 70% scroll
+  // depth (any device) — whichever fires first. Never on first pageview,
+  // never repeating within the same session (including after a refresh).
+  useEffect(() => {
+    if (sessionStorage.getItem(SESSION_KEY)) return
+
+    const handleMouseLeave = (e: MouseEvent) => {
+      if (e.clientY <= 0) trigger()
+    }
+
+    const handleScroll = () => {
+      const scrolled = window.scrollY + window.innerHeight
+      const total = document.documentElement.scrollHeight
+      if (total > 0 && scrolled / total >= 0.7) trigger()
+    }
+
+    document.addEventListener('mouseleave', handleMouseLeave)
+    window.addEventListener('scroll', handleScroll, { passive: true })
+
+    return () => {
+      document.removeEventListener('mouseleave', handleMouseLeave)
+      window.removeEventListener('scroll', handleScroll)
+    }
+  }, [trigger])
 
   // Handle background scrolling
   useEffect(() => {
@@ -35,7 +56,7 @@ export function LeadPopup({ projectsList = [], locationNames = [] }: { projectsL
       document.body.style.overflow = ''
       document.documentElement.style.overflow = ''
     }
-    
+
     return () => {
       document.body.style.overflow = ''
       document.documentElement.style.overflow = ''
@@ -44,6 +65,10 @@ export function LeadPopup({ projectsList = [], locationNames = [] }: { projectsL
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (formData.phone.length !== 10) {
+      setPhoneError('Please enter a valid 10-digit number')
+      return
+    }
     setIsSubmitting(true)
 
     try {
@@ -51,8 +76,10 @@ export function LeadPopup({ projectsList = [], locationNames = [] }: { projectsL
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...formData,
-          sourcePage: 'Website',
+          name: formData.name,
+          phone: formData.phone,
+          enquiryType: 'Pricing Details',
+          sourcePage: 'Exit Intent Popup',
         }),
       })
 
@@ -68,6 +95,9 @@ export function LeadPopup({ projectsList = [], locationNames = [] }: { projectsL
   }
 
   if (!isOpen) return null
+
+  const waMessage = encodeURIComponent('Hi Bhuwanta, I would like to know today\'s investor pricing.')
+  const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${waMessage}`
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
@@ -88,9 +118,7 @@ export function LeadPopup({ projectsList = [], locationNames = [] }: { projectsL
         transition={{ duration: 0.25, ease: 'easeOut' }}
         className="relative w-full max-w-sm sm:max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col"
       >
-        {/* Header — Balanced vertical spacing, text removed */}
         <div className="bg-[#002935] px-6 py-6 flex flex-col items-center justify-center text-center relative shrink-0">
-          {/* Close button */}
           <button
             onClick={() => setIsOpen(false)}
             className="absolute top-4 right-4 p-1.5 text-white/60 hover:text-white bg-white/5 hover:bg-white/20 rounded-full transition-all z-10"
@@ -99,32 +127,33 @@ export function LeadPopup({ projectsList = [], locationNames = [] }: { projectsL
             <X className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
 
-          {/* Logo */}
-          <Image 
-            src={logoImg} 
-            alt="Bhuwanta" 
-            width={320} 
-            height={120} 
+          <Image
+            src={logoImg}
+            alt="Bhuwanta"
+            width={320}
+            height={120}
             loading="lazy"
-            className="w-56 sm:w-72 h-auto max-h-24 object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.3)]" 
+            className="w-56 sm:w-72 h-auto max-h-24 object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.3)]"
             style={{ height: 'auto' }}
             sizes="(max-width: 640px) 224px, 288px"
           />
         </div>
 
-        {/* Form / Success States */}
         <div className="px-6 py-6 sm:py-7">
           <AnimatePresence mode="wait">
             {!isSubmitted ? (
-              <motion.form
+              <motion.div
                 key="form"
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 10 }}
-                onSubmit={handleSubmit}
-                className="space-y-4"
               >
-                <div className="space-y-3">
+                <h3 className="text-lg sm:text-xl font-bold text-[#002935] text-center mb-1">
+                  Get Today&apos;s Investor Pricing
+                </h3>
+                <p className="text-sm text-[#002935]/60 text-center mb-5">On WhatsApp — no obligation.</p>
+
+                <form onSubmit={handleSubmit} className="space-y-3">
                   <input
                     required
                     type="text"
@@ -135,111 +164,53 @@ export function LeadPopup({ projectsList = [], locationNames = [] }: { projectsL
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   />
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <input
-                        required
-                        type="tel"
-                        placeholder="Phone Number *"
-                        aria-label="Phone Number"
-                        minLength={10}
-                        pattern="[0-9]{10}"
-                        className={`w-full px-4 py-3 bg-[#f8f9fb] border ${phoneError ? 'border-red-500 focus:ring-red-500' : 'border-[#e8ecf2] focus:ring-[#002935]/20'} rounded-xl text-sm text-[#002935] placeholder:text-[#002935]/40 focus:outline-none focus:ring-2 focus:border-[#002935]/50 transition-all`}
-                        value={formData.phone}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          const digitsOnly = val.replace(/\D/g, '');
-                          if (val !== digitsOnly || digitsOnly.length > 10) {
-                            setPhoneError('Please enter 10 digits only');
-                          } else {
-                            setPhoneError('');
-                          }
-                          setFormData({ ...formData, phone: digitsOnly.slice(0, 10) });
-                        }}
-                      />
-                      {phoneError && <p className="text-red-500 text-xs mt-1">{phoneError}</p>}
-                    </div>
+                  <div>
                     <input
                       required
-                      type="email"
-                      placeholder="Email Address *"
-                      aria-label="Email Address"
-                      className="w-full px-4 py-3 bg-[#f8f9fb] border border-[#e8ecf2] rounded-xl text-sm text-[#002935] placeholder:text-[#002935]/40 focus:outline-none focus:ring-2 focus:ring-[#002935]/20 focus:border-[#002935]/50 transition-all"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      type="tel"
+                      placeholder="Mobile Number *"
+                      aria-label="Mobile Number"
+                      minLength={10}
+                      pattern="[0-9]{10}"
+                      className={`w-full px-4 py-3 bg-[#f8f9fb] border ${phoneError ? 'border-red-500 focus:ring-red-500' : 'border-[#e8ecf2] focus:ring-[#002935]/20'} rounded-xl text-sm text-[#002935] placeholder:text-[#002935]/40 focus:outline-none focus:ring-2 focus:border-[#002935]/50 transition-all`}
+                      value={formData.phone}
+                      onChange={(e) => {
+                        const val = e.target.value
+                        const digitsOnly = val.replace(/\D/g, '')
+                        setPhoneError(val !== digitsOnly || digitsOnly.length > 10 ? 'Please enter 10 digits only' : '')
+                        setFormData({ ...formData, phone: digitsOnly.slice(0, 10) })
+                      }}
                     />
+                    {phoneError && <p className="text-red-500 text-xs mt-1">{phoneError}</p>}
                   </div>
 
-                  <div className="relative">
-                    <select 
-                      aria-label="Select location"
-                      className="w-full appearance-none px-4 py-3 bg-[#f8f9fb] border border-[#e8ecf2] rounded-xl text-sm text-[#002935] focus:outline-none focus:ring-2 focus:ring-[#002935]/20 focus:border-[#002935]/50 transition-all"
-                      value={formData.location}
-                      onChange={(e) => setFormData({ ...formData, location: e.target.value, project: 'Not Sure' })}
-                    >
-                      <option value="All">Location: All</option>
-                      {locationNames.map((name, idx) => (
-                        <option key={idx} value={name}>{name}</option>
-                      ))}
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-[#002935]/40">
-                      <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" /></svg>
-                    </div>
-                  </div>
-
-                  <div className="relative">
-                    <select 
-                      aria-label="Select project"
-                      className="w-full appearance-none px-4 py-3 bg-[#f8f9fb] border border-[#e8ecf2] rounded-xl text-sm text-[#002935] focus:outline-none focus:ring-2 focus:ring-[#002935]/20 focus:border-[#002935]/50 transition-all"
-                      value={formData.project}
-                      onChange={(e) => setFormData({ ...formData, project: e.target.value })}
-                    >
-                      <option value="Not Sure">Project: Not Sure</option>
-                      {Array.from(new Set(
-                        projectsList
-                          .filter(p => (formData.location && formData.location !== 'All') ? p.location === formData.location : true)
-                          .map(p => p.name)
-                      )).map((name, idx) => (
-                        <option key={idx} value={name}>{name}</option>
-                      ))}
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-[#002935]/40">
-                      <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" /></svg>
-                    </div>
-                  </div>
-
-                  <textarea
-                    placeholder="Your Message (Optional)"
-                    rows={2}
-                    aria-label="Your message"
-                    className="w-full px-4 py-3 bg-[#f8f9fb] border border-[#e8ecf2] rounded-xl text-sm text-[#002935] placeholder:text-[#002935]/40 focus:outline-none focus:ring-2 focus:ring-[#002935]/20 focus:border-[#002935]/50 transition-all resize-none"
-                    value={formData.message}
-                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                  />
-                </div>
-
-                <div className="pt-2">
                   <button
                     disabled={isSubmitting}
                     className="w-full py-3 sm:py-3.5 bg-[#002935] text-white text-sm sm:text-base font-semibold rounded-xl hover:bg-[#003d4f] hover:shadow-lg active:scale-[0.98] transition-all disabled:opacity-70 flex items-center justify-center"
                   >
-                    {isSubmitting ? (
-                      <span className="flex items-center gap-2">
-                        <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Submitting...
-                      </span>
-                    ) : (
-                      'Book Visit'
-                    )}
+                    {isSubmitting ? 'Submitting...' : 'Get Investor Pricing'}
                   </button>
-                  <p className="text-[11px] text-center text-[#002935]/40 mt-3 font-medium">
-                    Your information is kept 100% confidential.
-                  </p>
+                </form>
+
+                <div className="flex items-center gap-3 my-4">
+                  <div className="h-px bg-[#e8ecf2] flex-1" />
+                  <span className="text-xs text-[#002935]/40 font-medium">OR</span>
+                  <div className="h-px bg-[#e8ecf2] flex-1" />
                 </div>
-              </motion.form>
+
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full inline-flex items-center justify-center gap-2 py-3 bg-[#25D366] text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity"
+                >
+                  Chat on WhatsApp Instead
+                </a>
+
+                <p className="text-[11px] text-center text-[#002935]/40 mt-3 font-medium">
+                  Your information is kept 100% confidential.
+                </p>
+              </motion.div>
             ) : (
               <motion.div
                 key="success"
@@ -248,8 +219,8 @@ export function LeadPopup({ projectsList = [], locationNames = [] }: { projectsL
                 className="text-center py-8 sm:py-10"
               >
                 <CheckCircle2 className="w-14 h-14 text-emerald-500 mx-auto mb-4" />
-                <h3 className="text-lg sm:text-xl font-bold text-[#002935] mb-2">You're all set!</h3>
-                <p className="text-sm text-[#002935]/60">Our team will be in touch with you shortly to confirm your visit.</p>
+                <h3 className="text-lg sm:text-xl font-bold text-[#002935] mb-2">You&apos;re all set!</h3>
+                <p className="text-sm text-[#002935]/60">Our team will be in touch with today&apos;s investor pricing shortly.</p>
               </motion.div>
             )}
           </AnimatePresence>
