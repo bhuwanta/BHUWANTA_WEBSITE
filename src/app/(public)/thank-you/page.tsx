@@ -1,13 +1,21 @@
 'use client'
 
+import { useEffect } from 'react'
 import Link from 'next/link'
 import { CheckCircle2 } from 'lucide-react'
+import { fireLeadConversion } from '@/lib/gtag'
 
 const WHATSAPP_NUMBER = '919666504405'
 
 export default function ThankYouPage() {
   const waMessage = encodeURIComponent('Hi Bhuwanta, I just submitted an enquiry on your website — could we speak sooner on WhatsApp?')
   const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${waMessage}`
+
+  // Reaching this page only happens after a successful form submission
+  // (ContactForm redirects here) — fires the shared lead conversion once.
+  useEffect(() => {
+    fireLeadConversion()
+  }, [])
 
   return (
     <main className="min-h-[80vh] flex items-center justify-center bg-white px-4 pt-24">

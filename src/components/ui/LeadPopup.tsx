@@ -7,6 +7,7 @@ import Image from 'next/image'
 import logoImg from '@/images/logo.png'
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth'
 import { auth } from '@/lib/firebase/config'
+import { fireLeadConversion } from '@/lib/gtag'
 
 declare global {
   interface Window {
@@ -112,6 +113,7 @@ export function LeadPopup({ projectsList = [], locationNames = [] }: { projectsL
 
       if (response.ok) {
         setIsSubmitted(true)
+        fireLeadConversion()
         setTimeout(() => setIsOpen(false), 3000)
       } else {
         throw new Error('Failed to send message.')

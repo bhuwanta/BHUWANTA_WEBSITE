@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { MapPin, Download, CreditCard } from 'lucide-react'
 import { ProjectImageCarousel } from '@/components/ui/ProjectImageCarousel'
 import { DownloadPopup } from '@/components/ui/DownloadPopup'
+import { fireLeadConversion } from '@/lib/gtag'
 
 interface ProjectDetailActionsProps {
   name: string
@@ -50,6 +51,7 @@ export function ProjectDetailActions({
           href={`https://wa.me/919666504405?text=${encodeURIComponent(`Hi Bhuwanta, I'm interested in investor pricing for ${name}. Please share details.`)}`}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={fireLeadConversion}
           className="w-full col-span-1 px-2 py-2.5 md:px-5 md:w-auto bg-[#25D366] text-white font-semibold rounded-lg hover:opacity-90 transition-all text-xs sm:text-sm text-center flex items-center justify-center md:justify-start"
         >
           WhatsApp

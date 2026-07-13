@@ -5,6 +5,7 @@ import { sanityFetch, projectByNameQuery } from '@/lib/sanity'
 import { JsonLd, buildBreadcrumbSchema, buildFaqSchema } from '@/components/seo/JsonLd'
 import { ProjectImageCarousel } from '@/components/ui/ProjectImageCarousel'
 import { TrustStrip } from '@/components/ui/TrustStrip'
+import { TrackedWhatsAppAnchor } from '@/components/ui/TrackedWhatsAppAnchor'
 
 const PROJECT_NAME = 'VIAN VALLY'
 const WHATSAPP_NUMBER = '919666504405'
@@ -107,9 +108,9 @@ export default async function ShadnagarOpenPlotsPage() {
             <Link href="/#book-visit?project=Vian%20Vally" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 gradient-gold text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all">
               Request Investor Pricing
             </Link>
-            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 border border-white/20 text-white font-bold rounded-xl hover:bg-white/20 transition-all">
+            <TrackedWhatsAppAnchor href={whatsappUrl} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 border border-white/20 text-white font-bold rounded-xl hover:bg-white/20 transition-all">
               Chat on WhatsApp
-            </a>
+            </TrackedWhatsAppAnchor>
           </div>
         </div>
       </section>
