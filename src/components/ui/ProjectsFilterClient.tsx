@@ -27,6 +27,16 @@ export interface ProjectEntry {
   youtubeUrl?: string
 }
 
+// Fallback slugs for the hand-authored /projects/<slug> pages, keyed by the
+// exact project name as stored in Sanity — used until/unless an editor sets
+// the CMS slug field, at which point project.slug?.current takes precedence.
+const KNOWN_PROJECT_SLUGS: Record<string, string> = {
+  'S.V.KANAKA MAPLE HOMES': 'sv-kanaka-maple-homes',
+  'TJR TownShip': 'tjr-township',
+  'VAIBHAV COUNTY': 'vaibhav-county',
+  'VIAN VALLY': 'vian-vally',
+}
+
 export function ProjectsFilterClient({ projects, categories = [], pageHeading }: { projects: ProjectEntry[], categories?: { id: string; title: string; label: string; order?: number }[], pageHeading?: string }) {
   const [activeFilter, setActiveFilter] = useState<string>('all')
   const filterRef = useRef<HTMLDivElement>(null)
@@ -139,8 +149,8 @@ export function ProjectsFilterClient({ projects, categories = [], pageHeading }:
                               <Link href={`/#book-visit?project=${encodeURIComponent(project.name)}`} className="w-full col-span-1 px-2 py-2 md:px-6 md:w-auto gradient-gold text-white font-semibold rounded-lg shadow-lg shadow-[#c4a55a]/20 hover:scale-105 transition-premium text-xs sm:text-sm text-center flex items-center justify-center md:justify-start">
                                 Enquire Now
                               </Link>
-                              {project.slug?.current && (
-                                <Link href={`/projects/${project.slug.current}`} className="w-full col-span-1 px-2 py-2 md:px-6 md:w-auto bg-white border border-[#c4a55a] text-[#c4a55a] font-semibold rounded-lg hover:bg-[#f7f8fa] transition-premium text-xs sm:text-sm text-center flex items-center justify-center md:justify-start">
+                              {(project.slug?.current || KNOWN_PROJECT_SLUGS[project.name]) && (
+                                <Link href={`/projects/${project.slug?.current || KNOWN_PROJECT_SLUGS[project.name]}`} className="w-full col-span-1 px-2 py-2 md:px-6 md:w-auto bg-white border border-[#c4a55a] text-[#c4a55a] font-semibold rounded-lg hover:bg-[#f7f8fa] transition-premium text-xs sm:text-sm text-center flex items-center justify-center md:justify-start">
                                   View Project
                                 </Link>
                               )}
