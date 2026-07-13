@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server'
-import { client } from '@/lib/sanity'
+import { createClient } from '@supabase/supabase-js'
 import { resend } from '@/lib/resend'
 
 // Required to make sure Next.js doesn't passively cache background cron runs
 export const dynamic = 'force-dynamic'
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 export async function GET(request: Request) {
   try {
@@ -38,12 +42,13 @@ export async function GET(request: Request) {
     const startOfYesterdayUTC = new Date(startOfYesterdayIST.getTime() - istOffset)
     const endOfYesterdayUTC = new Date(endOfYesterdayIST.getTime() - istOffset)
 
-    // 3. Fetch Sanity Leads
-    const query = `*[_type == "lead" && _createdAt >= $start && _createdAt <= $end] | order(_createdAt desc)`
-    const leads = await client.fetch(query, {
-      start: startOfYesterdayUTC.toISOString(),
-      end: endOfYesterdayUTC.toISOString(),
-    })
+    // 3. Fetch Supabase Leads
+    const { data: leads, error } = await supabase
+      .from('leads')
+      .select('*')
+      .gte('created_at', startOfYesterdayUTC.toISOString())
+      .lte('created_at', endOfYesterdayUTC.toISOString())
+      .order('created_at', { ascending: false })
 
     // If there were zero leads yesterday, we safely exit so we don't spam the inbox with empty spreadsheets.
     if (!leads || leads.length === 0) {
@@ -53,21 +58,22 @@ export async function GET(request: Request) {
 
     // 4. Construct the CSV Structure programmatically. 
     // This is incredibly lightweight and natively compatible with Microsoft Excel.
-    const csvHeaders = 'Name,Email,Phone,Budget,Source,Status,Received Date\n'
+    const csvHeaders = 'Name,Email,Phone,Project,Source,Status,Message,Received Date\n'
     
     // Using string replacement on quotes to strictly preserve Excel formatting integrity
     const csvRows = leads.map((lead: any) => {
       const name = (lead.name || '').replace(/"/g, '""')
       const email = (lead.email || '').replace(/"/g, '""')
       const phone = (lead.phone || '').replace(/"/g, '""')
-      const budget = (lead.budget || '').replace(/"/g, '""')
-      const source = (lead.sourcePage || 'Website').replace(/"/g, '""')
+      const project = (lead.project || '').replace(/"/g, '""')
+      const source = (lead.source_page || 'Website').replace(/"/g, '""')
       const status = (lead.status || 'new').replace(/"/g, '""')
+      const message = (lead.message || '').replace(/"/g, '""')
       
       // Convert UTC creation date into readable format
-      const dateStr = new Date(lead._createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
+      const dateStr = new Date(lead.created_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
       
-      return `"${name}","${email}","${phone}","${budget}","${source}","${status}","${dateStr}"`
+      return `"${name}","${email}","${phone}","${project}","${source}","${status}","${message}","${dateStr}"`
     }).join('\n')
 
     const csvContent = csvHeaders + csvRows

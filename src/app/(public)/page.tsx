@@ -188,6 +188,9 @@ export default async function HomePage({
           <h1 className="sr-only">HMDA &amp; DTCP Approved Plots in Hyderabad</h1>
         </div>
 
+        {/* Spacer to push bottom actions down, letting HeroSlider own the center */}
+        <div className="flex-grow" />
+
         {/* Bottom Actions Container */}
         <div className="relative z-20 w-full max-w-5xl mx-auto px-4 pb-28 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
@@ -510,7 +513,7 @@ export default async function HomePage({
             </p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+          <div className={`grid grid-cols-2 ${sitePhotos.length === 2 ? 'max-w-4xl mx-auto md:grid-cols-2' : 'md:grid-cols-3'} gap-4 sm:gap-6`}>
             {sitePhotos.map((photo, i) => (
               <div key={i} className="relative aspect-[4/3] rounded-xl overflow-hidden border border-white/10 group">
                 <Image

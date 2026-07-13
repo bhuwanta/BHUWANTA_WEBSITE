@@ -1,12 +1,48 @@
+'use client'
+
+import { useEffect, useState, useRef } from 'react'
+import { useInView, useSpring } from 'framer-motion'
+
 interface AnimatedCounterProps {
   value: string;
 }
 
-// Renders the real, final value directly in markup (so SSR HTML and
-// no-JS/bot requests always see the true number) and applies a pure-CSS
-// fade/scale-in for visual polish. No JS count-up, no IntersectionObserver —
-// the previous version rendered "0" until a JS count-up animation finished,
-// which is what bots and no-JS users saw.
 export function AnimatedCounter({ value }: AnimatedCounterProps) {
-  return <span className="inline-block animate-counter-in">{value}</span>
+  const ref = useRef<HTMLSpanElement>(null)
+  // Removed strict margin so it triggers earlier on scroll
+  const isInView = useInView(ref, { once: true })
+  
+  const numMatch = value.match(/\d+/)
+  const num = numMatch ? parseInt(numMatch[0], 10) : 0
+  const suffix = value.replace(/[0-9]/g, '')
+  
+  const [display, setDisplay] = useState("0")
+  
+  const springValue = useSpring(0, {
+    damping: 40,
+    stiffness: 100,
+  })
+
+  useEffect(() => {
+    if (isInView) {
+      springValue.set(num)
+    }
+  }, [isInView, springValue, num])
+
+  useEffect(() => {
+    const unsubscribe = springValue.on("change", (latest) => {
+      setDisplay(Math.floor(latest).toString())
+    })
+    return unsubscribe
+  }, [springValue])
+
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+
+  return (
+    <span ref={ref} className="inline-block bg-clip-text text-transparent bg-gradient-to-r from-[#c4a55a] via-[#e2cc8f] to-[#c4a55a]">
+      {!mounted ? value : `${display}${suffix}`}
+    </span>
+  )
 }
+
