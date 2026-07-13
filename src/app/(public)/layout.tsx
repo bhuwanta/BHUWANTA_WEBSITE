@@ -3,7 +3,7 @@ import { Footer } from '@/components/layout/Footer'
 import { DynamicClientComponents } from '@/components/ui/DynamicClientComponents'
 import { JsonLd, buildWebSiteSchema, buildLocalBusinessSchema } from '@/components/seo/JsonLd'
 import Script from 'next/script'
-import { sanityFetch, siteSettingsQuery } from '@/lib/sanity'
+import { sanityFetch, siteSettingsQuery, projectsQuery } from '@/lib/sanity'
 
 export default async function PublicLayout({
   children,
@@ -14,9 +14,19 @@ export default async function PublicLayout({
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let settings: any = null
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let projectsData: any = null
   try {
     settings = await sanityFetch({ query: siteSettingsQuery, tags: ['siteSettings'] })
+    projectsData = await sanityFetch({ query: projectsQuery, tags: ['projects'] })
   } catch { /* fallback */ }
+
+  const projectsList = (projectsData?.projectEntries || []).map((p: any) => ({
+    name: p.name,
+    location: p.categoryTitle,
+  })).filter((p: any) => p.name)
+
+  const uniqueLocations = Array.from(new Set(projectsList.map((p: any) => p.location).filter(Boolean))) as string[]
 
   const websiteSchema = buildWebSiteSchema({
     name: 'Bhuwanta',
@@ -99,7 +109,7 @@ export default async function PublicLayout({
       <Navbar />
       <main className="flex-1 flex flex-col">{children}</main>
       <Footer />
-      <DynamicClientComponents />
+      <DynamicClientComponents projectsList={projectsList} locationNames={uniqueLocations} />
     </>
   )
 }

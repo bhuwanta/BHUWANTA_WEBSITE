@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronDown } from 'lucide-react'
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth'
 import { auth } from '@/lib/firebase/config'
 
@@ -24,11 +23,6 @@ export function ContactForm({ projectsList = [], locationNames = [], initialProj
   // silently show a blank state since no <option> would match the value.
   const matchedProject = initialProject && projectsList.some(p => p.name === initialProject) ? initialProject : 'Not Sure'
   const matchedLocation = initialProject ? projectsList.find(p => p.name === initialProject)?.location : undefined
-
-  // Deep-linking in with a project (e.g. from a project page's Enquire Now
-  // button) is a sign the visitor already knows what they want — show the
-  // detailed fields expanded from the start instead of collapsed.
-  const [showDetails, setShowDetails] = useState(matchedProject !== 'Not Sure')
 
   const [formData, setFormData] = useState({
     name: '',
@@ -161,7 +155,7 @@ export function ContactForm({ projectsList = [], locationNames = [], initialProj
 
   return (
     <div className="space-y-5">
-      <h3 className="text-2xl font-bold text-[#0f1d33] mb-2">Request Investor Pricing</h3>
+      <h3 className="text-2xl font-bold text-[#0f1d33] mb-2">Send Us a Message</h3>
 
       {error && (
         <div className="bg-red-50 text-red-600 p-4 rounded-lg text-sm font-medium mb-6">
@@ -171,7 +165,6 @@ export function ContactForm({ projectsList = [], locationNames = [], initialProj
 
       {step === 1 ? (
         <form onSubmit={handleSendOTP} className="space-y-5">
-          {/* Primary: Name + Mobile + Location — three fields, done */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-[#0f1d33] mb-1">Full Name <span className="text-red-500">*</span></label>
@@ -202,7 +195,7 @@ export function ContactForm({ projectsList = [], locationNames = [], initialProj
               {phoneError && <p className="text-red-500 text-xs mt-1">{phoneError}</p>}
             </div>
 
-            <div className="sm:col-span-2">
+            <div>
               <label htmlFor="location" className="block text-sm font-medium text-[#0f1d33] mb-1">Preferred Location</label>
               <div className="relative">
                 <select
@@ -224,94 +217,81 @@ export function ContactForm({ projectsList = [], locationNames = [], initialProj
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Secondary: optional detailed enquiry — collapsed by default */}
-          <button
-            type="button"
-            onClick={() => setShowDetails(v => !v)}
-            className="flex items-center gap-1.5 text-sm font-semibold text-[#1e3a5f] hover:text-[#c4a55a] transition-colors"
-          >
-            <ChevronDown className={`w-4 h-4 transition-transform ${showDetails ? 'rotate-180' : ''}`} />
-            {showDetails ? 'Hide details' : 'Add more details (optional)'}
-          </button>
-
-          {showDetails && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="project" className="block text-sm font-medium text-[#0f1d33] mb-1">Project Interested In</label>
-                <div className="relative">
-                  <select
-                    id="project"
-                    name="project"
-                    value={formData.project}
-                    onChange={handleChange}
-                    className="w-full appearance-none bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg pl-3 pr-10 py-2.5 text-[#0f1d33] text-sm focus:outline-none focus:ring-2 focus:ring-[#c4a55a] focus:border-transparent"
-                  >
-                    <option value="Not Sure">Not Sure</option>
-                    {Array.from(new Set(
-                      projectsList
-                        .filter(p => (formData.location && formData.location !== 'All') ? p.location === formData.location : true)
-                        .map(p => p.name)
-                    )).map((name, idx) => (
-                      <option key={idx} value={name}>{name}</option>
-                    ))}
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#5a6a82]">
-                    <svg className="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                      <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-[#0f1d33] mb-1">Email ID</label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
+            <div>
+              <label htmlFor="project" className="block text-sm font-medium text-[#0f1d33] mb-1">Project Interested In</label>
+              <div className="relative">
+                <select
+                  id="project"
+                  name="project"
+                  value={formData.project}
                   onChange={handleChange}
-                  className="w-full bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-3 py-2.5 text-[#0f1d33] text-sm focus:outline-none focus:ring-2 focus:ring-[#c4a55a] focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="enquiryType" className="block text-sm font-medium text-[#0f1d33] mb-1">Select Enquiry Type</label>
-                <div className="relative">
-                  <select
-                    id="enquiryType"
-                    name="enquiryType"
-                    value={formData.enquiryType}
-                    onChange={handleChange}
-                    className="w-full appearance-none bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg pl-3 pr-10 py-2.5 text-[#0f1d33] text-sm focus:outline-none focus:ring-2 focus:ring-[#c4a55a] focus:border-transparent"
-                  >
-                    <option value="Site Visit">Site Visit</option>
-                    <option value="General Inquiry">General Inquiry</option>
-                    <option value="Pricing Details">Pricing Details</option>
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#5a6a82]">
-                    <svg className="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                      <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
-                    </svg>
-                  </div>
+                  className="w-full appearance-none bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg pl-3 pr-10 py-2.5 text-[#0f1d33] text-sm focus:outline-none focus:ring-2 focus:ring-[#c4a55a] focus:border-transparent"
+                >
+                  <option value="Not Sure">Not Sure</option>
+                  {Array.from(new Set(
+                    projectsList
+                      .filter(p => (formData.location && formData.location !== 'All') ? p.location === formData.location : true)
+                      .map(p => p.name)
+                  )).map((name, idx) => (
+                    <option key={idx} value={name}>{name}</option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#5a6a82]">
+                  <svg className="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                    <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                  </svg>
                 </div>
-              </div>
-
-              <div className="sm:col-span-2">
-                <label htmlFor="message" className="block text-sm font-medium text-[#0f1d33] mb-1">Your Message</label>
-                <textarea
-                  id="message"
-                  name="message"
-                  rows={2}
-                  value={formData.message}
-                  onChange={handleChange}
-                  className="w-full bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-3 py-2.5 text-[#0f1d33] text-sm focus:outline-none focus:ring-2 focus:ring-[#c4a55a] focus:border-transparent resize-none"
-                ></textarea>
               </div>
             </div>
-          )}
+
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-[#0f1d33] mb-1">Email ID</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                className="w-full bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-3 py-2.5 text-[#0f1d33] text-sm focus:outline-none focus:ring-2 focus:ring-[#c4a55a] focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="enquiryType" className="block text-sm font-medium text-[#0f1d33] mb-1">Select Enquiry Type</label>
+              <div className="relative">
+                <select
+                  id="enquiryType"
+                  name="enquiryType"
+                  value={formData.enquiryType}
+                  onChange={handleChange}
+                  className="w-full appearance-none bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg pl-3 pr-10 py-2.5 text-[#0f1d33] text-sm focus:outline-none focus:ring-2 focus:ring-[#c4a55a] focus:border-transparent"
+                >
+                  <option value="Site Visit">Site Visit</option>
+                  <option value="General Inquiry">General Inquiry</option>
+                  <option value="Pricing Details">Pricing Details</option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#5a6a82]">
+                  <svg className="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                    <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div className="sm:col-span-2">
+              <label htmlFor="message" className="block text-sm font-medium text-[#0f1d33] mb-1">Your Message</label>
+              <textarea
+                id="message"
+                name="message"
+                rows={2}
+                value={formData.message}
+                onChange={handleChange}
+                required
+                className="w-full bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-3 py-2.5 text-[#0f1d33] text-sm focus:outline-none focus:ring-2 focus:ring-[#c4a55a] focus:border-transparent resize-none"
+              ></textarea>
+            </div>
+          </div>
 
           <div className="flex items-center gap-2 pt-1">
             <input
