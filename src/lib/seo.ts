@@ -11,14 +11,17 @@ export function buildStaticOgMetadata({
   url,
   ogTitle,
   ogSubtitle,
+  image,
 }: {
   title: string
   description: string
   url: string
   ogTitle: string
   ogSubtitle: string
+  /** Real photo to use instead of the generated placeholder, when the page is about a specific project. */
+  image?: string
 }): Metadata {
-  const ogImage = `https://bhuwanta.com/api/og?title=${encodeURIComponent(ogTitle)}&subtitle=${encodeURIComponent(ogSubtitle)}`
+  const ogImage = image || `https://bhuwanta.com/api/og?title=${encodeURIComponent(ogTitle)}&subtitle=${encodeURIComponent(ogSubtitle)}`
 
   return {
     title: { absolute: title },

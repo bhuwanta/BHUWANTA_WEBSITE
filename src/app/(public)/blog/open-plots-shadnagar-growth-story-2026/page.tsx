@@ -2,14 +2,24 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 import { ArticleLayout } from '@/components/ui/ArticleLayout'
 import { buildStaticOgMetadata } from '@/lib/seo'
+import { sanityFetch, projectByNameQuery } from '@/lib/sanity'
 
-export const metadata: Metadata = buildStaticOgMetadata({
-  title: 'Open Plots for Sale in Shadnagar: What\'s Driving the 2026 Growth Story | Bhuwanta Developers',
-  description: 'Why Shadnagar is drawing buyer interest in 2026 — micro-location context, infrastructure drivers, and the red flags to check before buying any open plot in this corridor.',
-  url: 'https://bhuwanta.com/blog/open-plots-shadnagar-growth-story-2026',
-  ogTitle: 'Open Plots for Sale in Shadnagar',
-  ogSubtitle: "What's Driving the 2026 Growth Story",
-})
+export async function generateMetadata(): Promise<Metadata> {
+  const vianVally = await sanityFetch<{ images?: string[] } | null>({
+    query: projectByNameQuery,
+    params: { name: 'VIAN VALLY' },
+    tags: ['projects'],
+  }).catch(() => null)
+
+  return buildStaticOgMetadata({
+    title: 'Open Plots for Sale in Shadnagar: What\'s Driving the 2026 Growth Story | Bhuwanta Developers',
+    description: 'Why Shadnagar is drawing buyer interest in 2026 — micro-location context, infrastructure drivers, and the red flags to check before buying any open plot in this corridor.',
+    url: 'https://bhuwanta.com/blog/open-plots-shadnagar-growth-story-2026',
+    ogTitle: 'Open Plots for Sale in Shadnagar',
+    ogSubtitle: "What's Driving the 2026 Growth Story",
+    image: vianVally?.images?.[0],
+  })
+}
 
 const faqs = [
   {

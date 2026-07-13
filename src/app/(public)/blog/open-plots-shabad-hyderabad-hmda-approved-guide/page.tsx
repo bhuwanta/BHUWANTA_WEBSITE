@@ -2,14 +2,24 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 import { ArticleLayout } from '@/components/ui/ArticleLayout'
 import { buildStaticOgMetadata } from '@/lib/seo'
+import { sanityFetch, projectByNameQuery } from '@/lib/sanity'
 
-export const metadata: Metadata = buildStaticOgMetadata({
-  title: 'Open Plots in Shabad, Hyderabad: HMDA Approved Plots Near Bangalore Highway (2026 Guide) | Bhuwanta Developers',
-  description: 'A complete 2026 guide to open plots in Shabad, Hyderabad — HMDA approval, what drives value on the NH-44 Bangalore Highway corridor, and how to verify a plot before you buy.',
-  url: 'https://bhuwanta.com/blog/open-plots-shabad-hyderabad-hmda-approved-guide',
-  ogTitle: 'Open Plots in Shabad, Hyderabad',
-  ogSubtitle: 'HMDA Approved Plots Near Bangalore Highway — 2026 Guide',
-})
+export async function generateMetadata(): Promise<Metadata> {
+  const vianVally = await sanityFetch<{ images?: string[] } | null>({
+    query: projectByNameQuery,
+    params: { name: 'VIAN VALLY' },
+    tags: ['projects'],
+  }).catch(() => null)
+
+  return buildStaticOgMetadata({
+    title: 'Open Plots in Shabad, Hyderabad: HMDA Approved Plots Near Bangalore Highway (2026 Guide) | Bhuwanta Developers',
+    description: 'A complete 2026 guide to open plots in Shabad, Hyderabad — HMDA approval, what drives value on the NH-44 Bangalore Highway corridor, and how to verify a plot before you buy.',
+    url: 'https://bhuwanta.com/blog/open-plots-shabad-hyderabad-hmda-approved-guide',
+    ogTitle: 'Open Plots in Shabad, Hyderabad',
+    ogSubtitle: 'HMDA Approved Plots Near Bangalore Highway — 2026 Guide',
+    image: vianVally?.images?.[0],
+  })
+}
 
 const faqs = [
   {
