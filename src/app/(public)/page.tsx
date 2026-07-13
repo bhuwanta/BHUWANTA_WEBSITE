@@ -3,9 +3,9 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { SanityImage } from '@/components/ui/SanityImage'
 import { 
-  ArrowRight, Phone, MessageCircle, Check, ShieldCheck, 
-  FileCheck, MapPin, IndianRupee, Compass, Hammer, Building2, 
-  BadgeCheck, Landmark, Download, Send
+  ArrowRight, Phone, MessageCircle, Check, ShieldCheck,
+  FileCheck, MapPin, IndianRupee, Compass, Hammer, Building2,
+  BadgeCheck, Download, Send
 } from 'lucide-react'
 import { generatePageMetadata } from '@/lib/seo'
 import { sanityFetch, homeQuery, projectsQuery, projectCategoriesQuery, sanityImageLoader } from '@/lib/sanity'
@@ -133,7 +133,6 @@ export default async function HomePage({
     { icon: Building2, title: 'DTCP Approved' },
     { icon: Check, title: 'YTDA Approved' },
     { icon: BadgeCheck, title: 'RERA Certified' },
-    { icon: Landmark, title: 'Support for Bank Loan' },
     { icon: FileCheck, title: 'Verified Documentation' },
   ]
 
@@ -178,9 +177,15 @@ export default async function HomePage({
 
         {/* Center Content */}
         <div className="relative z-20 w-full max-w-5xl mx-auto px-4 text-center flex-grow flex flex-col justify-center pt-20">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white tracking-tight drop-shadow-lg">
-            HMDA &amp; DTCP Approved Plots in <span className="text-[#c4a55a]">Hyderabad</span>
-          </h1>
+          {/*
+            Visually hidden — HeroSlider renders the visible, CMS-editable
+            caption for each slide. This H1 exists so the page always has a
+            real, stable, keyword-relevant heading regardless of whether an
+            editor has set slide caption text (previously the page had none
+            at all when no caption was set). Rendering it visibly here caused
+            it to overlap the slide caption whenever one was set.
+          */}
+          <h1 className="sr-only">HMDA &amp; DTCP Approved Plots in Hyderabad</h1>
         </div>
 
         {/* Bottom Actions Container */}
@@ -224,7 +229,7 @@ export default async function HomePage({
       <section className="bg-white py-10 sm:py-14 border-b border-[#e8ecf2]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
           <p className="text-sm sm:text-base text-[#5a6a82] leading-relaxed text-center">
-            Bhuwanta Developers is a Hyderabad-based real estate company specializing in HMDA and DTCP approved open plots, villa plots, and farmlands. The company&apos;s current projects span three of Hyderabad&apos;s fastest-growing corridors: S.V. Kanaka Maple Homes on the Warangal Highway near the Yadagirigutta Temple, TJR Township at Sangareddy Junction on the Mumbai Highway, and Vaibhav County in Sadashivpet, also on the Mumbai Highway. Every layout is DTCP, HMDA, or YTDA approved and RERA registered, with clear legal documentation, Vastu-compliant planning, underground drainage, and bank loan eligibility. Bhuwanta is led by Chairman &amp; Managing Director S. Siva Kumar and CEO &amp; Managing Director CH. Rama Krishna Reddy. The company&apos;s headquarters is at Alluri Trade Center, KPHB, Hyderabad, near KPHB Metro Station. Buyers can book a free site visit directly through the website or WhatsApp.
+            Bhuwanta Developers is a Hyderabad-based real estate company specializing in HMDA and DTCP approved open plots, villa plots, and farmlands. The company&apos;s current projects span three of Hyderabad&apos;s fastest-growing corridors: S.V. Kanaka Maple Homes on the Warangal Highway near the Yadagirigutta Temple, TJR Township at Sangareddy Junction on the Mumbai Highway, and Vaibhav County in Sadashivpet, also on the Mumbai Highway. Every layout is DTCP, HMDA, or YTDA approved and RERA registered, with clear legal documentation, Vastu-compliant planning, and underground drainage. Bhuwanta is led by Chairman &amp; Managing Director S. Siva Kumar and CEO &amp; Managing Director CH. Rama Krishna Reddy. The company&apos;s headquarters is at Alluri Trade Center, KPHB, Hyderabad, near KPHB Metro Station. Buyers can book a free site visit directly through the website or WhatsApp.
           </p>
         </div>
       </section>
