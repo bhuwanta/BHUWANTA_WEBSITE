@@ -17,7 +17,7 @@ export default function robots(): MetadataRoute.Robots {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bhuwanta.com'
 
   const allowRules = ['/']
-  const disallowRules = ['/dashboard', '/api', '/studio', '/crm']
+  const disallowRules = ['/dashboard', '/api', '/studio', '/crm', '/thank-you']
 
   return {
     rules: [
