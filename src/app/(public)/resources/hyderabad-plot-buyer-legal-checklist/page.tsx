@@ -1,15 +1,19 @@
 import { Metadata } from 'next'
+import Link from 'next/link'
 import { CheckCircle2 } from 'lucide-react'
 import { JsonLd, buildBreadcrumbSchema } from '@/components/seo/JsonLd'
 import { PageBanner } from '@/components/ui/PageBanner'
 import { GatedResource } from '@/components/ui/GatedResource'
 import { CtaSection } from '@/components/ui/CtaSection'
+import { buildStaticOgMetadata } from '@/lib/seo'
 
-export const metadata: Metadata = {
-  title: { absolute: "Hyderabad Plot Buyer's Legal Checklist (2026) | Bhuwanta Developers" },
+export const metadata: Metadata = buildStaticOgMetadata({
+  title: "Hyderabad Plot Buyer's Legal Checklist (2026) | Bhuwanta Developers",
   description: "A step-by-step legal verification checklist for buying open plots in Hyderabad — HMDA/DTCP approval, RERA registration, encumbrance certificates, and more.",
-  alternates: { canonical: 'https://bhuwanta.com/resources/hyderabad-plot-buyer-legal-checklist' },
-}
+  url: 'https://bhuwanta.com/resources/hyderabad-plot-buyer-legal-checklist',
+  ogTitle: "Plot Buyer's Legal Checklist",
+  ogSubtitle: 'Free 8-Step Verification Guide (2026)',
+})
 
 const steps = [
   {
@@ -84,7 +88,11 @@ export default function LegalChecklistPage() {
               This checklist is general guidance, not legal advice. For a specific transaction, consult a
               qualified property lawyer. Bhuwanta Developers provides HMDA/DTCP approval documents and RERA
               certificates for all our own projects on request — happy to walk you through this checklist
-              against our own documentation.
+              against our own documentation. For the detailed walkthrough of steps 1-4 (which portals to use and
+              what to search for), see{' '}
+              <Link href="/blog/verify-hmda-dtcp-approval-telangana" className="font-semibold text-[#1e3a5f] hover:text-[#c4a55a]">
+                How to Verify HMDA/DTCP Approval in Telangana
+              </Link>.
             </p>
           </GatedResource>
         </div>

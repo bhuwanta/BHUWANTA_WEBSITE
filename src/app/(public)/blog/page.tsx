@@ -40,6 +40,7 @@ export default async function BlogPage() {
   ])
 
   const staticGuides = [
+    { href: '/blog/verify-hmda-dtcp-approval-telangana', title: 'How to Verify HMDA/DTCP Approval in Telangana: Step-by-Step (2026)', tag: 'Buyer Verification' },
     { href: '/hmda-vs-dtcp-plots-hyderabad', title: 'HMDA vs DTCP Approved Plots in Hyderabad: Complete 2026 Comparison', tag: 'Guide' },
     { href: '/blog/open-plots-shabad-hyderabad-hmda-approved-guide', title: 'Open Plots in Shabad, Hyderabad: HMDA Approved Plots Near Bangalore Highway (2026 Guide)', tag: 'Shabad' },
     { href: '/blog/dtcp-vs-hmda-plots-shadnagar-buyer-guide', title: "DTCP vs HMDA Approved Plots in Shadnagar: Complete Buyer's Guide (2026)", tag: 'Shadnagar' },
