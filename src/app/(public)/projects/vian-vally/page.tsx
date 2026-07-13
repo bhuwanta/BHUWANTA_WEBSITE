@@ -6,8 +6,8 @@ export const revalidate = 60
 export async function generateMetadata(): Promise<Metadata> {
   return buildProjectPageMetadata(
     config,
-    'Vian Vally — Shabad, NH-44 Bangalore Highway | Bhuwanta Developers',
-    'Vian Vally — HMDA & RERA approved open plots in Shabad, on the NH-44 Bangalore Highway corridor. A curated, investor-grade land asset by Bhuwanta Developers.'
+    'Vian Vally — Shabad, NH-44 Bangalore Highway | Bhuwanta',
+    'Vian Vally — HMDA & RERA approved open plots in Shabad, on the NH-44 Bangalore Highway corridor. A curated, investor-grade land asset by Bhuwanta.'
   )
 }
 

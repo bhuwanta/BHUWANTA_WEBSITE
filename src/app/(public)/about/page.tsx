@@ -10,9 +10,9 @@ import { CtaSection } from '@/components/ui/CtaSection'
 
 export async function generateMetadata(): Promise<Metadata> {
   return generatePageMetadata(
-    'about', 
-    'About Bhuwanta Developers | HMDA & DTCP Approved Plots in Hyderabad', 
-    'Learn about Bhuwanta Developers — Hyderabad\'s trusted real estate company with 20+ years of experience in HMDA & DTCP approved plots, villa plots, and farmlands.'
+    'about',
+    'About Us | HMDA & DTCP Approved Plots Hyderabad',
+    'Bhuwanta Developers — Hyderabad\'s trusted real estate company, 20+ years of experience in HMDA & DTCP approved plots, villa plots, and farmlands.'
   )
 }
 

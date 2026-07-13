@@ -7,8 +7,8 @@ import { CtaSection } from '@/components/ui/CtaSection'
 import { buildStaticOgMetadata } from '@/lib/seo'
 
 export const metadata: Metadata = buildStaticOgMetadata({
-  title: 'HMDA vs DTCP Approved Plots in Hyderabad: Complete 2026 Comparison | Bhuwanta Developers',
-  description: 'HMDA vs DTCP approved plots in Hyderabad — compare pricing, infrastructure, approval process, and appreciation potential to choose the right plot for your investment goals.',
+  title: 'HMDA vs DTCP Plots in Hyderabad: 2026 Comparison | Bhuwanta',
+  description: 'HMDA vs DTCP approved plots in Hyderabad — compare infrastructure, approval process, and appreciation potential before you invest.',
   url: 'https://bhuwanta.com/hmda-vs-dtcp-plots-hyderabad',
   ogTitle: 'HMDA vs DTCP Approved Plots',
   ogSubtitle: 'Complete 2026 Comparison',

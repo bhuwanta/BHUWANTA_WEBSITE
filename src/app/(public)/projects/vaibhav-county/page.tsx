@@ -6,8 +6,8 @@ export const revalidate = 60
 export async function generateMetadata(): Promise<Metadata> {
   return buildProjectPageMetadata(
     config,
-    'Vaibhav County — Sadashivpet, Mumbai Highway | Bhuwanta Developers',
-    'Vaibhav County — DTCP & RERA approved open plots in Sadashivpet on the Mumbai Highway (NH 65). A curated, investor-grade land asset by Bhuwanta Developers.'
+    'Vaibhav County — Sadashivpet, Mumbai Highway | Bhuwanta',
+    'Vaibhav County — DTCP & RERA approved open plots in Sadashivpet on the Mumbai Highway (NH 65), a curated land asset by Bhuwanta.'
   )
 }
 

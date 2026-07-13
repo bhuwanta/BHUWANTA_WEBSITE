@@ -6,8 +6,8 @@ export const revalidate = 60
 export async function generateMetadata(): Promise<Metadata> {
   return buildProjectPageMetadata(
     config,
-    'S.V. Kanaka Maple Homes — Warangal Highway, Near Yadagirigutta | Bhuwanta Developers',
-    'S.V. Kanaka Maple Homes — DTCP & RERA approved open plots on the Warangal Highway near the Yadagirigutta temple corridor. A curated, investor-grade land asset by Bhuwanta Developers.'
+    'S.V. Kanaka Maple Homes — Warangal Highway | Bhuwanta',
+    'S.V. Kanaka Maple Homes — DTCP & RERA approved open plots on the Warangal Highway, near the Yadagirigutta temple corridor.'
   )
 }
 

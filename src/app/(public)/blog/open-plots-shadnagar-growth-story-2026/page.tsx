@@ -12,8 +12,8 @@ export async function generateMetadata(): Promise<Metadata> {
   }).catch(() => null)
 
   return buildStaticOgMetadata({
-    title: 'Open Plots for Sale in Shadnagar: What\'s Driving the 2026 Growth Story | Bhuwanta Developers',
-    description: 'Why Shadnagar is drawing buyer interest in 2026 — micro-location context, infrastructure drivers, and the red flags to check before buying any open plot in this corridor.',
+    title: 'Open Plots in Shadnagar: 2026 Growth Story | Bhuwanta',
+    description: 'Why Shadnagar is drawing buyer interest in 2026 — micro-location context, infrastructure drivers, and red flags to check before buying any open plot here.',
     url: 'https://bhuwanta.com/blog/open-plots-shadnagar-growth-story-2026',
     ogTitle: 'Open Plots for Sale in Shadnagar',
     ogSubtitle: "What's Driving the 2026 Growth Story",

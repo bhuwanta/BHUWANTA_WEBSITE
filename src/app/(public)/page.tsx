@@ -17,7 +17,7 @@ const AnimatedCounter = dynamic(() => import('@/components/ui/AnimatedCounter').
 import { HeroSlider } from '@/components/ui/HeroSlider'
 
 export async function generateMetadata(): Promise<Metadata> {
-  return generatePageMetadata('home', 'HMDA Approved Plots in Hyderabad', 'Own HMDA-approved, Vastu-aligned plots in Hyderabad\'s fastest-growing corridors. Designed for homebuilders and smart investors. Book a free site visit today.')
+  return generatePageMetadata('home', 'HMDA Approved Plots in Hyderabad', 'Own HMDA-approved, Vastu-aligned plots in Hyderabad\'s fastest-growing corridors, built for homebuilders and smart investors. Book a free site visit.')
 }
 
 export const revalidate = 60

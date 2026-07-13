@@ -8,8 +8,8 @@ import { CtaSection } from '@/components/ui/CtaSection'
 import { buildStaticOgMetadata } from '@/lib/seo'
 
 export const metadata: Metadata = buildStaticOgMetadata({
-  title: "Hyderabad Plot Buyer's Legal Checklist (2026) | Bhuwanta Developers",
-  description: "A step-by-step legal verification checklist for buying open plots in Hyderabad — HMDA/DTCP approval, RERA registration, encumbrance certificates, and more.",
+  title: "Hyderabad Plot Buyer's Legal Checklist | Bhuwanta",
+  description: "A step-by-step legal verification checklist for buying open plots in Hyderabad — HMDA/DTCP approval, RERA registration, and encumbrance certificates.",
   url: 'https://bhuwanta.com/resources/hyderabad-plot-buyer-legal-checklist',
   ogTitle: "Plot Buyer's Legal Checklist",
   ogSubtitle: 'Free 8-Step Verification Guide (2026)',

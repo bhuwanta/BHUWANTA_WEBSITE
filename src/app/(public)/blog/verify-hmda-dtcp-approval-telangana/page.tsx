@@ -4,8 +4,8 @@ import { ArticleLayout } from '@/components/ui/ArticleLayout'
 import { buildStaticOgMetadata } from '@/lib/seo'
 
 export const metadata: Metadata = buildStaticOgMetadata({
-  title: 'How to Verify HMDA/DTCP Approval in Telangana: Step-by-Step (2026) | Bhuwanta Developers',
-  description: 'A step-by-step guide to verifying HMDA and DTCP layout approval and RERA registration in Telangana using the official government portals, before you buy a plot.',
+  title: 'How to Verify HMDA/DTCP Approval in Telangana | Bhuwanta',
+  description: 'A step-by-step guide to verifying HMDA/DTCP layout approval and RERA registration in Telangana on the official government portals before you buy.',
   url: 'https://bhuwanta.com/blog/verify-hmda-dtcp-approval-telangana',
   ogTitle: 'How to Verify HMDA/DTCP Approval',
   ogSubtitle: 'Step-by-Step Guide Using Official Telangana Portals',

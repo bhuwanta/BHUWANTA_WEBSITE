@@ -24,8 +24,8 @@ interface ProjectData {
 
 export const revalidate = 60
 
-const PAGE_TITLE = 'Exclusive Open Plots in Shabad — HMDA & RERA Approved | Vian Vally | Bhuwanta Developers'
-const PAGE_DESCRIPTION = 'Curated, HMDA & RERA approved open plots in Shabad on the NH-44 Bangalore Highway corridor. Vian Vally by Bhuwanta Developers — reserve a private consultation, no public pricing.'
+const PAGE_TITLE = 'Open Plots in Shabad — HMDA & RERA Approved | Bhuwanta'
+const PAGE_DESCRIPTION = 'Curated, HMDA & RERA approved open plots in Shabad on the NH-44 Bangalore Highway corridor. Reserve a private consultation — no public pricing.'
 const PAGE_URL = 'https://bhuwanta.com/shabad-open-plots'
 
 export async function generateMetadata(): Promise<Metadata> {

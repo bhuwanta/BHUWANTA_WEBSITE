@@ -19,8 +19,8 @@ interface ProjectData {
 
 export const revalidate = 60
 
-const PAGE_TITLE = 'Plots Near Shadnagar / NH-44 — Curated HMDA & DTCP Options | Bhuwanta Developers'
-const PAGE_DESCRIPTION = 'Exploring open plots near Shadnagar on the NH-44 corridor? See Vian Vally — Bhuwanta\'s HMDA & RERA approved project nearby in Shabad, on the same highway corridor. Enquire for investor pricing.'
+const PAGE_TITLE = 'Plots Near Shadnagar, NH-44 Corridor | Bhuwanta'
+const PAGE_DESCRIPTION = 'Exploring plots near Shadnagar? See Vian Vally, our HMDA & RERA approved project nearby in Shabad, on the same NH-44 highway corridor.'
 const PAGE_URL = 'https://bhuwanta.com/shadnagar-open-plots'
 
 export async function generateMetadata(): Promise<Metadata> {

@@ -12,8 +12,8 @@ export async function generateMetadata(): Promise<Metadata> {
   }).catch(() => null)
 
   return buildStaticOgMetadata({
-    title: 'DTCP vs HMDA Approved Plots in Shadnagar: Complete Buyer\'s Guide (2026) | Bhuwanta Developers',
-    description: 'DTCP vs HMDA approved plots in the Shadnagar area — what applies where, how to verify either approval type, and where Bhuwanta\'s nearest verified project fits in.',
+    title: 'DTCP vs HMDA Plots in Shadnagar: Buyer\'s Guide | Bhuwanta',
+    description: 'DTCP vs HMDA approved plots in Shadnagar — what applies where, how to verify either type, and where Bhuwanta\'s nearest verified project fits in.',
     url: 'https://bhuwanta.com/blog/dtcp-vs-hmda-plots-shadnagar-buyer-guide',
     ogTitle: 'DTCP vs HMDA Plots in Shadnagar',
     ogSubtitle: "Complete Buyer's Guide (2026)",

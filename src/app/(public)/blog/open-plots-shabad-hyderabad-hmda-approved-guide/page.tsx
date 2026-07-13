@@ -12,8 +12,8 @@ export async function generateMetadata(): Promise<Metadata> {
   }).catch(() => null)
 
   return buildStaticOgMetadata({
-    title: 'Open Plots in Shabad, Hyderabad: HMDA Approved Plots Near Bangalore Highway (2026 Guide) | Bhuwanta Developers',
-    description: 'A complete 2026 guide to open plots in Shabad, Hyderabad — HMDA approval, what drives value on the NH-44 Bangalore Highway corridor, and how to verify a plot before you buy.',
+    title: 'Open Plots in Shabad: HMDA Approved Guide (2026) | Bhuwanta',
+    description: 'A guide to open plots in Shabad, Hyderabad — HMDA approval, what drives value on the NH-44 corridor, and how to verify a plot before you buy.',
     url: 'https://bhuwanta.com/blog/open-plots-shabad-hyderabad-hmda-approved-guide',
     ogTitle: 'Open Plots in Shabad, Hyderabad',
     ogSubtitle: 'HMDA Approved Plots Near Bangalore Highway — 2026 Guide',

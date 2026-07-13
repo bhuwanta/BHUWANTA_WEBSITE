@@ -8,8 +8,8 @@ import { CtaSection } from '@/components/ui/CtaSection'
 import { buildStaticOgMetadata } from '@/lib/seo'
 
 export const metadata: Metadata = buildStaticOgMetadata({
-  title: 'NH-44 Growth Corridor Investment Guide | Bhuwanta Developers',
-  description: 'A structured guide to the NH-44 Bangalore Highway growth corridor southwest of Hyderabad — key towns, infrastructure drivers, and where Bhuwanta has verified inventory.',
+  title: 'NH-44 Growth Corridor Investment Guide | Bhuwanta',
+  description: 'A guide to the NH-44 Bangalore Highway corridor southwest of Hyderabad — key towns, infrastructure drivers, and verified inventory.',
   url: 'https://bhuwanta.com/resources/nh44-growth-corridor-investment-map',
   ogTitle: 'NH-44 Growth Corridor',
   ogSubtitle: 'Free Investment Guide — Shabad & Shadnagar',

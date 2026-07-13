@@ -6,8 +6,8 @@ export const revalidate = 60
 export async function generateMetadata(): Promise<Metadata> {
   return buildProjectPageMetadata(
     config,
-    'TJR Township — Sangareddy Junction, Mumbai Highway | Bhuwanta Developers',
-    'TJR Township — HMDA & RERA approved open plots at Sangareddy Junction on the Mumbai Highway (NH 65). A curated, investor-grade land asset by Bhuwanta Developers.'
+    'TJR Township — Sangareddy Junction | Bhuwanta',
+    'TJR Township — HMDA & RERA approved open plots at Sangareddy Junction on the Mumbai Highway (NH 65), a curated land asset by Bhuwanta.'
   )
 }
 

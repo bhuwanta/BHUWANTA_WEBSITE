@@ -12,8 +12,8 @@ export async function generateMetadata(): Promise<Metadata> {
   }).catch(() => null)
 
   return buildStaticOgMetadata({
-    title: 'Shabad vs Shadnagar: Which Growth Corridor Should You Invest In? | Bhuwanta Developers',
-    description: 'Shabad vs Shadnagar — a straight comparison of Hyderabad\'s NH-44 growth corridor towns, who should choose which, and where verified, HMDA-approved inventory is available today.',
+    title: 'Shabad vs Shadnagar: Where Should You Invest? | Bhuwanta',
+    description: 'Shabad vs Shadnagar — a straight comparison of Hyderabad\'s NH-44 corridor towns, who should choose which, and where verified inventory is available today.',
     url: 'https://bhuwanta.com/blog/shabad-vs-shadnagar-investment-comparison',
     ogTitle: 'Shabad vs Shadnagar',
     ogSubtitle: 'Which Growth Corridor Should You Invest In?',
