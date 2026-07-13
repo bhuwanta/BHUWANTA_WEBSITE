@@ -11,7 +11,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${siteUrl}/gallery`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
     { url: `${siteUrl}/blog`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
     { url: `${siteUrl}/hmda-vs-dtcp-plots-hyderabad`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${siteUrl}/shabad-open-plots`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${siteUrl}/shadnagar-open-plots`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${siteUrl}/blog/open-plots-shabad-hyderabad-hmda-approved-guide`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${siteUrl}/blog/dtcp-vs-hmda-plots-shadnagar-buyer-guide`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${siteUrl}/blog/shabad-vs-shadnagar-investment-comparison`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${siteUrl}/blog/open-plots-shadnagar-growth-story-2026`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${siteUrl}/resources/hyderabad-plot-buyer-legal-checklist`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${siteUrl}/resources/nh44-growth-corridor-investment-map`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
   ]
+
+  // Hand-authored /projects/<slug> pages that exist as static routes today,
+  // independent of whether the Sanity slug field has been set for these
+  // projects yet (see KNOWN_PROJECT_SLUGS in ProjectsFilterClient.tsx).
+  const staticProjectSlugs = ['sv-kanaka-maple-homes', 'tjr-township', 'vaibhav-county', 'vian-vally']
+  staticProjectSlugs.forEach(slug => {
+    routes.push({
+      url: `${siteUrl}/projects/${slug}`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8
+    })
+  })
 
   // Add dynamic blog slugs
   try {
@@ -43,6 +64,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     if (projectSlugs) {
       projectSlugs.forEach(slug => {
+        // Skip slugs already covered by the hand-authored static pages above
+        // (an editor may eventually set a matching CMS slug for one of them).
+        if (staticProjectSlugs.includes(slug)) return
         routes.push({
           url: `${siteUrl}/projects/${slug}`,
           lastModified: new Date(),

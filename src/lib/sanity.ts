@@ -178,6 +178,29 @@ export const projectsQuery = `*[_type == "projects"][0]{
 
 export const projectSlugsQuery = `*[_type == "projects"][0].projectEntries[defined(slug.current)][].slug.current`
 
+// Looks a project up by its display name rather than its Sanity slug — used by
+// the static /projects/<name-slug> pages, which exist as hand-authored routes
+// independent of whether an editor has set the CMS slug field yet.
+export const projectByNameQuery = `*[_type == "projects"][0].projectEntries[name == $name][0]{
+  name,
+  "category": category->slug.current,
+  "categoryTitle": category->title,
+  slug,
+  location,
+  googleMapsUrl,
+  description,
+  "images": images[].asset->url,
+  "videoUrl": videoFile.asset->url,
+  youtubeUrl,
+  projectHighlights,
+  "brochureUrls": brochure[].asset->url,
+  "layoutUrls": layoutPdf[].asset->url,
+  "reraUrls": reraCertificate[].asset->url,
+  approvalCertificateLabel,
+  "hmdaDtcpUrls": hmdaDtcpCertificate[].asset->url,
+  approvalBadge
+}`
+
 export const projectBySlugQuery = `*[_type == "projects"][0].projectEntries[slug.current == $slug][0]{
   name,
   "category": category->slug.current,

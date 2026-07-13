@@ -81,15 +81,15 @@ export async function POST(request: NextRequest) {
     const locationStr = location && location !== 'Not Sure' ? `Location: ${location} | ` : ''
     const budget = `${locationStr}Project: ${project} | Type: ${enquiryType} | Message: ${message}`
 
-    // Validation
-    if (!name || !email || !phone) {
+    // Validation — email is optional (short-form lead capture only asks name + phone)
+    if (!name || !phone) {
       return NextResponse.json(
-        { error: 'Name, email, and phone are required.' },
+        { error: 'Name and phone are required.' },
         { status: 400 }
       )
     }
 
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json(
         { error: 'Please provide a valid email address.' },
         { status: 400 }
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
       await writeClient.create({
         _type: 'lead',
         name,
-        email,
+        email: email || '',
         phone: phone || '',
         budget: budget || '',
         sourcePage: sourcePage || 'Website',
@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
 
       await supabase.from('leads').insert({
         name,
-        email,
+        email: email || null,
         phone: phone || null,
         message: message || '',
         location: location && location !== 'All' ? location : null,
@@ -139,11 +139,13 @@ export async function POST(request: NextRequest) {
       console.error('Supabase backup insert failed (non-critical):', backupErr)
     }
 
-    // Send emails (non-blocking, don't fail the request)
+    // Send emails (non-blocking, don't fail the request) — the autoresponder and
+    // reply-to both need a real email, which short-form (name + phone only) leads
+    // won't have, so skip the lead-facing emails and just notify the team.
     try {
       await Promise.all([
         sendContactNotification({ name, email, phone, location, project, enquiryType, message, sourcePage }),
-        sendDynamicAutoresponder(name, email), // Call our new Sanity-driven function
+        ...(email ? [sendDynamicAutoresponder(name, email)] : []),
       ])
     } catch (emailError) {
       console.error('Email send error:', emailError)

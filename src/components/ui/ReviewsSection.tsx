@@ -39,7 +39,7 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({ reviews }) => {
               {review.name.charAt(0)}
             </div>
             <div>
-              <h4 className="font-bold text-[#002935] text-sm">{review.name}</h4>
+              <h3 className="font-bold text-[#002935] text-sm">{review.name}</h3>
               <p className="text-xs text-[#5a6a82]">{review.role}</p>
             </div>
           </div>

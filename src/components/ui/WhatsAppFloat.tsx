@@ -1,10 +1,22 @@
 'use client'
 
-import { Phone } from 'lucide-react'
+import { usePathname } from 'next/navigation'
 
-const WHATSAPP_NUMBER = '919666504405' // Replace with your actual number
-const PHONE_NUMBER = '+919666504405'   // Replace with your actual number
-const DEFAULT_MESSAGE = 'Hi Bhuwanta, I would like to know more about your projects.'
+const WHATSAPP_NUMBER = '919666504405'
+
+// Pre-fills a project/location-relevant WhatsApp message based on the page the
+// visitor is actually on, instead of one generic message sitewide.
+const PAGE_CONTEXT: Record<string, string> = {
+  '/projects/sv-kanaka-maple-homes': 'S.V. Kanaka Maple Homes on the Warangal Highway',
+  '/projects/tjr-township': 'TJR Township at Sangareddy Junction',
+  '/projects/vaibhav-county': 'Vaibhav County in Sadashivpet',
+  '/projects/vian-vally': 'Vian Vally in Shabad',
+  '/shabad-open-plots': 'Vian Vally in Shabad',
+  '/shadnagar-open-plots': 'plots near Shadnagar (and the nearby Vian Vally project in Shabad)',
+  '/projects': 'your projects',
+  '/about': 'Bhuwanta Developers',
+  '/gallery': 'your projects',
+}
 
 function WhatsAppIcon({ className }: { className?: string }) {
   return (
@@ -13,9 +25,12 @@ function WhatsAppIcon({ className }: { className?: string }) {
     </svg>
   )
 }
-//
+
 export function WhatsAppFloat() {
-  const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(DEFAULT_MESSAGE)}`
+  const pathname = usePathname()
+  const context = PAGE_CONTEXT[pathname] || 'your projects'
+  const message = `Hi Bhuwanta, I'm interested in investor pricing for ${context}. Please share details.`
+  const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`
 
   return (
     <div className="fixed bottom-4 right-4 sm:bottom-8 sm:right-6 z-40 flex flex-col items-end gap-2 sm:gap-3">

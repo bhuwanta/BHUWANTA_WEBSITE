@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { ChevronDown } from 'lucide-react'
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth'
 import { auth } from '@/lib/firebase/config'
 
@@ -11,18 +13,22 @@ declare global {
 }
 
 export function ContactForm({ projectsList = [], locationNames = [], initialProject }: { projectsList?: { name: string, location: string }[], locationNames?: string[], initialProject?: string }) {
+  const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
   const [phoneError, setPhoneError] = useState('')
   const [step, setStep] = useState<1 | 2>(1)
   const [otp, setOtp] = useState('')
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null)
-
   // Only preselect if it's a real project name — otherwise the <select> would
   // silently show a blank state since no <option> would match the value.
   const matchedProject = initialProject && projectsList.some(p => p.name === initialProject) ? initialProject : 'Not Sure'
   const matchedLocation = initialProject ? projectsList.find(p => p.name === initialProject)?.location : undefined
+
+  // Deep-linking in with a project (e.g. from a project page's Enquire Now
+  // button) is a sign the visitor already knows what they want — show the
+  // detailed fields expanded from the start instead of collapsed.
+  const [showDetails, setShowDetails] = useState(matchedProject !== 'Not Sure')
 
   const [formData, setFormData] = useState({
     name: '',
@@ -38,7 +44,7 @@ export function ContactForm({ projectsList = [], locationNames = [], initialProj
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target
     const checked = (e.target as HTMLInputElement).checked
-    
+
     let finalValue = value
     if (name === 'phone') {
       const digitsOnly = value.replace(/\D/g, '')
@@ -75,7 +81,6 @@ export function ContactForm({ projectsList = [], locationNames = [], initialProj
 
     setLoading(true)
     setError('')
-    setSuccess(false)
 
     try {
       if (!window.recaptchaVerifier) {
@@ -83,7 +88,7 @@ export function ContactForm({ projectsList = [], locationNames = [], initialProj
           size: 'invisible',
         })
       }
-      
+
       const formattedPhone = `+91${formData.phone}`
       const confirmation = await signInWithPhoneNumber(auth, formattedPhone, window.recaptchaVerifier)
       setConfirmationResult(confirmation)
@@ -123,7 +128,7 @@ export function ContactForm({ projectsList = [], locationNames = [], initialProj
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: formData.name,
-          email: formData.email,
+          email: formData.email || undefined,
           phone: formData.phone,
           location: formData.location,
           project: formData.project,
@@ -138,26 +143,14 @@ export function ContactForm({ projectsList = [], locationNames = [], initialProj
         throw new Error(data.error || 'Failed to send message.')
       }
 
-      setSuccess(true)
-      setStep(1)
-      setOtp('')
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        location: 'All',
-        project: 'Not Sure',
-        enquiryType: 'Site Visit',
-        message: '',
-        agree: false,
-      })
-      
       if (window.recaptchaVerifier) {
         window.recaptchaVerifier.clear()
         window.recaptchaVerifier = null
         const container = document.getElementById('recaptcha-container')
         if (container) container.innerHTML = ''
       }
+
+      router.push('/thank-you')
     } catch (err: any) {
       console.error(err)
       setError('Invalid OTP or error submitting form. Please try again.')
@@ -168,14 +161,8 @@ export function ContactForm({ projectsList = [], locationNames = [], initialProj
 
   return (
     <div className="space-y-5">
-      <h3 className="text-2xl font-bold text-[#0f1d33] mb-2">Send Us a Message</h3>
-      
-      {success && (
-        <div className="bg-emerald-50 text-emerald-600 p-4 rounded-lg text-sm font-medium mb-6">
-          Message sent successfully! We will get back to you soon.
-        </div>
-      )}
-      
+      <h3 className="text-2xl font-bold text-[#0f1d33] mb-2">Request Investor Pricing</h3>
+
       {error && (
         <div className="bg-red-50 text-red-600 p-4 rounded-lg text-sm font-medium mb-6">
           {error}
@@ -184,29 +171,30 @@ export function ContactForm({ projectsList = [], locationNames = [], initialProj
 
       {step === 1 ? (
         <form onSubmit={handleSendOTP} className="space-y-5">
+          {/* Primary: Name + Mobile + Location — three fields, done */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-[#0f1d33] mb-1">Full Name <span className="text-red-500">*</span></label>
-              <input 
-                type="text" 
-                id="name" 
-                name="name" 
+              <input
+                type="text"
+                id="name"
+                name="name"
                 value={formData.name}
                 onChange={handleChange}
-                required 
+                required
                 className="w-full bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-3 py-2.5 text-[#0f1d33] text-sm focus:outline-none focus:ring-2 focus:ring-[#c4a55a] focus:border-transparent"
               />
             </div>
 
             <div>
               <label htmlFor="phone" className="block text-sm font-medium text-[#0f1d33] mb-1">Mobile Number <span className="text-red-500">*</span></label>
-              <input 
-                type="tel" 
-                id="phone" 
-                name="phone" 
+              <input
+                type="tel"
+                id="phone"
+                name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                required 
+                required
                 minLength={10}
                 pattern="[0-9]{10}"
                 className={`w-full bg-[#f3f5f8] border ${phoneError ? 'border-red-500 focus:ring-red-500' : 'border-[#e8ecf2] focus:ring-[#c4a55a]'} rounded-lg px-3 py-2.5 text-[#0f1d33] text-sm focus:outline-none focus:ring-2 focus:border-transparent`}
@@ -214,12 +202,12 @@ export function ContactForm({ projectsList = [], locationNames = [], initialProj
               {phoneError && <p className="text-red-500 text-xs mt-1">{phoneError}</p>}
             </div>
 
-            <div>
+            <div className="sm:col-span-2">
               <label htmlFor="location" className="block text-sm font-medium text-[#0f1d33] mb-1">Preferred Location</label>
               <div className="relative">
-                <select 
-                  id="location" 
-                  name="location" 
+                <select
+                  id="location"
+                  name="location"
                   value={formData.location}
                   onChange={handleChange}
                   className="w-full appearance-none bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg pl-3 pr-10 py-2.5 text-[#0f1d33] text-sm focus:outline-none focus:ring-2 focus:ring-[#c4a55a] focus:border-transparent"
@@ -236,88 +224,100 @@ export function ContactForm({ projectsList = [], locationNames = [], initialProj
                 </div>
               </div>
             </div>
-
-            <div>
-              <label htmlFor="project" className="block text-sm font-medium text-[#0f1d33] mb-1">Project Interested In</label>
-              <div className="relative">
-                <select 
-                  id="project" 
-                  name="project" 
-                  value={formData.project}
-                  onChange={handleChange}
-                  className="w-full appearance-none bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg pl-3 pr-10 py-2.5 text-[#0f1d33] text-sm focus:outline-none focus:ring-2 focus:ring-[#c4a55a] focus:border-transparent"
-                >
-                  <option value="Not Sure">Not Sure</option>
-                  {Array.from(new Set(
-                    projectsList
-                      .filter(p => (formData.location && formData.location !== 'All') ? p.location === formData.location : true)
-                      .map(p => p.name)
-                  )).map((name, idx) => (
-                    <option key={idx} value={name}>{name}</option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#5a6a82]">
-                  <svg className="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                    <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-[#0f1d33] mb-1">Email ID <span className="text-red-500">*</span></label>
-              <input 
-                type="email" 
-                id="email" 
-                name="email" 
-                value={formData.email}
-                onChange={handleChange}
-                required 
-                className="w-full bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-3 py-2.5 text-[#0f1d33] text-sm focus:outline-none focus:ring-2 focus:ring-[#c4a55a] focus:border-transparent"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="enquiryType" className="block text-sm font-medium text-[#0f1d33] mb-1">Select Enquiry Type</label>
-              <div className="relative">
-                <select 
-                  id="enquiryType" 
-                  name="enquiryType" 
-                  value={formData.enquiryType}
-                  onChange={handleChange}
-                  className="w-full appearance-none bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg pl-3 pr-10 py-2.5 text-[#0f1d33] text-sm focus:outline-none focus:ring-2 focus:ring-[#c4a55a] focus:border-transparent"
-                >
-                  <option value="Site Visit">Site Visit</option>
-                  <option value="General Inquiry">General Inquiry</option>
-                  <option value="Pricing Details">Pricing Details</option>
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#5a6a82]">
-                  <svg className="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                    <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            <div className="sm:col-span-2">
-              <label htmlFor="message" className="block text-sm font-medium text-[#0f1d33] mb-1">Your Message</label>
-              <textarea 
-                id="message" 
-                name="message" 
-                rows={2} 
-                value={formData.message}
-                onChange={handleChange}
-                required
-                className="w-full bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-3 py-2.5 text-[#0f1d33] text-sm focus:outline-none focus:ring-2 focus:ring-[#c4a55a] focus:border-transparent resize-none"
-              ></textarea>
-            </div>
           </div>
 
+          {/* Secondary: optional detailed enquiry — collapsed by default */}
+          <button
+            type="button"
+            onClick={() => setShowDetails(v => !v)}
+            className="flex items-center gap-1.5 text-sm font-semibold text-[#1e3a5f] hover:text-[#c4a55a] transition-colors"
+          >
+            <ChevronDown className={`w-4 h-4 transition-transform ${showDetails ? 'rotate-180' : ''}`} />
+            {showDetails ? 'Hide details' : 'Add more details (optional)'}
+          </button>
+
+          {showDetails && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="project" className="block text-sm font-medium text-[#0f1d33] mb-1">Project Interested In</label>
+                <div className="relative">
+                  <select
+                    id="project"
+                    name="project"
+                    value={formData.project}
+                    onChange={handleChange}
+                    className="w-full appearance-none bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg pl-3 pr-10 py-2.5 text-[#0f1d33] text-sm focus:outline-none focus:ring-2 focus:ring-[#c4a55a] focus:border-transparent"
+                  >
+                    <option value="Not Sure">Not Sure</option>
+                    {Array.from(new Set(
+                      projectsList
+                        .filter(p => (formData.location && formData.location !== 'All') ? p.location === formData.location : true)
+                        .map(p => p.name)
+                    )).map((name, idx) => (
+                      <option key={idx} value={name}>{name}</option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#5a6a82]">
+                    <svg className="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                      <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-[#0f1d33] mb-1">Email ID</label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="w-full bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-3 py-2.5 text-[#0f1d33] text-sm focus:outline-none focus:ring-2 focus:ring-[#c4a55a] focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="enquiryType" className="block text-sm font-medium text-[#0f1d33] mb-1">Select Enquiry Type</label>
+                <div className="relative">
+                  <select
+                    id="enquiryType"
+                    name="enquiryType"
+                    value={formData.enquiryType}
+                    onChange={handleChange}
+                    className="w-full appearance-none bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg pl-3 pr-10 py-2.5 text-[#0f1d33] text-sm focus:outline-none focus:ring-2 focus:ring-[#c4a55a] focus:border-transparent"
+                  >
+                    <option value="Site Visit">Site Visit</option>
+                    <option value="General Inquiry">General Inquiry</option>
+                    <option value="Pricing Details">Pricing Details</option>
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#5a6a82]">
+                    <svg className="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                      <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <div className="sm:col-span-2">
+                <label htmlFor="message" className="block text-sm font-medium text-[#0f1d33] mb-1">Your Message</label>
+                <textarea
+                  id="message"
+                  name="message"
+                  rows={2}
+                  value={formData.message}
+                  onChange={handleChange}
+                  className="w-full bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-3 py-2.5 text-[#0f1d33] text-sm focus:outline-none focus:ring-2 focus:ring-[#c4a55a] focus:border-transparent resize-none"
+                ></textarea>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center gap-2 pt-1">
-            <input 
-              type="checkbox" 
-              id="agree" 
-              name="agree" 
+            <input
+              type="checkbox"
+              id="agree"
+              name="agree"
               checked={formData.agree}
               onChange={handleChange}
               required
@@ -330,12 +330,12 @@ export function ContactForm({ projectsList = [], locationNames = [], initialProj
 
           <div id="recaptcha-container"></div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={loading}
             className="w-full bg-gradient-to-r from-[#c4a55a] to-[#d4b872] text-white font-semibold rounded-lg shadow-lg shadow-[#c4a55a]/20 py-3 px-4 flex justify-center items-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            {loading ? 'Sending OTP...' : 'Send Message →'}
+            {loading ? 'Sending OTP...' : 'Request Investor Pricing →'}
           </button>
         </form>
       ) : (
@@ -344,32 +344,32 @@ export function ContactForm({ projectsList = [], locationNames = [], initialProj
             <h4 className="text-lg font-semibold text-[#0f1d33] mb-1">Verify Phone Number</h4>
             <p className="text-sm text-[#5a6a82] mb-4">We sent a 6-digit code to +91 {formData.phone}</p>
           </div>
-          
+
           <div>
             <label htmlFor="otp" className="block text-sm font-medium text-[#0f1d33] mb-1 text-center">Enter OTP</label>
-            <input 
-              type="text" 
-              id="otp" 
-              name="otp" 
+            <input
+              type="text"
+              id="otp"
+              name="otp"
               value={otp}
               onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-              required 
+              required
               placeholder="000000"
               className="w-full text-center tracking-widest text-xl bg-white border border-[#e8ecf2] rounded-lg px-3 py-3 text-[#0f1d33] focus:outline-none focus:ring-2 focus:ring-[#c4a55a] focus:border-transparent"
             />
           </div>
 
           <div className="flex gap-3">
-            <button 
-              type="button" 
+            <button
+              type="button"
               onClick={() => setStep(1)}
               disabled={loading}
               className="w-1/3 bg-white border border-[#e8ecf2] text-[#5a6a82] font-semibold rounded-lg py-3 px-4 hover:bg-gray-50 transition-colors disabled:opacity-70"
             >
               Back
             </button>
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={loading || otp.length < 6}
               className="w-2/3 bg-gradient-to-r from-[#c4a55a] to-[#d4b872] text-white font-semibold rounded-lg shadow-lg shadow-[#c4a55a]/20 py-3 px-4 flex justify-center items-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-70 disabled:cursor-not-allowed"
             >

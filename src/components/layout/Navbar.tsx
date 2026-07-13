@@ -4,7 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, Phone } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { client, urlFor } from '@/lib/sanity'
 import logoFallback from '@/images/logo.png'
@@ -128,6 +128,19 @@ export function Navbar() {
 
             {/* CTA + Call Now + Mobile Toggle */}
             <div className="flex items-center gap-3">
+
+              {/* Click-to-call — mobile only, one tap for buyers who'd rather dial than submit a form */}
+              <a
+                href="tel:+919666504405"
+                aria-label="Call Bhuwanta"
+                id="nav-call"
+                className={cn(
+                  "sm:hidden p-2 rounded-full transition-colors",
+                  isDarkContent ? "text-[#002935] bg-[#f3f5f8]" : "text-white bg-white/10"
+                )}
+              >
+                <Phone className="w-5 h-5" />
+              </a>
 
               <Link
                 href={ctaLink}

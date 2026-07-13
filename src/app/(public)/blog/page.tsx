@@ -1,5 +1,6 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
+import Image from 'next/image'
 import { ArrowRight, Calendar, Tag, BookOpen } from 'lucide-react'
 import { generatePageMetadata } from '@/lib/seo'
 import { sanityFetch, blogListQuery } from '@/lib/sanity'
@@ -38,6 +39,14 @@ export default async function BlogPage() {
     { name: 'Blog', url: `${siteUrl}/blog` },
   ])
 
+  const staticGuides = [
+    { href: '/hmda-vs-dtcp-plots-hyderabad', title: 'HMDA vs DTCP Approved Plots in Hyderabad: Complete 2026 Comparison', tag: 'Guide' },
+    { href: '/blog/open-plots-shabad-hyderabad-hmda-approved-guide', title: 'Open Plots in Shabad, Hyderabad: HMDA Approved Plots Near Bangalore Highway (2026 Guide)', tag: 'Shabad' },
+    { href: '/blog/dtcp-vs-hmda-plots-shadnagar-buyer-guide', title: "DTCP vs HMDA Approved Plots in Shadnagar: Complete Buyer's Guide (2026)", tag: 'Shadnagar' },
+    { href: '/blog/shabad-vs-shadnagar-investment-comparison', title: 'Shabad vs Shadnagar: Which Growth Corridor Should You Invest In?', tag: 'Comparison' },
+    { href: '/blog/open-plots-shadnagar-growth-story-2026', title: "Open Plots for Sale in Shadnagar: What's Driving the 2026 Growth Story", tag: 'Shadnagar' },
+  ]
+
   return (
     <>
       <JsonLd data={breadcrumb} />
@@ -56,7 +65,13 @@ export default async function BlogPage() {
                   <article className="bg-white border border-[#e8ecf2] shadow-sm rounded-xl overflow-hidden hover:shadow-md transition-shadow flex flex-col h-full">
                     {post.mainImage && (
                       <div className="w-full aspect-[16/9] relative overflow-hidden bg-[#f7f8fa]">
-                        <img src={post.mainImage} alt={post.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                        <Image
+                          src={post.mainImage}
+                          alt={`${post.title} — cover image`}
+                          fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
                       </div>
                     )}
                     <div className="p-6 flex flex-col flex-grow">
@@ -88,6 +103,28 @@ export default async function BlogPage() {
               <p className="text-[#5a6a82]">Check back later for new insights and updates.</p>
             </div>
           )}
+        </div>
+      </section>
+
+      {/* Guides Section — hand-authored pages, not CMS blog posts */}
+      <section className="py-20 bg-white border-t border-[#e8ecf2]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl sm:text-3xl font-bold text-[#0f1d33] mb-8 text-center">More <span className="text-[#c4a55a]">Guides</span></h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {staticGuides.map((guide) => (
+              <Link key={guide.href} href={guide.href} className="block h-full group">
+                <article className="bg-[#f7f8fa] border border-[#e8ecf2] rounded-xl p-6 h-full flex flex-col hover:shadow-md transition-shadow">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#c4a55a] mb-3">{guide.tag}</span>
+                  <h3 className="text-lg font-bold text-[#1e3a5f] mb-4 group-hover:text-[#c4a55a] transition-colors leading-snug flex-grow">
+                    {guide.title}
+                  </h3>
+                  <div className="inline-flex items-center gap-2 text-sm font-bold text-[#c4a55a] group-hover:text-[#a38743] transition-colors mt-auto">
+                    Read Guide <ArrowRight className="w-4 h-4" />
+                  </div>
+                </article>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 
