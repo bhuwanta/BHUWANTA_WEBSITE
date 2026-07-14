@@ -1,9 +1,8 @@
 import { Metadata } from 'next'
 import { Eye, Target, ShieldCheck, Award, Heart, Lightbulb, Users, Navigation } from 'lucide-react'
 import { generatePageMetadata } from '@/lib/seo'
-import { sanityFetch, aboutQuery, urlFor } from '@/lib/sanity'
+import { sanityFetch, aboutQuery } from '@/lib/sanity'
 import { JsonLd, buildBreadcrumbSchema } from '@/components/seo/JsonLd'
-import Link from 'next/link'
 
 import { PageBanner } from '@/components/ui/PageBanner'
 import { CtaSection } from '@/components/ui/CtaSection'
@@ -69,16 +68,16 @@ export default async function AboutPage() {
     pageHeading: data?.pageHeading?.trim() || defaults.pageHeading,
     pageSubtitle: data?.pageSubtitle?.trim() || defaults.pageSubtitle,
     storyHeading: data?.storyHeading?.trim() || defaults.storyHeading,
-    storyParagraphs: data?.storyParagraphs?.length ? data.storyParagraphs : defaults.storyParagraphs,
+    storyParagraphs: (data?.storyParagraphs?.length ? data.storyParagraphs : defaults.storyParagraphs) as string[],
     missionTitle: data?.missionTitle?.trim() || defaults.missionTitle,
     missionBody: data?.missionBody?.trim() || defaults.missionBody,
     visionTitle: data?.visionTitle?.trim() || defaults.visionTitle,
     visionBody: data?.visionBody?.trim() || defaults.visionBody,
-    coreValues: data?.coreValues?.length ? data.coreValues : defaults.coreValues,
+    coreValues: (data?.coreValues?.length ? data.coreValues : defaults.coreValues) as typeof defaults.coreValues,
     leadershipHeading: data?.leadershipHeading?.trim() || defaults.leadershipHeading,
-    leaders: data?.leaders?.length ? data.leaders : defaults.leaders,
+    leaders: (data?.leaders?.length ? data.leaders : defaults.leaders) as typeof defaults.leaders,
     strengthsHeading: data?.strengthsHeading?.trim() || defaults.strengthsHeading,
-    strengths: data?.strengths?.length ? data.strengths : defaults.strengths,
+    strengths: (data?.strengths?.length ? data.strengths : defaults.strengths) as typeof defaults.strengths,
     ctaTitle: data?.ctaTitle?.trim() || defaults.ctaTitle,
     ctaDescription: data?.ctaDescription?.trim() || defaults.ctaDescription,
     storyImage: data?.storyImage
@@ -91,7 +90,6 @@ export default async function AboutPage() {
   ])
 
   const { storyParagraphs, coreValues, leaders, strengths } = d
-  const storyImageUrl = d.storyImage?.asset?.url || '/logo.png'
 
   return (
     <>
@@ -174,7 +172,7 @@ export default async function AboutPage() {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {coreValues.map((value: any, i: number) => {
+              {coreValues.map((value: { title: string; description: string }, i: number) => {
                 const Icon = valueIcons[i % valueIcons.length]
                 return (
                   <div key={i} className="text-center group">
@@ -201,7 +199,7 @@ export default async function AboutPage() {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
-              {leaders.map((leader: any, i: number) => (
+              {leaders.map((leader: { name: string; role: string; bio: string }, i: number) => (
                 <div key={i} className="bg-white/5 p-8 sm:p-10 rounded-2xl border border-white/10 hover:border-white/20 transition-all">
                   <div className="mb-6">
                     <h3 className="text-2xl font-bold text-white mb-1">{leader.name}</h3>
@@ -227,7 +225,7 @@ export default async function AboutPage() {
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-              {strengths.map((item: any, i: number) => {
+              {strengths.map((item: { title: string; description: string }, i: number) => {
                 const Icon = strengthIcons[i % strengthIcons.length]
                 return (
                   <div key={i} className="bg-white p-8 rounded-xl border border-[#e8ecf2] shadow-sm hover:shadow-md transition-all hover:-translate-y-1 group">

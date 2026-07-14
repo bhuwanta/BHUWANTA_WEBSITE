@@ -4,7 +4,6 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Eye, EyeOff } from 'lucide-react'
 import { signup } from './actions'
-import { useActionState } from 'react'
 
 export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false)

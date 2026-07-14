@@ -10,6 +10,7 @@ export function SanityImage(props: ImageProps) {
   return (
     <Image
       {...props}
+      alt={props.alt || ''}
       loader={isSanity ? sanityImageLoader : undefined}
     />
   )

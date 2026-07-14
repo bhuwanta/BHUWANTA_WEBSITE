@@ -1,9 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Play, Image as ImageIcon, Film, X, Share2, Camera, PlayCircle } from 'lucide-react'
+import { Image as ImageIcon, Film, X, Share2 } from 'lucide-react'
 import Image from 'next/image'
-import Script from 'next/script'
 
 interface ProjectGallery {
   name: string

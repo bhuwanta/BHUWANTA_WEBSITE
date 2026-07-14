@@ -30,7 +30,7 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ message: 'Successfully subscribed!', data })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Newsletter POST error:', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }

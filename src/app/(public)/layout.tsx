@@ -15,18 +15,19 @@ export default async function PublicLayout({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let settings: any = null
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let projectsData: any = null
+  let projectsData: Record<string, unknown> | null = null
   try {
-    settings = await sanityFetch({ query: siteSettingsQuery, tags: ['siteSettings'] })
+    settings = (await sanityFetch({ query: siteSettingsQuery, tags: ['siteSettings'] })) as any
     projectsData = await sanityFetch({ query: projectsQuery, tags: ['projects'] })
   } catch { /* fallback */ }
 
-  const projectsList = (projectsData?.projectEntries || []).map((p: any) => ({
-    name: p.name,
-    location: p.categoryTitle,
-  })).filter((p: any) => p.name)
+  const projectEntries = (projectsData?.projectEntries || []) as Array<Record<string, unknown>>
+  const projectsList = projectEntries.map((p) => ({
+    name: p.name as string,
+    location: (p.categoryTitle as string) || '',
+  })).filter((p) => p.name)
 
-  const uniqueLocations = Array.from(new Set(projectsList.map((p: any) => p.location).filter(Boolean))) as string[]
+  const uniqueLocations = Array.from(new Set(projectsList.map((p) => p.location).filter(Boolean))) as string[]
 
   const websiteSchema = buildWebSiteSchema({
     name: 'Bhuwanta',

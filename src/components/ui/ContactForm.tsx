@@ -7,7 +7,7 @@ import { auth } from '@/lib/firebase/config'
 
 declare global {
   interface Window {
-    recaptchaVerifier: any;
+    recaptchaVerifier: RecaptchaVerifier | null;
   }
 }
 
@@ -87,13 +87,14 @@ export function ContactForm({ projectsList = [], locationNames = [], initialProj
       const confirmation = await signInWithPhoneNumber(auth, formattedPhone, window.recaptchaVerifier)
       setConfirmationResult(confirmation)
       setStep(2)
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const firebaseErr = err as { code?: string; message?: string }
       console.error('Firebase OTP Error:', {
-        code: err.code,
-        message: err.message,
+        code: firebaseErr.code,
+        message: firebaseErr.message,
         fullError: err,
       })
-      setError(err.message || 'Failed to send OTP. Please try again.')
+      setError(firebaseErr.message || 'Failed to send OTP. Please try again.')
       if (window.recaptchaVerifier) {
         window.recaptchaVerifier.clear()
         window.recaptchaVerifier = null
@@ -145,7 +146,7 @@ export function ContactForm({ projectsList = [], locationNames = [], initialProj
       }
 
       router.push('/thank-you')
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err)
       setError('Invalid OTP or error submitting form. Please try again.')
     } finally {

@@ -116,7 +116,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ success: true, count: leads.length })
 
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Fatal cron error:', err)
     return NextResponse.json(
       { error: 'Internal Server Error processing daily leads' },

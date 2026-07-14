@@ -10,12 +10,9 @@ import {
   FileText,
   Map,
   LineChart,
-  PieChart,
-  Settings,
   LogOut,
   ChevronLeft,
   ChevronRight,
-  Link as LinkIcon,
   Shield,
   MessageCircle
 } from "lucide-react";

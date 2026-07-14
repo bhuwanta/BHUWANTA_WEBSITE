@@ -54,9 +54,9 @@ export function GatedResource({
       const confirmation = await signInWithPhoneNumber(auth, formattedPhone, window.recaptchaVerifier)
       setConfirmationResult(confirmation)
       setStep(2)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Firebase OTP Error:', err)
-      setError(err.message || 'Failed to send OTP. Please try again.')
+      setError((err instanceof Error ? err.message : null) || 'Failed to send OTP. Please try again.')
       if (window.recaptchaVerifier) {
         window.recaptchaVerifier.clear()
         window.recaptchaVerifier = null
@@ -97,7 +97,7 @@ export function GatedResource({
         window.recaptchaVerifier.clear()
         window.recaptchaVerifier = null
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err)
       setError('Invalid OTP or submission error.')
     } finally {

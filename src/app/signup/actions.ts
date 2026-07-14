@@ -15,7 +15,7 @@ export async function signup(formData: FormData) {
 
   const supabase = await createClient()
 
-  const { data, error } = await supabase.auth.signUp({
+  const { data: _data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {

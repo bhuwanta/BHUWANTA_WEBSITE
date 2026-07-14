@@ -11,7 +11,7 @@ export interface DynamicIconProps extends LucideProps {
  */
 export function DynamicIcon({ name, fallback, ...props }: DynamicIconProps) {
   // Try to find the icon (case-insensitive for safety, though lucide usually exports PascalCase)
-  const IconComponent = (icons as any)[name] || 
+  const IconComponent = (icons as Record<string, React.ComponentType<LucideProps>>)[name] || 
     Object.entries(icons).find(([key]) => key.toLowerCase() === name.toLowerCase())?.[1]
 
   if (!IconComponent) {

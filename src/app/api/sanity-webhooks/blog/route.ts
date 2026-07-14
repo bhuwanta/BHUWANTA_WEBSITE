@@ -78,7 +78,7 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ message: 'Successfully notified subscribers!', emailData })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Webhook error:', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }

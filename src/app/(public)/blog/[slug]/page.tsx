@@ -1,7 +1,7 @@
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { PortableText } from '@portabletext/react'
-import { ArrowLeft, Calendar, Clock, Tag } from 'lucide-react'
+import { ArrowLeft, Calendar, Tag } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { sanityFetch, blogPostQuery } from '@/lib/sanity'
@@ -11,7 +11,7 @@ import { formatDate, calculateReadingTime } from '@/lib/utils'
 interface BlogPostData {
   title: string
   slug: { current: string }
-  body: any[]
+  body: Array<{ _type: string; children?: Array<{ text?: string }>; [key: string]: unknown }>
   mainImage?: string
   tags?: string[]
   publishDate: string
@@ -82,11 +82,11 @@ export default async function BlogPostPage({
 
   // Estimate reading time from body text
   const bodyText = post.body
-    ?.map((block: any) =>
-      block.children?.map((c: any) => c.text).join(' ') || ''
+    ?.map((block) =>
+      block.children?.map((c) => c.text).join(' ') || ''
     )
     .join(' ') || ''
-  const readingTime = calculateReadingTime(bodyText)
+  calculateReadingTime(bodyText)
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bhuwanta.com'
   const breadcrumb = buildBreadcrumbSchema([
@@ -155,9 +155,9 @@ export default async function BlogPostPage({
                   value={post.body} 
                   components={{
                     block: {
-                      normal: ({ children }: any) => {
+                      normal: ({ children }: { children?: React.ReactNode }) => {
                         // If the user hit enter to create an empty line, force it to take up vertical space
-                        if (!children || children.length === 0 || (children.length === 1 && children[0] === '')) {
+                        if (!children || (Array.isArray(children) && (children.length === 0 || (children.length === 1 && children[0] === '')))) {
                           return <p className="h-6"><br /></p>
                         }
                         return <p>{children}</p>

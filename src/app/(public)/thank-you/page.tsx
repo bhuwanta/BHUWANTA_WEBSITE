@@ -23,7 +23,7 @@ export default function ThankYouPage() {
         <CheckCircle2 className="w-16 h-16 text-emerald-500 mx-auto mb-6" />
         <h1 className="text-3xl sm:text-4xl font-bold text-[#0f1d33] mb-4">Done — We&apos;ve Got Your Enquiry</h1>
         <p className="text-[#5a6a82] mb-10 leading-relaxed">
-          Our team will call you within 2 hours during business hours (Mon–Sat, 9 AM–6 PM). Want it faster?
+          Our team will call you within 2 hours during business hours (Mon–Sat, 10 AM–7 PM). Want it faster?
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <a

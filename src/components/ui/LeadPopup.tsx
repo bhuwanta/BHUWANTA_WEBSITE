@@ -11,7 +11,7 @@ import { fireLeadConversion } from '@/lib/gtag'
 
 declare global {
   interface Window {
-    recaptchaVerifier: any;
+    recaptchaVerifier: RecaptchaVerifier | null;
   }
 }
 
@@ -78,9 +78,9 @@ export function LeadPopup({ projectsList = [], locationNames = [] }: { projectsL
       const confirmation = await signInWithPhoneNumber(auth, formattedPhone, window.recaptchaVerifier)
       setConfirmationResult(confirmation)
       setStep(2)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Firebase OTP Error:', err)
-      setError(err.message || 'Failed to send OTP. Please try again.')
+      setError((err instanceof Error ? err.message : null) || 'Failed to send OTP. Please try again.')
       if (window.recaptchaVerifier) {
         window.recaptchaVerifier.clear()
         window.recaptchaVerifier = null
@@ -125,7 +125,7 @@ export function LeadPopup({ projectsList = [], locationNames = [] }: { projectsL
         const container = document.getElementById('recaptcha-container-popup')
         if (container) container.innerHTML = ''
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err)
       setError('Invalid OTP or error submitting form. Please try again.')
     } finally {
