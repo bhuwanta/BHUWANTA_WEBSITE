@@ -131,11 +131,29 @@ export default function LeadsClient({ initialLeads, userRole = 'Admin' }: { init
   const [editingMetaFormName, setEditingMetaFormName] = useState('')
   const [isMetaLoading, setIsMetaLoading] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
+  const [syncCountdown, setSyncCountdown] = useState(15 * 60) // 15 minutes
   
   // Sort State
   type SortField = 'created_at' | 'name' | 'phone' | 'source_page' | 'status'
   const [sortField, setSortField] = useState<SortField>('created_at')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+
+  // Countdown Effect
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSyncCountdown(prev => {
+        if (prev <= 1) return 15 * 60;
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatCountdown = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
 
   useEffect(() => {
     const supabase = createClient()
@@ -264,6 +282,7 @@ export default function LeadsClient({ initialLeads, userRole = 'Admin' }: { init
 
   const handleManualSync = async () => {
     setIsSyncing(true)
+    setSyncCountdown(15 * 60)
     try {
       const res = await fetch('/api/cron/meta-sync')
       const data = await res.json()
@@ -666,7 +685,7 @@ export default function LeadsClient({ initialLeads, userRole = 'Admin' }: { init
                 className="inline-flex items-center gap-1.5 justify-center rounded-full bg-emerald-50 border border-emerald-200 px-4 py-1.5 text-sm font-semibold text-emerald-600 hover:bg-emerald-100 disabled:opacity-50 transition-colors"
               >
                 <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
-                {isSyncing ? 'Syncing...' : 'Sync Meta Leads'}
+                {isSyncing ? 'Syncing...' : `Sync Meta Leads (${formatCountdown(syncCountdown)})`}
               </button>
               <button
                 onClick={openMetaSettings}
