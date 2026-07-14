@@ -3,6 +3,22 @@
     {
       "path": "/api/cron/meta-sync",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/leads-report",
+      "schedule": "30 3 * * *"
+    },
+    {
+      "path": "/api/cron/leads-report",
+      "schedule": "30 6 * * *"
+    },
+    {
+      "path": "/api/cron/leads-report",
+      "schedule": "30 9 * * *"
+    },
+    {
+      "path": "/api/cron/leads-report",
+      "schedule": "30 12 * * *"
     }
   ]
 }
