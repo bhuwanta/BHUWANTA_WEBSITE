@@ -19,6 +19,7 @@ export function ArticleLayout({
   faqs,
   relatedLinks,
   whatsappContext,
+  disclaimer,
 }: {
   slug: string
   title: string
@@ -29,6 +30,7 @@ export function ArticleLayout({
   faqs: ArticleFaq[]
   relatedLinks: { href: string; label: string }[]
   whatsappContext: string
+  disclaimer?: string
 }) {
   const siteUrl = 'https://bhuwanta.com'
   const pageUrl = `${siteUrl}/blog/${slug}`
@@ -90,6 +92,12 @@ export function ArticleLayout({
                   ))}
                 </div>
               </div>
+            )}
+
+            {disclaimer && (
+              <p className="mt-10 text-sm text-[#5a6a82] italic border-t border-[#e8ecf2] pt-6">
+                {disclaimer}
+              </p>
             )}
 
             {relatedLinks.length > 0 && (

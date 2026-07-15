@@ -48,6 +48,14 @@ const ogImage = (title: string, subtitle: string) =>
 // concern either way.
 const staticGuides: (Omit<BlogCard, 'image'> & { fallbackImage: string })[] = [
   {
+    href: '/blog/nri-guide-uk-open-plots-hyderabad',
+    title: 'Buying Open Plots in Hyderabad from the UK: Complete NRI Guide 2026',
+    excerpt: 'A complete 2026 guide for UK-based NRIs buying open plots near Hyderabad — FEMA eligibility, UK tax basics, the Notary Public + FCDO apostille Power of Attorney process, and how to buy remotely.',
+    fallbackImage: ogImage('Buying Open Plots in Hyderabad from the UK', 'Complete NRI Guide 2026'),
+    tag: 'NRI Guide',
+    publishDate: '2026-07-16',
+  },
+  {
     href: '/blog/verify-hmda-dtcp-approval-telangana',
     title: 'How to Verify HMDA/DTCP Approval in Telangana: Step-by-Step (2026)',
     excerpt: 'A step-by-step guide to verifying HMDA and DTCP layout approval and RERA registration in Telangana using the official government portals, before you buy a plot.',
