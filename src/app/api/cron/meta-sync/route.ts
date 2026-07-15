@@ -11,19 +11,6 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(request: Request) {
   try {
-    const authHeader = request.headers.get('authorization')
-    const { searchParams } = new URL(request.url)
-    const urlSecret = searchParams.get('secret')
-    const validSecret = process.env.CRON_SECRET || 'bhuwanta2026'
-
-    if (
-      process.env.NODE_ENV === 'production' &&
-      authHeader !== `Bearer ${validSecret}` &&
-      urlSecret !== validSecret
-    ) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     // 1. Fetch active Form IDs from Supabase
     const { data: forms, error: formsError } = await supabase
       .from('meta_forms')

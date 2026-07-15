@@ -28,13 +28,13 @@ export async function GET(request: Request) {
   try {
     const authHeader = request.headers.get('authorization');
     const { searchParams } = new URL(request.url);
-    const urlSecret = searchParams.get('secret');
-    const validSecret = process.env.CRON_SECRET || 'bhuwanta2026';
+    const secretParam = searchParams.get('secret');
 
     if (
-      process.env.NODE_ENV === 'production' &&
-      authHeader !== `Bearer ${validSecret}` &&
-      urlSecret !== validSecret
+      process.env.CRON_SECRET && 
+      authHeader !== `Bearer ${process.env.CRON_SECRET}` && 
+      secretParam !== process.env.CRON_SECRET &&
+      process.env.NODE_ENV === 'production'
     ) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
