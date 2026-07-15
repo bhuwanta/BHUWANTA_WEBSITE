@@ -27,13 +27,9 @@ function formatLead(lead: any): LeadReportData {
 export async function GET(request: Request) {
   try {
     const authHeader = request.headers.get('authorization');
-    const { searchParams } = new URL(request.url);
-    const secretParam = searchParams.get('secret');
-
     if (
       process.env.CRON_SECRET && 
       authHeader !== `Bearer ${process.env.CRON_SECRET}` && 
-      secretParam !== process.env.CRON_SECRET &&
       process.env.NODE_ENV === 'production'
     ) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -53,7 +49,7 @@ export async function GET(request: Request) {
 
     const getUtcStr = (istDate: Date) => new Date(istDate.getTime() - (5.5 * 60 * 60 * 1000)).toISOString();
 
-    if (istHour >= 17 && istHour < 20) {
+    if (istHour >= 17) {
       // 6 PM Logic
       reportPeriod = "6 PM Evening Report";
       
@@ -90,10 +86,7 @@ export async function GET(request: Request) {
       }
     } else {
       let startIst = new Date(midnightIst);
-      if (istHour >= 20) {
-        startIst = new Date(midnightIst.getTime() + (18 * 60 * 60 * 1000)); // 6 PM Today
-        reportPeriod = "Night Report (6 PM - 9 PM)";
-      } else if (istHour >= 14) {
+      if (istHour >= 14) {
         startIst = new Date(midnightIst.getTime() + (12 * 60 * 60 * 1000)); // 12 PM Today
         reportPeriod = "Afternoon Report (12 PM - 3 PM)";
       } else if (istHour >= 11) {
