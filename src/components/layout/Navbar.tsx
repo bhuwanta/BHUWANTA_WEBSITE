@@ -13,6 +13,7 @@ const navLinks = [
   { href: '/', label: 'Home' },
   { href: '/about', label: 'About' },
   { href: '/projects', label: 'Projects' },
+  { href: '/why-bhuwanta', label: 'Why Bhuwanta' },
   { href: '#', label: 'Reviews' },
   { href: '/gallery', label: 'Gallery' },
   { href: '/blog', label: 'Blog' },

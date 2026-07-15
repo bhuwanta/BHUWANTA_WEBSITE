@@ -138,14 +138,39 @@ export default function NriGuideUkPage() {
         </li>
       </ul>
 
-      <h2>Why HMDA/DTCP/RERA Approval Matters</h2>
+      <h2>Why HMDA/DTCP/RERA Approval Matters — and Where UK Buyers Can Actually Put Their Money</h2>
       <p>
         For a buyer managing a purchase from thousands of miles away, title risk is the single biggest fear — and
         it&apos;s a legitimate one. This is where we can speak with full confidence about our own projects, not
         just the market in general: every Bhuwanta project is HMDA, DTCP, or YTDA approved and RERA registered,
         and we make the approval documents and RERA certificates available on request. We&apos;d rather a UK buyer
         verify everything independently — through the government portals, or through their own lawyer — than take
-        our word for it. That verification is exactly what removes the remote-buying risk.
+        our word for it. That verification is exactly what removes the remote-buying risk. Here&apos;s where that
+        actually applies, project by project:
+      </p>
+
+      <h3>Vian Vally — Shabad</h3>
+      <p>
+        Located in Shabad, Telangana, directly on the NH-44 Bangalore Highway. HMDA and RERA approved.{' '}
+        <Link href="/projects/vian-vally">View Vian Vally</Link>.
+      </p>
+
+      <h3>S.V. Kanaka Maple Homes — Yadagirigutta / Warangal Highway</h3>
+      <p>
+        Located on the Warangal Highway, near the Yadagirigutta Temple corridor. DTCP and RERA approved.{' '}
+        <Link href="/projects/sv-kanaka-maple-homes">View S.V. Kanaka Maple Homes</Link>.
+      </p>
+
+      <h3>TJR Township — Sangareddy / Mumbai Highway, Near the Regional Ring Road</h3>
+      <p>
+        Located at Sangareddy Junction on the Mumbai Highway, close to the Regional Ring Road corridor. HMDA and
+        RERA approved. <Link href="/projects/tjr-township">View TJR Township</Link>.
+      </p>
+
+      <h3>Vaibhav County — Sadashivpet</h3>
+      <p>
+        Located in Sadashivpet, on the Mumbai Highway. DTCP and RERA approved.{' '}
+        <Link href="/projects/vaibhav-county">View Vaibhav County</Link>.
       </p>
 
       <p>
