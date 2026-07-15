@@ -31,7 +31,7 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({ reviews }) => {
           </div>
           
           <p className="text-[#5a6a82] leading-relaxed mb-8 flex-grow italic">
-            "{review.content}"
+            &ldquo;{review.content}&rdquo;
           </p>
           
           <div className="flex items-center gap-4">

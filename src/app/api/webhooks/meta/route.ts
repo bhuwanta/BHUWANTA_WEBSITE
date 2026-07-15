@@ -114,7 +114,7 @@ export async function POST(request: Request) {
     }
     
     return new NextResponse('Not a page event', { status: 404 })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('❌ Webhook Execution Error:', error)
     return new NextResponse('Internal Error', { status: 500 })
   }

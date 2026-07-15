@@ -1,10 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
 import { Eye, EyeOff } from 'lucide-react'
 import { login } from './actions'
-import { useActionState } from 'react'
 
 export default function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false)

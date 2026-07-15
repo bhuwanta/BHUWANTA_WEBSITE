@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getSession, setSession, clearSession, ConversationStep } from '@/lib/whatsapp/state'
+import { getSession, setSession, clearSession } from '@/lib/whatsapp/state'
 import { upsertWhatsAppLead, logLeadActivity, triggerSalesNotification } from '@/lib/whatsapp/crm'
 import { getActiveAreas, getProjectsByArea, getProjectDetails } from '@/lib/whatsapp/sanity'
 
@@ -66,37 +66,6 @@ async function sendListMenu(to: string, header: string, body: string, buttonText
   if (!res.ok) console.error('❌ Failed to send list menu:', responseText)
 }
 
-// Send Interactive Buttons (Max 3)
-async function sendButtonsMenu(to: string, body: string, buttons: { id: string, title: string }[]) {
-  if (!ACCESS_TOKEN || !PHONE_NUMBER_ID) return;
-
-  const buttonsArray = buttons.slice(0, 3).map(btn => ({
-    type: 'reply',
-    reply: {
-      id: btn.id,
-      title: btn.title.slice(0, 20)
-    }
-  }))
-
-  const res = await fetch(`https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${ACCESS_TOKEN}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      messaging_product: 'whatsapp',
-      to,
-      type: 'interactive',
-      interactive: {
-        type: 'button',
-        body: { text: body.slice(0, 1024) },
-        action: { buttons: buttonsArray }
-      }
-    })
-  })
-  if (!res.ok) console.error('Failed to send buttons menu:', await res.text())
-}
 
 // Send Document Message
 async function sendDocumentMessage(to: string, documentUrl: string, filename: string) {
@@ -177,7 +146,7 @@ export async function POST(request: Request) {
         console.log(`📩 Received from ${senderPhone}: ${userInput}`)
 
         // 1. Get or Create Session
-        let session = await getSession(senderPhone, profileName)
+        const session = await getSession(senderPhone, profileName)
 
         // --- Global Navigation Interceptors ---
         if (userInput === 'action_main_menu' || userInput === 'action_back_to_areas' || userInput === 'start_over') {
@@ -236,7 +205,7 @@ export async function POST(request: Request) {
             return new NextResponse('EVENT_RECEIVED', { status: 200 })
           }
 
-          const options = projects.map((p: any) => ({ id: `proj_${p.name}`, title: p.name, description: p.location }))
+          const options = projects.map((p: { name: string, location: string }) => ({ id: `proj_${p.name}`, title: p.name, description: p.location }))
           options.push({ id: `action_back_to_areas`, title: '⬅️ Back to Areas' })
           
           await sendListMenu(

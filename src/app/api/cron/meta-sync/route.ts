@@ -22,11 +22,11 @@ export async function GET(request: Request) {
     }
 
     let totalLeadsAdded = 0
-    let syncErrors: string[] = []
+    const syncErrors: string[] = []
 
-    // 2. Loop through forms and fetch leads
+    // 2. Loop through forms and fetch leads (limit=500 per form to get historical leads without timing out)
     for (const form of forms) {
-      const url = `https://graph.facebook.com/v18.0/${form.form_id}/leads?access_token=${META_ACCESS_TOKEN}&fields=created_time,id,field_data,campaign_name,ad_name`
+      const url = `https://graph.facebook.com/v18.0/${form.form_id}/leads?access_token=${META_ACCESS_TOKEN}&fields=created_time,id,field_data,campaign_name,ad_name&limit=500`
       
       const response = await fetch(url)
       const data = await response.json()
@@ -58,7 +58,9 @@ export async function GET(request: Request) {
 
         const campaign = lead.campaign_name ? ` | Campaign: ${lead.campaign_name}` : ''
         const ad = lead.ad_name ? ` | Ad: ${lead.ad_name}` : ''
-        const sourceText = `Meta: ${form.name || form.form_id}${campaign}${ad}`
+        
+        const formIdentifier = form.name ? `${form.name} (${form.form_id})` : form.form_id;
+        const sourceText = `Meta: ${formIdentifier}${campaign}${ad}`
 
         // Upsert lead using provider_id
         const { error: insertError } = await supabase
@@ -90,8 +92,8 @@ export async function GET(request: Request) {
       processed: totalLeadsAdded,
       errors: syncErrors.length > 0 ? syncErrors : undefined 
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('❌ Error in Meta Sync:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 })
   }
 }

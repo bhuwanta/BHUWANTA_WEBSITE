@@ -3,12 +3,12 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { SanityImage } from '@/components/ui/SanityImage'
 import { 
-  ArrowRight, Phone, MessageCircle, Check, ShieldCheck,
+  ArrowRight, MessageCircle, Check, ShieldCheck,
   FileCheck, MapPin, IndianRupee, Compass, Hammer, Building2,
-  BadgeCheck, Download, Send
+  BadgeCheck
 } from 'lucide-react'
 import { generatePageMetadata } from '@/lib/seo'
-import { sanityFetch, homeQuery, projectsQuery, projectCategoriesQuery, sanityImageLoader } from '@/lib/sanity'
+import { sanityFetch, homeQuery, projectsQuery, projectCategoriesQuery } from '@/lib/sanity'
 import { extractYouTubeId } from '@/lib/utils'
 import dynamic from 'next/dynamic'
 
@@ -35,14 +35,14 @@ export default async function HomePage({
   searchParams: Promise<{ project?: string }>
 }) {
   const { project: preselectedProject } = await searchParams
-  let data = fallback as any
-  let projectsData: any = null
-  let categoriesData: any = null
+  let data = fallback as Record<string, unknown>
+  let projectsData: Record<string, unknown> | null = null
+  let categoriesData: Array<Record<string, unknown>> | null = null
   try {
     const [sanityDataResult, projectsDataResult, categoriesDataResult] = await Promise.allSettled([
-      sanityFetch<any>({ query: homeQuery, tags: ['home'] }),
-      sanityFetch<any>({ query: projectsQuery, tags: ['projects'] }),
-      sanityFetch<any>({ query: projectCategoriesQuery, tags: ['projectCategory'] })
+      sanityFetch<Record<string, unknown>>({ query: homeQuery, tags: ['home'] }),
+      sanityFetch<Record<string, unknown>>({ query: projectsQuery, tags: ['projects'] }),
+      sanityFetch<Array<Record<string, unknown>>>({ query: projectCategoriesQuery, tags: ['projectCategory'] })
     ])
 
     if (sanityDataResult.status === 'fulfilled' && sanityDataResult.value) {
@@ -60,12 +60,13 @@ export default async function HomePage({
     // Use fallback
   }
 
-  const projectsList = (projectsData?.projectEntries || []).map((p: any) => ({
-    name: p.name,
-    location: p.categoryTitle,
-  })).filter((p: any) => p.name)
+  const projectEntries = (projectsData?.projectEntries || []) as Array<Record<string, unknown>>
+  const projectsList = projectEntries.map((p) => ({
+    name: p.name as string,
+    location: (p.categoryTitle as string) || "",
+  })).filter((p) => p.name)
 
-  const locationNames = Array.from(new Set(projectsList.map((p: any) => p.location).filter(Boolean))) as string[]
+  const locationNames = Array.from(new Set(projectsList.map((p) => p.location).filter(Boolean))) as string[]
 
   // 1. Why Features
   const whyFeatures = [
@@ -92,26 +93,28 @@ export default async function HomePage({
   
   const uniqueCategoriesMap = new Map<string, string>()
   
-  ;(projectsData?.projectEntries || []).forEach((p: any) => {
-    const hasData = (p.images && p.images.length > 0) || p.videoUrl || p.youtubeUrl
+  ;(projectEntries).forEach((p) => {
+    const images = p.images as string[] | undefined
+    const hasData = (images && images.length > 0) || p.videoUrl || p.youtubeUrl
     if (hasData && p.categoryTitle) {
-      if (!uniqueCategoriesMap.has(p.categoryTitle)) {
+      if (!uniqueCategoriesMap.has(p.categoryTitle as string)) {
         // Find the category in categoriesData to see if it has an explicitly uploaded image
-        const categoryData = (categoriesData || []).find((c: any) => c.title === p.categoryTitle)
+        const categoryData = (categoriesData || []).find((c) => c.title === p.categoryTitle)
         let previewImage = fallbackImage
+        const categoryImage = categoryData?.image as { asset?: { url?: string } } | undefined
 
-        if (categoryData?.image?.asset?.url) {
-          previewImage = categoryData.image.asset.url
-        } else if (p.images && p.images.length > 0) {
-          previewImage = p.images[0]
+        if (categoryImage?.asset?.url) {
+          previewImage = categoryImage.asset.url
+        } else if (images && images.length > 0) {
+          previewImage = images[0]
         } else if (p.youtubeUrl) {
-          const ytId = extractYouTubeId(p.youtubeUrl)
+          const ytId = extractYouTubeId(p.youtubeUrl as string)
           if (ytId) {
             previewImage = `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`
           }
         }
         
-        uniqueCategoriesMap.set(p.categoryTitle, previewImage)
+        uniqueCategoriesMap.set(p.categoryTitle as string, previewImage)
       }
     }
   })
@@ -139,13 +142,13 @@ export default async function HomePage({
   // 6. Real site photos — used instead of testimonials until real, sourced
   // client reviews/videos are available. Placeholder quotes with generic
   // names would be unverifiable and are worse than showing real project photos.
-  const sitePhotos = ((projectsData?.projectEntries || []) as any[])
-    .filter((p) => p.images && p.images.length > 0)
-    .map((p) => ({ url: `${p.images[0]}?w=800&q=75&auto=format`, name: p.name, location: p.categoryTitle }))
+  const sitePhotos = (projectEntries)
+    .filter((p) => (p.images as string[] | undefined) && (p.images as string[]).length > 0)
+    .map((p) => ({ url: `${(p.images as string[])[0]}?w=800&q=75&auto=format`, name: p.name as string, location: p.categoryTitle as string }))
     .slice(0, 6)
 
   // Support both old format (direct asset) and new format (object with image + text)
-  const mappedHeroImages = (data.heroImages || [])
+  const mappedHeroImages = ((data.heroImages || []) as Array<any>)
     .map((item: any) => {
       // New format: { image: { asset: { url } }, text }
       if (item.image?.asset?.url) {
@@ -315,7 +318,7 @@ export default async function HomePage({
           </h2>
 
           <p className="text-base sm:text-lg text-[#3a3a3a] text-center max-w-3xl mx-auto mb-14 leading-relaxed">
-            Discover strategically located HMDA-approved plots in Hyderabad's fastest growing corridors. Each project is designed to offer excellent connectivity, infrastructure, and long-term appreciation.
+            Discover strategically located HMDA-approved plots in Hyderabad&apos;s fastest growing corridors. Each project is designed to offer excellent connectivity, infrastructure, and long-term appreciation.
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
@@ -567,7 +570,7 @@ export default async function HomePage({
                   </div>
                   <div>
                     <h3 className="font-semibold text-[#022F3A]">WhatsApp Support</h3>
-                    <p className="text-sm text-gray-500 mt-1">Available Mon-Sat, 9 AM to 6 PM</p>
+                    <p className="text-sm text-gray-500 mt-1">Available Mon-Sat, 10 AM to 7 PM</p>
                   </div>
                 </div>
               </div>

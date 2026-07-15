@@ -37,7 +37,7 @@ export function AnimatedCounter({ value }: AnimatedCounterProps) {
   }, [springValue])
 
   const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
+  useEffect(() => { queueMicrotask(() => setMounted(true)) }, [])
 
   return (
     <span ref={ref} className="inline-block bg-clip-text text-transparent bg-gradient-to-r from-[#c4a55a] via-[#e2cc8f] to-[#c4a55a]">

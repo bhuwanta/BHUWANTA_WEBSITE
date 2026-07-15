@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ error: "Invalid request parameters" }, { status: 400 })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Delete Media Error:", error)
     return NextResponse.json({ error: "Failed to delete" }, { status: 500 })
   }

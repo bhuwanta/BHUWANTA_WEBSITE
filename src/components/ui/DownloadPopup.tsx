@@ -33,12 +33,15 @@ export function DownloadPopup({ isOpen, onClose, urls, projectName, documentType
   // Reset state and handle background scrolling
   useEffect(() => {
     if (isOpen) {
-      setIsSubmitting(false)
-      setPhoneError('')
-      setError('')
-      setStep(1)
-      setOtp('')
-      setFormData({ name: '', phone: '', email: '' })
+      // Batch state resets outside synchronous effect to avoid cascading renders
+      queueMicrotask(() => {
+        setIsSubmitting(false)
+        setPhoneError('')
+        setError('')
+        setStep(1)
+        setOtp('')
+        setFormData({ name: '', phone: '', email: '' })
+      })
       
       document.body.style.overflow = 'hidden'
       document.documentElement.style.overflow = 'hidden'
@@ -80,9 +83,9 @@ export function DownloadPopup({ isOpen, onClose, urls, projectName, documentType
       const confirmation = await signInWithPhoneNumber(auth, formattedPhone, window.recaptchaVerifier)
       setConfirmationResult(confirmation)
       setStep(2)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err)
-      setError(err.message || 'Failed to send OTP.')
+      setError((err instanceof Error ? err.message : null) || 'Failed to send OTP.')
       if (window.recaptchaVerifier) {
         window.recaptchaVerifier.clear()
         window.recaptchaVerifier = null
@@ -130,7 +133,7 @@ export function DownloadPopup({ isOpen, onClose, urls, projectName, documentType
       })
 
       onClose() // Close the popup immediately after success
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Submission error:', err)
       setError('Invalid OTP or submission error.')
     } finally {

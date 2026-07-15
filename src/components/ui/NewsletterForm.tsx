@@ -31,8 +31,8 @@ export function NewsletterForm() {
 
       toast.success(data.message || 'Successfully subscribed to the newsletter!')
       setEmail('')
-    } catch (error: any) {
-      toast.error(error.message || 'Something went wrong. Please try again.')
+    } catch (error: unknown) {
+      toast.error((error instanceof Error ? error.message : null) || 'Something went wrong. Please try again.')
     } finally {
       setLoading(false)
     }

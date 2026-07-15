@@ -1,10 +1,7 @@
 import { Metadata } from 'next'
-import Link from 'next/link'
-import { ArrowRight, MapPin, Phone, MessageCircle, Crown, Check, CreditCard, Download } from 'lucide-react'
 import { generatePageMetadata } from '@/lib/seo'
-import { sanityFetch, projectsQuery, projectCategoriesQuery, urlFor } from '@/lib/sanity'
+import { sanityFetch, projectsQuery, projectCategoriesQuery } from '@/lib/sanity'
 import { JsonLd, buildBreadcrumbSchema, buildRealEstateListingSchema } from '@/components/seo/JsonLd'
-import { DynamicIcon } from '@/components/ui/DynamicIcon'
 import { PageBanner } from '../../../components/ui/PageBanner'
 import { CtaSection } from '@/components/ui/CtaSection'
 import { ProjectsFilterClient } from '@/components/ui/ProjectsFilterClient'
@@ -15,21 +12,6 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export const revalidate = 0
 
-const statusColors: Record<string, string> = {
-  'registrations-open': 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  upcoming: 'bg-[#003d4f]/10 text-[#003d4f] border-[#003d4f]/20',
-  'under-development': 'bg-[#B69A4E]/10 text-[#B69A4E] border-[#B69A4E]/20',
-  ready: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  'sold-out': 'bg-red-50 text-red-700 border-red-200',
-}
-
-const statusLabels: Record<string, string> = {
-  'registrations-open': 'Registrations Open',
-  upcoming: 'Upcoming',
-  'under-development': 'Under Development',
-  ready: 'Ready',
-  'sold-out': 'Sold Out',
-}
 
 interface ProjectEntry {
   name: string
@@ -51,7 +33,6 @@ interface ProjectEntry {
 
 export default async function ProjectsPage() {
   let projects: ProjectEntry[] = []
-  let pageHeading = 'Our Projects'
   let categories: { id: string; title: string; label: string; order?: number }[] = []
 
   try {
@@ -64,9 +45,9 @@ export default async function ProjectsPage() {
       tags: ['projectCategory'],
     })
     
-    if (sanityCategories) categories = sanityCategories.filter((c: any) => c.title.toLowerCase() !== 'farmlands' && c.label.toLowerCase() !== 'farmlands')
-    if (sanityData?.projectEntries) projects = sanityData.projectEntries.map((p: any) => ({ ...p, description: p.description || '' }))
-    if (sanityData?.pageHeading) pageHeading = sanityData.pageHeading
+    if (sanityCategories) categories = sanityCategories.filter((c) => c.title.toLowerCase() !== 'farmlands' && c.label.toLowerCase() !== 'farmlands')
+    if (sanityData?.projectEntries) projects = sanityData.projectEntries.map((p: ProjectEntry) => ({ ...p, description: p.description || '' }))
+    if (sanityData?.pageHeading) { /* pageHeading available from CMS if needed */ }
   } catch { /* fallback */ }
 
   // Fallback project

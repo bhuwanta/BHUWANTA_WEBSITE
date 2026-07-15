@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
-import { Plus, Edit2, Trash2, X, Search, Globe, FilterX, Download, MessageCircle, Megaphone, Settings, ArrowUp, ArrowDown, ArrowUpDown, Check } from 'lucide-react'
+import { Plus, Edit2, Trash2, X, Search, Globe, FilterX, Download, MessageCircle, Megaphone, Settings, ArrowUp, ArrowDown, ArrowUpDown, Check, RefreshCw } from 'lucide-react'
 
 
 import { createClient } from '@/lib/supabase/client'
@@ -31,6 +31,73 @@ const YoutubeIcon = (props: any) => (
     <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.42a2.78 2.78 0 0 0-1.94 2C1 8.11 1 12 1 12s0 3.89.46 5.58a1.9 1.9 0 0 0 1.32 1.35c1.7.47 8.22.47 8.22.47s6.52 0 8.22-.47a1.9 1.9 0 0 0 1.32-1.35c.46-1.69.46-5.58.46-5.58s0-3.89-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/>
   </svg>
 )
+
+const SourceBadge = ({ source }: { source: string }) => {
+  if (!source) return <span className="inline-flex items-center rounded-full bg-[#f3f5f8] px-2.5 py-0.5 text-[10px] font-medium text-[#1e3a5f]">contact</span>;
+  
+  if (source.startsWith('Meta:')) {
+    const parts = source.split(' | ');
+    return (
+      <div className="flex flex-col gap-1 items-start">
+        {parts.map((part, index) => {
+          if (part.startsWith('Meta:')) {
+            const raw = part.replace('Meta:', '').trim();
+            const match = raw.match(/^(.*?)\s+\((.*?)\)$/);
+            
+            if (match) {
+              const name = match[1];
+              const id = match[2];
+              return (
+                <div key={index} className="flex flex-col gap-1 items-start">
+                  <span className="inline-flex items-center rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-medium text-blue-700 border border-blue-200 max-w-[180px] sm:max-w-xs truncate" title={name}>
+                    <FacebookIcon className="w-3 h-3 mr-1 flex-shrink-0" />
+                    <span className="truncate">Form: {name}</span>
+                  </span>
+                  <span className="inline-flex items-center rounded bg-slate-50 px-1.5 py-0.5 text-[9px] font-medium text-slate-500 border border-slate-200 max-w-[180px] sm:max-w-xs truncate" title={id}>
+                    <span className="truncate">ID: {id}</span>
+                  </span>
+                </div>
+              );
+            }
+
+            return (
+              <span key={index} className="inline-flex items-center rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-medium text-blue-700 border border-blue-200 max-w-[180px] sm:max-w-xs truncate" title={part}>
+                <FacebookIcon className="w-3 h-3 mr-1 flex-shrink-0" />
+                <span className="truncate">Form: {raw}</span>
+              </span>
+            );
+          }
+          if (part.startsWith('Campaign:')) {
+            return (
+              <span key={index} className="inline-flex items-center rounded bg-indigo-50 px-1.5 py-0.5 text-[10px] font-medium text-indigo-700 border border-indigo-200 max-w-[180px] sm:max-w-xs truncate" title={part}>
+                <Megaphone className="w-3 h-3 mr-1 flex-shrink-0" />
+                <span className="truncate">{part.replace('Campaign:', 'Cmp:').trim()}</span>
+              </span>
+            );
+          }
+          if (part.startsWith('Ad:')) {
+            return (
+              <span key={index} className="inline-flex items-center rounded bg-purple-50 px-1.5 py-0.5 text-[10px] font-medium text-purple-700 border border-purple-200 max-w-[180px] sm:max-w-xs truncate" title={part}>
+                <span className="truncate">{part.trim()}</span>
+              </span>
+            );
+          }
+          return (
+            <span key={index} className="inline-flex items-center rounded bg-[#f3f5f8] px-1.5 py-0.5 text-[10px] font-medium text-[#1e3a5f] max-w-[180px] sm:max-w-xs truncate">
+              {part.trim()}
+            </span>
+          );
+        })}
+      </div>
+    );
+  }
+  
+  return (
+    <span className="inline-flex items-center rounded-full bg-[#f3f5f8] px-2.5 py-0.5 text-[10px] font-medium text-[#1e3a5f]">
+      {source}
+    </span>
+  );
+};
 
 export default function LeadsClient({ initialLeads, userRole = 'Admin' }: { initialLeads: any[], userRole?: string }) {
   const router = useRouter()
@@ -64,11 +131,29 @@ export default function LeadsClient({ initialLeads, userRole = 'Admin' }: { init
   const [editingMetaFormName, setEditingMetaFormName] = useState('')
   const [isMetaLoading, setIsMetaLoading] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
+  const [syncCountdown, setSyncCountdown] = useState(15 * 60) // 15 minutes
   
   // Sort State
   type SortField = 'created_at' | 'name' | 'phone' | 'source_page' | 'status'
   const [sortField, setSortField] = useState<SortField>('created_at')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+
+  // Countdown Effect
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSyncCountdown(prev => {
+        if (prev <= 1) return 15 * 60;
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatCountdown = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
 
   useEffect(() => {
     const supabase = createClient()
@@ -197,13 +282,14 @@ export default function LeadsClient({ initialLeads, userRole = 'Admin' }: { init
 
   const handleManualSync = async () => {
     setIsSyncing(true)
+    setSyncCountdown(15 * 60)
     try {
       const res = await fetch('/api/cron/meta-sync')
       const data = await res.json()
       if (data.error) {
         alert('Sync error: ' + data.error)
       } else {
-        let msg = `Sync complete! Pulled ${data.processed || 0} new leads.`
+        let msg = `Sync complete! Processed ${data.processed || 0} leads from Meta (duplicates skipped).`
         if (data.errors && data.errors.length > 0) {
           msg += '\n\nHowever, some forms had errors:\n' + data.errors.join('\n')
         }
@@ -440,18 +526,6 @@ export default function LeadsClient({ initialLeads, userRole = 'Admin' }: { init
           </p>
         </div>
         <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-          <div className="relative w-full sm:w-64">
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <Search className="h-4 w-4 text-[#5a6a82]" />
-            </div>
-            <input
-              type="text"
-              placeholder="Search leads..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="block w-full rounded-lg border border-[#e8ecf2] bg-white py-2 pl-10 pr-3 text-sm text-[#0f1d33] placeholder-[#5a6a82] outline-none focus:border-[#1e3a5f] focus:ring-1 focus:ring-[#1e3a5f] transition-shadow"
-            />
-          </div>
           {selectedLeadIds.length > 0 && userRole !== 'Telecaller' && (
             <button
               onClick={handleBulkDelete}
@@ -472,8 +546,22 @@ export default function LeadsClient({ initialLeads, userRole = 'Admin' }: { init
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 bg-white p-4 rounded-xl border border-[#e8ecf2] shadow-sm">
-        <span className="text-sm font-medium text-[#5a6a82] mr-2">Filter by Source:</span>
+      <div className="flex flex-col gap-4 bg-white p-4 rounded-xl border border-[#e8ecf2] shadow-sm">
+        <div className="relative w-full">
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
+            <Search className="h-5 w-5 text-[#5a6a82]" />
+          </div>
+          <input
+            type="text"
+            placeholder="Search leads by name, email, phone, or project..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="block w-full rounded-lg border border-[#e8ecf2] bg-[#f9fafb] py-2.5 pl-11 pr-4 text-sm text-[#0f1d33] placeholder-[#5a6a82] outline-none focus:border-[#1e3a5f] focus:ring-1 focus:ring-[#1e3a5f] transition-shadow"
+          />
+        </div>
+        
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="text-sm font-medium text-[#5a6a82] mr-2">Filter by Source:</span>
         
         <button
           onClick={() => toggleSourceFilter('meta')}
@@ -590,13 +678,23 @@ export default function LeadsClient({ initialLeads, userRole = 'Admin' }: { init
             </button>
           )}
           {userRole !== 'Telecaller' && (
-            <button
-              onClick={openMetaSettings}
-              className="inline-flex items-center gap-1.5 justify-center rounded-full bg-[#f3f5f8] border border-[#e8ecf2] px-4 py-1.5 text-sm font-semibold text-[#1e3a5f] hover:bg-[#e8ecf2] transition-colors"
-            >
-              <Settings className="h-4 w-4" />
-              Meta Setup
-            </button>
+            <>
+              <button
+                onClick={handleManualSync}
+                disabled={isSyncing}
+                className="inline-flex items-center gap-1.5 justify-center rounded-full bg-emerald-50 border border-emerald-200 px-4 py-1.5 text-sm font-semibold text-emerald-600 hover:bg-emerald-100 disabled:opacity-50 transition-colors"
+              >
+                <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                {isSyncing ? 'Syncing...' : `Sync Meta Leads (${formatCountdown(syncCountdown)})`}
+              </button>
+              <button
+                onClick={openMetaSettings}
+                className="inline-flex items-center gap-1.5 justify-center rounded-full bg-[#f3f5f8] border border-[#e8ecf2] px-4 py-1.5 text-sm font-semibold text-[#1e3a5f] hover:bg-[#e8ecf2] transition-colors"
+              >
+                <Settings className="h-4 w-4" />
+                Meta Setup
+              </button>
+            </>
           )}
           <button
             onClick={exportToCSV}
@@ -605,6 +703,7 @@ export default function LeadsClient({ initialLeads, userRole = 'Admin' }: { init
             <Download className="h-4 w-4" />
             Export CSV
           </button>
+        </div>
         </div>
       </div>
 
@@ -685,17 +784,15 @@ export default function LeadsClient({ initialLeads, userRole = 'Admin' }: { init
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-col items-start gap-1">
-                        <span className="inline-flex items-center rounded-full bg-[#f3f5f8] px-2.5 py-0.5 text-xs font-medium text-[#1e3a5f]">
-                          {lead.source_page || 'contact'}
-                        </span>
+                        <SourceBadge source={lead.source_page} />
+                        {lead.project && (
+                          <span className="text-[10px] font-semibold text-[#0f1d33] bg-[#c4a55a]/10 px-2 py-0.5 rounded border border-[#c4a55a]/20">
+                            Project: {lead.project}
+                          </span>
+                        )}
                         {lead.enquiry_type && (
                           <span className="text-xs text-[#5a6a82]">
                             {lead.enquiry_type}
-                          </span>
-                        )}
-                        {lead.downloaded_item && (
-                          <span className="text-xs font-semibold text-[#c4a55a]">
-                            Doc: {lead.downloaded_item}
                           </span>
                         )}
                       </div>
@@ -798,11 +895,13 @@ export default function LeadsClient({ initialLeads, userRole = 'Admin' }: { init
                   <div className="flex flex-col">
                     <span className="text-xs text-[#5a6a82] mb-0.5">Source</span>
                     <div className="flex flex-wrap gap-1">
-                      <span className="inline-flex items-center rounded-full bg-[#f3f5f8] px-2 py-0.5 text-[10px] font-medium text-[#1e3a5f]">
-                        {lead.source_page || 'contact'}
-                      </span>
+                      <SourceBadge source={lead.source_page} />
+                      {lead.project && (
+                        <span className="inline-flex items-center rounded bg-[#c4a55a]/10 px-1.5 py-0.5 text-[10px] font-bold text-[#0f1d33] border border-[#c4a55a]/20">
+                          Project: {lead.project}
+                        </span>
+                      )}
                       {lead.enquiry_type && <span className="text-[10px] text-[#5a6a82]">{lead.enquiry_type}</span>}
-                      {lead.downloaded_item && <span className="text-[10px] font-semibold text-[#c4a55a]">Doc: {lead.downloaded_item}</span>}
                     </div>
                   </div>
                 </div>
@@ -1181,14 +1280,6 @@ export default function LeadsClient({ initialLeads, userRole = 'Admin' }: { init
                         </li>
                       ))}
                     </ul>
-                    
-                    <button
-                      onClick={handleManualSync}
-                      disabled={isSyncing}
-                      className="w-full inline-flex items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-200 px-4 py-2 text-sm font-semibold hover:bg-emerald-100 disabled:opacity-50 transition-colors"
-                    >
-                      {isSyncing ? 'Syncing...' : 'Sync Leads Now'}
-                    </button>
                   </div>
                 )}
               </div>

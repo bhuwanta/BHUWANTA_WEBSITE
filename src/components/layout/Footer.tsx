@@ -2,30 +2,30 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { Mail, Phone, MapPin } from 'lucide-react'
+import { Mail, MapPin } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { client, urlFor } from '@/lib/sanity'
 import logoFallback from '@/images/logo.png'
 
-const LinkedinIcon = (props: any) => (
+const LinkedinIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
     <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/>
   </svg>
 )
 
-const FacebookIcon = (props: any) => (
+const FacebookIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
     <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
   </svg>
 )
 
-const InstagramIcon = (props: any) => (
+const InstagramIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
     <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
   </svg>
 )
 
-const YoutubeIcon = (props: any) => (
+const YoutubeIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
     <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.42a2.78 2.78 0 0 0-1.94 2C1 8.11 1 12 1 12s0 3.89.46 5.58a1.9 1.9 0 0 0 1.32 1.35c1.7.47 8.22.47 8.22.47s6.52 0 8.22-.47a1.9 1.9 0 0 0 1.32-1.35c.46-1.69.46-5.58.46-5.58s0-3.89-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/>
   </svg>
@@ -41,7 +41,7 @@ const defaultFooterLinks = [
 interface FooterSettings {
   siteName?: string
   tagline?: string
-  logo?: any
+  logo?: { asset?: { _ref: string } }
   navLinks?: { label: string; href: string }[]
   footerAddress?: string
   footerAddressLabel?: string
@@ -72,13 +72,13 @@ export function Footer() {
   }, [])
 
   const siteName = settings.siteName || 'BHUWANTA'
-  const tagline = settings.tagline || 'Land Today. Landmark Tomorrow.'
+  const _tagline = settings.tagline || 'Land Today. Landmark Tomorrow.'
   const logoSrc = settings.logo ? urlFor(settings.logo).height(96).url() : null
   const footerLinks = settings.navLinks?.length ? settings.navLinks : defaultFooterLinks
   const address = settings.footerAddress || 'Alluri Trade Center, Floor #5 , Unit #406 , KPHB, Near KPHB Metro Station (opposite to pillar number # 761), hyderabad, telangana - 500072'
   const addressLabel = settings.footerAddressLabel || 'Headquarters'
   const mapsUrl = settings.googleMapsUrl || 'https://maps.app.goo.gl/USjC2iYeGiXbZ5U16'
-  const phone = (settings.footerPhone && settings.footerPhone !== '+91 XXXXX XXXXX') ? settings.footerPhone : null
+  const _phone = (settings.footerPhone && settings.footerPhone !== '+91 XXXXX XXXXX') ? settings.footerPhone : null
   const email = settings.footerEmail || 'info@bhuwanta.com'
   const copyright = settings.copyrightText || 'Bhuwanta. All rights reserved.'
 

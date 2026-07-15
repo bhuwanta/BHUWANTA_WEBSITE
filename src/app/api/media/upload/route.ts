@@ -125,8 +125,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ error: "Invalid type" }, { status: 400 })
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Sanity Media Upload Error:", error)
-    return NextResponse.json({ error: error.message || "Failed to process upload" }, { status: 500 })
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Failed to process upload" }, { status: 500 })
   }
 }

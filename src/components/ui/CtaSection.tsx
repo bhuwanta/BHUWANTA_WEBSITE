@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowRight, Phone } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 
 interface CtaSectionProps {
   title?: React.ReactNode;

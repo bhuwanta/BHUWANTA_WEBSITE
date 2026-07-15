@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react'
 import Link from 'next/link'
-import { MapPin, Crown, Check, CreditCard, Download, FileText, ShieldCheck, Scale } from 'lucide-react'
+import { MapPin, Crown, Check, CreditCard, Download } from 'lucide-react'
 import { ProjectImageCarousel } from '@/components/ui/ProjectImageCarousel'
 import { DownloadPopup } from '@/components/ui/DownloadPopup'
 
@@ -43,7 +43,7 @@ function getKnownSlug(name: string): string | undefined {
   return KNOWN_PROJECT_SLUGS[name] || KNOWN_PROJECT_SLUGS[name.trim()]
 }
 
-export function ProjectsFilterClient({ projects, categories = [], pageHeading }: { projects: ProjectEntry[], categories?: { id: string; title: string; label: string; order?: number }[], pageHeading?: string }) {
+export function ProjectsFilterClient({ projects, categories = [] }: { projects: ProjectEntry[], categories?: { id: string; title: string; label: string; order?: number }[] }) {
   const [activeFilter, setActiveFilter] = useState<string>('all')
   const filterRef = useRef<HTMLDivElement>(null)
   const [downloadQueue, setDownloadQueue] = useState<{ urls: string[]; projectName: string; documentType: string } | null>(null)
