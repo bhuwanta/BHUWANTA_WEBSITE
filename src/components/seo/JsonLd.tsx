@@ -37,6 +37,8 @@ export function buildLocalBusinessSchema(business: {
   logoUrl?: string
   openingHours?: Array<{ day: string; open: string; close: string }>
   sameAsLinks?: string[]
+  areaServed?: Array<{ type: 'State' | 'Place'; name: string }>
+  knowsAbout?: string[]
 }) {
   return {
     '@context': 'https://schema.org',
@@ -65,6 +67,10 @@ export function buildLocalBusinessSchema(business: {
     ...(business.priceRange && { priceRange: business.priceRange }),
     ...(business.logoUrl && { logo: business.logoUrl }),
     ...(business.sameAsLinks?.length && { sameAs: business.sameAsLinks }),
+    ...(business.areaServed?.length && {
+      areaServed: business.areaServed.map((a) => ({ '@type': a.type, name: a.name })),
+    }),
+    ...(business.knowsAbout?.length && { knowsAbout: business.knowsAbout }),
   }
 }
 

@@ -34,6 +34,7 @@ const YoutubeIcon = (props: React.SVGProps<SVGSVGElement>) => (
 const defaultFooterLinks = [
   { href: '/about', label: 'About Us' },
   { href: '/projects', label: 'Projects' },
+  { href: '/why-bhuwanta', label: 'Why Bhuwanta' },
   { href: '/gallery', label: 'Gallery' },
   { href: '/blog', label: 'Blog' },
 ]

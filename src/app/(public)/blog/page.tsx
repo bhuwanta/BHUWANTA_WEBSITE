@@ -48,6 +48,30 @@ const ogImage = (title: string, subtitle: string) =>
 // concern either way.
 const staticGuides: (Omit<BlogCard, 'image'> & { fallbackImage: string })[] = [
   {
+    href: '/blog/best-real-estate-investment-telangana-andhra-pradesh',
+    title: 'Best Real Estate Investment Options in Telangana & Andhra Pradesh: 2026 Guide',
+    excerpt: 'A 2026 guide to investing in Telangana and Andhra Pradesh real estate — why HMDA/DTCP-approved open plots near growth corridors are drawing investor interest, and what to check before you buy.',
+    fallbackImage: ogImage('Best Real Estate Investment Options', 'Telangana & Andhra Pradesh — 2026 Guide'),
+    tag: 'Investment Guide',
+    publishDate: '2026-07-16',
+  },
+  {
+    href: '/blog/regional-ring-road-telangana-growth-areas',
+    title: 'Regional Ring Road (RRR): Which Areas in Telangana Will Benefit Most?',
+    excerpt: 'A look at Telangana\'s Regional Ring Road (RRR) — its decentralization goal, which growth corridors are seeing rising investor interest, and what it means for plot buyers.',
+    fallbackImage: ogImage('Regional Ring Road (RRR)', 'Which Areas in Telangana Will Benefit Most?'),
+    tag: 'Market Insight',
+    publishDate: '2026-07-16',
+  },
+  {
+    href: '/blog/nri-guide-uk-open-plots-hyderabad',
+    title: 'Buying Open Plots in Hyderabad from the UK: Complete NRI Guide 2026',
+    excerpt: 'A complete 2026 guide for UK-based NRIs buying open plots near Hyderabad — FEMA eligibility, UK tax basics, the Notary Public + FCDO apostille Power of Attorney process, and how to buy remotely.',
+    fallbackImage: ogImage('Buying Open Plots in Hyderabad from the UK', 'Complete NRI Guide 2026'),
+    tag: 'NRI Guide',
+    publishDate: '2026-07-16',
+  },
+  {
     href: '/blog/verify-hmda-dtcp-approval-telangana',
     title: 'How to Verify HMDA/DTCP Approval in Telangana: Step-by-Step (2026)',
     excerpt: 'A step-by-step guide to verifying HMDA and DTCP layout approval and RERA registration in Telangana using the official government portals, before you buy a plot.',

@@ -51,6 +51,20 @@ export default async function PublicLayout({
       settings?.socialLinks?.instagram || 'https://www.instagram.com/bhuwantadevelopers/',
       settings?.socialLinks?.youtube || 'https://www.youtube.com/@BhuwantaDevelopers',
     ],
+    areaServed: [
+      { type: 'State', name: 'Telangana' },
+      { type: 'Place', name: 'Shabad, Telangana' },
+      { type: 'Place', name: 'Yadagirigutta, Telangana' },
+      { type: 'Place', name: 'Sangareddy, Telangana' },
+      { type: 'Place', name: 'Sadashivpet, Telangana' },
+    ],
+    knowsAbout: [
+      'HMDA approved open plots',
+      'DTCP approved plots',
+      'RERA registered real estate',
+      'Open plot investment Telangana',
+      'Regional Ring Road growth corridors',
+    ],
   })
 
   return (
