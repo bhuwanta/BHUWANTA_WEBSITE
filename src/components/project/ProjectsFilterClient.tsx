@@ -3,8 +3,8 @@
 import { useState, useRef } from 'react'
 import Link from 'next/link'
 import { MapPin, Crown, Check, CreditCard, Download } from 'lucide-react'
-import { ProjectImageCarousel } from '@/components/ui/ProjectImageCarousel'
-import { DownloadPopup } from '@/components/ui/DownloadPopup'
+import { ProjectImageCarousel } from '@/components/project/ProjectImageCarousel'
+import { DownloadPopup } from '@/components/popups/DownloadPopup'
 
 export interface ProjectEntry {
   name: string

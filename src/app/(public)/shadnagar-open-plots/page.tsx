@@ -3,9 +3,9 @@ import Link from 'next/link'
 import { MapPin, Check } from 'lucide-react'
 import { sanityFetch, projectByNameQuery } from '@/lib/sanity'
 import { JsonLd, buildBreadcrumbSchema, buildFaqSchema } from '@/components/seo/JsonLd'
-import { ProjectImageCarousel } from '@/components/ui/ProjectImageCarousel'
-import { TrustStrip } from '@/components/ui/TrustStrip'
-import { TrackedWhatsAppAnchor } from '@/components/ui/TrackedWhatsAppAnchor'
+import { ProjectImageCarousel } from '@/components/project/ProjectImageCarousel'
+import { TrustStrip } from '@/components/sections/TrustStrip'
+import { TrackedWhatsAppAnchor } from '@/components/tracking/TrackedWhatsAppAnchor'
 
 const PROJECT_NAME = 'VIAN VALLY'
 const WHATSAPP_NUMBER = '919666504405'
@@ -32,7 +32,7 @@ export async function generateMetadata(): Promise<Metadata> {
   }).catch(() => null)
 
   const ogImage = project?.images?.[0]
-    || `https://bhuwanta.com/api/og?title=${encodeURIComponent('Plots Near Shadnagar')}&subtitle=${encodeURIComponent('Nearest verified option: Vian Vally in Shabad')}`
+    || `https://bhuwanta.com/api/widgets_og?title=${encodeURIComponent('Plots Near Shadnagar')}&subtitle=${encodeURIComponent('Nearest verified option: Vian Vally in Shabad')}`
 
   return {
     title: { absolute: PAGE_TITLE },

@@ -2,8 +2,8 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 import { Check } from 'lucide-react'
 import { JsonLd, buildBreadcrumbSchema, buildFaqSchema } from '@/components/seo/JsonLd'
-import { PageBanner } from '@/components/ui/PageBanner'
-import { CtaSection } from '@/components/ui/CtaSection'
+import { PageBanner } from '@/components/layout/PageBanner'
+import { CtaSection } from '@/components/sections/CtaSection'
 import { buildStaticOgMetadata } from '@/lib/seo'
 
 export const metadata: Metadata = buildStaticOgMetadata({

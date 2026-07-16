@@ -1,5 +1,5 @@
 import React from 'react'
-import { TrustStrip } from '@/components/ui/TrustStrip'
+import { TrustStrip } from '@/components/sections/TrustStrip'
 
 interface PageBannerProps {
   title: string | React.ReactNode

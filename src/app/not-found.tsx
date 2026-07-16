@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Home, Building2, BookOpen } from 'lucide-react'
-import { NotFoundTracker } from '@/components/ui/NotFoundTracker'
+import { NotFoundTracker } from '@/components/tracking/NotFoundTracker'
 
 export default function NotFound() {
   return (

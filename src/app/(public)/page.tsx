@@ -12,9 +12,9 @@ import { sanityFetch, homeQuery, projectsQuery, projectCategoriesQuery } from '@
 import { extractYouTubeId } from '@/lib/utils'
 import dynamic from 'next/dynamic'
 
-const ContactForm = dynamic(() => import('@/components/ui/ContactForm').then(mod => mod.ContactForm))
+const ContactForm = dynamic(() => import('@/components/forms/ContactForm').then(mod => mod.ContactForm))
 const AnimatedCounter = dynamic(() => import('@/components/ui/AnimatedCounter').then(mod => mod.AnimatedCounter))
-import { HeroSlider } from '@/components/ui/HeroSlider'
+import { HeroSlider } from '@/components/sections/HeroSlider'
 
 export async function generateMetadata(): Promise<Metadata> {
   return generatePageMetadata('home', 'HMDA Approved Plots in Hyderabad', 'Own HMDA-approved, Vastu-aligned plots in Hyderabad\'s fastest-growing corridors, built for homebuilders and smart investors. Book a free site visit.')

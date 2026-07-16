@@ -1,6 +1,6 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
-import { ArticleLayout } from '@/components/ui/ArticleLayout'
+import { ArticleLayout } from '@/components/layout/ArticleLayout'
 import { buildStaticOgMetadata } from '@/lib/seo'
 
 export const metadata: Metadata = buildStaticOgMetadata({

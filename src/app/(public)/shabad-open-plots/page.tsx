@@ -3,9 +3,9 @@ import Link from 'next/link'
 import { Check, MapPin, Download } from 'lucide-react'
 import { sanityFetch, projectByNameQuery } from '@/lib/sanity'
 import { JsonLd, buildBreadcrumbSchema, buildFaqSchema, buildRealEstateListingSchema } from '@/components/seo/JsonLd'
-import { ProjectImageCarousel } from '@/components/ui/ProjectImageCarousel'
-import { TrustStrip } from '@/components/ui/TrustStrip'
-import { TrackedWhatsAppAnchor } from '@/components/ui/TrackedWhatsAppAnchor'
+import { ProjectImageCarousel } from '@/components/project/ProjectImageCarousel'
+import { TrustStrip } from '@/components/sections/TrustStrip'
+import { TrackedWhatsAppAnchor } from '@/components/tracking/TrackedWhatsAppAnchor'
 
 const PROJECT_NAME = 'VIAN VALLY'
 const WHATSAPP_NUMBER = '919666504405'
@@ -37,7 +37,7 @@ export async function generateMetadata(): Promise<Metadata> {
   }).catch(() => null)
 
   const ogImage = project?.images?.[0]
-    || `https://bhuwanta.com/api/og?title=${encodeURIComponent('Open Plots in Shabad')}&subtitle=${encodeURIComponent('Vian Vally — HMDA & RERA Approved')}`
+    || `https://bhuwanta.com/api/widgets_og?title=${encodeURIComponent('Open Plots in Shabad')}&subtitle=${encodeURIComponent('Vian Vally — HMDA & RERA Approved')}`
 
   return {
     title: { absolute: PAGE_TITLE },

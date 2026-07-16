@@ -1,6 +1,6 @@
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
-import { DynamicClientComponents } from '@/components/ui/DynamicClientComponents'
+import { DynamicClientComponents } from '@/components/shared/DynamicClientComponents'
 import { JsonLd, buildWebSiteSchema, buildLocalBusinessSchema } from '@/components/seo/JsonLd'
 import Script from 'next/script'
 import { sanityFetch, siteSettingsQuery, projectsQuery } from '@/lib/sanity'

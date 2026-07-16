@@ -6,9 +6,9 @@ import { generatePageMetadata } from '@/lib/seo'
 import { sanityFetch, blogListQuery, projectByNameQuery } from '@/lib/sanity'
 import { JsonLd, buildBreadcrumbSchema } from '@/components/seo/JsonLd'
 import { formatDate } from '@/lib/utils'
-import { PageBanner } from '../../../components/ui/PageBanner'
-import { CtaSection } from '@/components/ui/CtaSection'
-import { NewsletterForm } from '@/components/ui/NewsletterForm'
+import { PageBanner } from '../../../components/layout/PageBanner'
+import { CtaSection } from '@/components/sections/CtaSection'
+import { NewsletterForm } from '@/components/forms/NewsletterForm'
 
 export async function generateMetadata(): Promise<Metadata> {
   return generatePageMetadata('blog', 'Blog', 'Practical advice on buying land, understanding approvals, Vastu principles, and building wealth through real estate.')
@@ -38,12 +38,12 @@ interface BlogCard {
 }
 
 const ogImage = (title: string, subtitle: string) =>
-  `https://bhuwanta.com/api/og?title=${encodeURIComponent(title)}&subtitle=${encodeURIComponent(subtitle)}`
+  `https://bhuwanta.com/api/widgets_og?title=${encodeURIComponent(title)}&subtitle=${encodeURIComponent(subtitle)}`
 
 // Guides about a specific project use that project's real photo instead of
 // the generated placeholder — more genuine, and matches how project/landing
 // pages already work. General/process guides (not tied to one project) keep
-// the branded /api/og image, which is entirely self-generated (the site's
+// the branded /api/widgets_og image, which is entirely self-generated (the site's
 // own logo + drawn text, no stock photography) so there's no copyright
 // concern either way.
 const staticGuides: (Omit<BlogCard, 'image'> & { fallbackImage: string })[] = [

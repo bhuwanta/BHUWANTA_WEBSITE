@@ -1,8 +1,8 @@
 import Link from 'next/link'
 import { Calendar, Tag } from 'lucide-react'
 import { JsonLd, buildBreadcrumbSchema, buildArticleSchema, buildFaqSchema } from '@/components/seo/JsonLd'
-import { CtaSection } from '@/components/ui/CtaSection'
-import { WhatsAppInlineCta } from '@/components/ui/WhatsAppInlineCta'
+import { CtaSection } from '@/components/sections/CtaSection'
+import { WhatsAppInlineCta } from '@/components/tracking/WhatsAppInlineCta'
 
 export interface ArticleFaq {
   question: string

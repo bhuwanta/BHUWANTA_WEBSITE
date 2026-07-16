@@ -7,11 +7,11 @@ import dynamic from 'next/dynamic'
 // Dynamic imports for non-critical UI — defers ~100 KiB (includes framer-motion)
 // These must be in a Client Component because `ssr: false` is not allowed in Server Components
 const WhatsAppFloat = dynamic(
-  () => import('@/components/ui/WhatsAppFloat').then(m => m.WhatsAppFloat),
+  () => import('@/components/tracking/WhatsAppFloat').then(m => m.WhatsAppFloat),
   { ssr: false }
 )
 const LeadPopup = dynamic(
-  () => import('@/components/ui/LeadPopup').then(m => m.LeadPopup),
+  () => import('@/components/popups/LeadPopup').then(m => m.LeadPopup),
   { ssr: false }
 )
 

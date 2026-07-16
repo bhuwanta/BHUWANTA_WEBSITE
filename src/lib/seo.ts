@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 
 // Builds full title/description/canonical/OG/Twitter metadata for hand-authored
 // static pages (articles, comparison pages, lead magnets) that have no
-// per-page photo of their own — falls back to the branded /api/og generator
+// per-page photo of their own — falls back to the branded /api/widgets_og generator
 // so every page still gets a real preview image on WhatsApp/social shares.
 export function buildStaticOgMetadata({
   title,
@@ -21,7 +21,7 @@ export function buildStaticOgMetadata({
   /** Real photo to use instead of the generated placeholder, when the page is about a specific project. */
   image?: string
 }): Metadata {
-  const ogImage = image || `https://bhuwanta.com/api/og?title=${encodeURIComponent(ogTitle)}&subtitle=${encodeURIComponent(ogSubtitle)}`
+  const ogImage = image || `https://bhuwanta.com/api/widgets_og?title=${encodeURIComponent(ogTitle)}&subtitle=${encodeURIComponent(ogSubtitle)}`
 
   return {
     title: { absolute: title },

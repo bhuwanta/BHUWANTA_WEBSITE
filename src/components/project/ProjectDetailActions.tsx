@@ -3,8 +3,8 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { MapPin, Download, CreditCard } from 'lucide-react'
-import { ProjectImageCarousel } from '@/components/ui/ProjectImageCarousel'
-import { DownloadPopup } from '@/components/ui/DownloadPopup'
+import { ProjectImageCarousel } from '@/components/project/ProjectImageCarousel'
+import { DownloadPopup } from '@/components/popups/DownloadPopup'
 import { fireLeadConversion } from '@/lib/gtag'
 
 interface ProjectDetailActionsProps {

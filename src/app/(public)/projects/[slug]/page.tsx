@@ -3,9 +3,9 @@ import { notFound } from 'next/navigation'
 import { Check } from 'lucide-react'
 import { sanityFetch, projectBySlugQuery, projectSlugsQuery } from '@/lib/sanity'
 import { JsonLd, buildBreadcrumbSchema, buildRealEstateListingSchema, buildFaqSchema } from '@/components/seo/JsonLd'
-import { PageBanner } from '@/components/ui/PageBanner'
-import { CtaSection } from '@/components/ui/CtaSection'
-import { ProjectDetailActions } from '@/components/ui/ProjectDetailActions'
+import { PageBanner } from '@/components/layout/PageBanner'
+import { CtaSection } from '@/components/sections/CtaSection'
+import { ProjectDetailActions } from '@/components/project/ProjectDetailActions'
 
 interface ProjectDetail {
   name: string

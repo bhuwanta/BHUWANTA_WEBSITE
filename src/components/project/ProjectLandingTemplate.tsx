@@ -3,9 +3,9 @@ import Link from 'next/link'
 import { Check, Download } from 'lucide-react'
 import { sanityFetch, projectByNameQuery } from '@/lib/sanity'
 import { JsonLd, buildBreadcrumbSchema, buildFaqSchema, buildRealEstateListingSchema } from '@/components/seo/JsonLd'
-import { PageBanner } from '@/components/ui/PageBanner'
-import { ProjectDetailActions } from '@/components/ui/ProjectDetailActions'
-import { CtaSection } from '@/components/ui/CtaSection'
+import { PageBanner } from '@/components/layout/PageBanner'
+import { ProjectDetailActions } from '@/components/project/ProjectDetailActions'
+import { CtaSection } from '@/components/sections/CtaSection'
 
 interface ProjectData {
   name: string
@@ -41,7 +41,7 @@ export interface ProjectLandingConfig {
 }
 
 // Shared by each /projects/<slug>/page.tsx so the OG/Twitter image is the
-// project's real photo (falls back to the branded /api/og generator when
+// project's real photo (falls back to the branded /api/widgets_og generator when
 // no photo is set yet) instead of every project page sharing one generic
 // preview image on WhatsApp/social.
 export async function buildProjectPageMetadata(
@@ -58,7 +58,7 @@ export async function buildProjectPageMetadata(
   }).catch(() => null)
 
   const ogImage = project?.images?.[0]
-    || `${siteUrl}/api/og?title=${encodeURIComponent(config.displayName)}&subtitle=${encodeURIComponent(config.corridorLabel)}`
+    || `${siteUrl}/api/widgets_og?title=${encodeURIComponent(config.displayName)}&subtitle=${encodeURIComponent(config.corridorLabel)}`
 
   return {
     title: { absolute: title },

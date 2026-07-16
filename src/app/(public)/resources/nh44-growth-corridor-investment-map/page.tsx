@@ -2,9 +2,9 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 import { MapPin } from 'lucide-react'
 import { JsonLd, buildBreadcrumbSchema } from '@/components/seo/JsonLd'
-import { PageBanner } from '@/components/ui/PageBanner'
-import { GatedResource } from '@/components/ui/GatedResource'
-import { CtaSection } from '@/components/ui/CtaSection'
+import { PageBanner } from '@/components/layout/PageBanner'
+import { GatedResource } from '@/components/forms/GatedResource'
+import { CtaSection } from '@/components/sections/CtaSection'
 import { buildStaticOgMetadata } from '@/lib/seo'
 
 export const metadata: Metadata = buildStaticOgMetadata({

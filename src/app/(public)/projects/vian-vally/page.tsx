@@ -1,5 +1,5 @@
 import { Metadata } from 'next'
-import { ProjectLandingTemplate, ProjectLandingConfig, buildProjectPageMetadata } from '@/components/ui/ProjectLandingTemplate'
+import { ProjectLandingTemplate, ProjectLandingConfig, buildProjectPageMetadata } from '@/components/project/ProjectLandingTemplate'
 
 export const revalidate = 60
 
