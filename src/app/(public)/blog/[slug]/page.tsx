@@ -5,6 +5,7 @@ import { ArrowLeft, Calendar, Tag } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { sanityFetch, blogPostQuery } from '@/lib/sanity'
+import { WhatsAppInlineCta } from '@/components/tracking/WhatsAppInlineCta'
 import { JsonLd, buildBreadcrumbSchema, buildArticleSchema, buildFaqSchema } from '@/components/seo/JsonLd'
 import { formatDate, calculateReadingTime } from '@/lib/utils'
 
@@ -20,6 +21,9 @@ interface BlogPostData {
   ogImage?: string
   canonicalUrl?: string
   focusKeyword?: string
+  whatsappContext?: string
+  disclaimer?: string
+  relatedLinks?: { label: string; href: string }[]
   faqs?: { question: string; answer: string }[]
 }
 
@@ -39,7 +43,7 @@ export async function generateMetadata({
 
     // The Sanity `canonicalUrl` field is a manually-set string that goes stale
     // whenever a post's slug changes (it isn't derived from the live route).
-    // Only trust it when it actually points at this post's current URL —
+    // Only trust it when it actually points at this post's current URL -
     // otherwise fall back to the live slug so the canonical can never point
     // at an old/renamed URL.
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bhuwanta.com'
@@ -119,7 +123,7 @@ export default async function BlogPostPage({
             <div className="w-full aspect-[16/9] relative bg-[#f3f5f8]">
               <Image
                 src={post.mainImage}
-                alt={`${post.title} — cover image`}
+                alt={`${post.title} - cover image`}
                 fill
                 sizes="(max-width: 768px) 100vw, 900px"
                 priority
@@ -149,7 +153,7 @@ export default async function BlogPostPage({
             </header>
 
             {/* Body */}
-            <div className="prose prose-lg max-w-none prose-headings:text-[#1e3a5f] prose-h3:text-[#1e3a5f] prose-h4:text-[#c4a55a] prose-h4:font-bold prose-p:text-[#5a6a82] prose-a:text-[#1e3a5f] prose-a:font-semibold hover:prose-a:text-[#c4a55a] prose-strong:text-[#0f1d33] prose-blockquote:bg-[#fef9f0] prose-blockquote:border-l-4 prose-blockquote:border-[#c4a55a] prose-blockquote:py-4 prose-blockquote:px-6 prose-blockquote:rounded-r-lg prose-blockquote:text-[#5a6a82] prose-blockquote:not-italic prose-li:text-[#5a6a82] prose-ul:text-[#5a6a82] prose-ol:text-[#5a6a82]">
+            <div className="text-justify prose prose-lg max-w-none prose-headings:text-[#1e3a5f] prose-headings:font-bold prose-h2:mt-12 prose-h2:mb-6 prose-h3:mt-8 prose-h3:mb-4 prose-h3:text-[#1e3a5f] prose-h4:text-[#c4a55a] prose-p:text-[#5a6a82] prose-a:text-[#1e3a5f] prose-a:font-semibold hover:prose-a:text-[#c4a55a] prose-strong:text-[#0f1d33] prose-strong:font-bold prose-blockquote:bg-[#fef9f0] prose-blockquote:border-l-4 prose-blockquote:border-[#c4a55a] prose-blockquote:py-4 prose-blockquote:px-6 prose-blockquote:rounded-r-lg prose-blockquote:text-[#5a6a82] prose-blockquote:not-italic prose-li:text-[#5a6a82] prose-ul:text-[#5a6a82] prose-ol:text-[#5a6a82]">
               {post.body && (
                 <PortableText 
                   value={post.body} 
@@ -161,12 +165,79 @@ export default async function BlogPostPage({
                           return <p className="h-6"><br /></p>
                         }
                         return <p>{children}</p>
+                      },
+                      h2: ({ children }: any) => <h2 className="font-bold text-2xl sm:text-3xl text-[#1e3a5f] mt-12 mb-6">{children}</h2>,
+                      h3: ({ children }: any) => <h3 className="font-bold text-xl sm:text-2xl text-[#1e3a5f] mt-8 mb-4">{children}</h3>,
+                      h4: ({ children }: any) => <h4 className="font-bold text-lg sm:text-xl text-[#c4a55a] mt-6 mb-3">{children}</h4>,
+                    },
+                    types: {
+                      image: ({ value }: any) => {
+                        if (!value?.asset?._ref) return null;
+                        const src = `https://cdn.sanity.io/images/${process.env.NEXT_PUBLIC_SANITY_PROJECT_ID}/${process.env.NEXT_PUBLIC_SANITY_DATASET}/${value.asset._ref.replace('image-', '').replace('-jpg', '.jpg').replace('-png', '.png').replace('-webp', '.webp')}`
+                        return (
+                          <Image
+                            src={src}
+                            alt={value.alt || 'Blog Image'}
+                            width={800}
+                            height={400}
+                            className="rounded-lg object-cover w-full h-auto mt-8 mb-4 shadow-sm"
+                          />
+                        )
+                      },
+                      blogTable: ({ value }: any) => {
+                        if (!value || (!value.headers && !value.rows)) return null;
+                        return (
+                          <div className="my-8 overflow-x-auto rounded-lg border border-[#e8ecf2] shadow-sm">
+                            <table className="w-full text-left border-collapse">
+                              <thead className="bg-[#1e3a5f] text-white">
+                                <tr>
+                                  {value.headers?.map((header: string, i: number) => (
+                                    <th key={i} className="px-3 py-3 md:px-4 font-bold border-b border-[#1e3a5f] text-sm md:text-base">
+                                      {header}
+                                    </th>
+                                  ))}
+                                </tr>
+                              </thead>
+                              <tbody className="text-[#5a6a82] bg-white">
+                                {value.rows?.map((row: any, i: number) => (
+                                  <tr key={i} className="border-b border-[#e8ecf2] hover:bg-[#f7f8fa] transition-colors">
+                                    {row.cells?.map((cell: string, j: number) => (
+                                      <td 
+                                        key={j} 
+                                        className={`px-3 py-3 md:px-4 text-sm md:text-base align-top ${j === 0 ? 'font-semibold text-[#0f1d33]' : ''}`}
+                                      >
+                                        {cell}
+                                      </td>
+                                    ))}
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )
+                      }
+                    },
+                    marks: {
+                      link: ({ children, value }: any) => {
+                        const rel = !value.href.startsWith('/') ? 'noreferrer noopener' : undefined;
+                        const target = !value.href.startsWith('/') ? '_blank' : undefined;
+                        return (
+                          <Link href={value.href} rel={rel} target={target}>
+                            {children}
+                          </Link>
+                        );
                       }
                     }
                   }}
                 />
               )}
             </div>
+
+            {post.whatsappContext && (
+              <div className="mt-10 flex justify-center">
+                <WhatsAppInlineCta context={post.whatsappContext} label="Ask Us on WhatsApp" />
+              </div>
+            )}
 
             {/* FAQs */}
             {post.faqs && post.faqs.length > 0 && (
@@ -180,6 +251,24 @@ export default async function BlogPostPage({
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {post.disclaimer && (
+              <p className="mt-10 text-sm text-[#5a6a82] italic border-t border-[#e8ecf2] pt-6">
+                {post.disclaimer}
+              </p>
+            )}
+
+            {post.relatedLinks && post.relatedLinks.length > 0 && (
+              <div className="mt-16 pt-8 border-t border-[#e8ecf2] flex flex-wrap gap-x-2 gap-y-1 text-sm text-[#5a6a82]">
+                <span>Related:</span>
+                {post.relatedLinks.map((link, i) => (
+                  <span key={link.href}>
+                    <Link href={link.href} className="font-semibold text-[#1e3a5f] hover:text-[#c4a55a]">{link.label}</Link>
+                    {i < (post.relatedLinks?.length ?? 0) - 1 ? ',' : ''}
+                  </span>
+                ))}
               </div>
             )}
 

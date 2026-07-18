@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 
 // Builds full title/description/canonical/OG/Twitter metadata for hand-authored
 // static pages (articles, comparison pages, lead magnets) that have no
-// per-page photo of their own — falls back to the branded /api/widgets_og generator
+// per-page photo of their own - falls back to the branded /api/widgets_og generator
 // so every page still gets a real preview image on WhatsApp/social shares.
 export function buildStaticOgMetadata({
   title,
@@ -114,7 +114,7 @@ export async function generatePageMetadata(
   const global = await getSeoGlobal()
   const settings = await getSeoSettings(pageSlug)
 
-  // `absolute` bypasses the root layout's `%s | Bhuwanta` title template — this
+  // `absolute` bypasses the root layout's `%s | Bhuwanta` title template - this
   // string already has the site name appended, so without `absolute` Next.js
   // appends it a second time (e.g. "... | Bhuwanta | Bhuwanta").
   const title = {

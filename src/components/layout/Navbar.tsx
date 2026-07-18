@@ -16,7 +16,7 @@ const navLinks = [
   { href: '/why-bhuwanta', label: 'Why Bhuwanta' },
   { href: '#', label: 'Reviews' },
   { href: '/gallery', label: 'Gallery' },
-  { href: '/blog', label: 'Blog' },
+  { href: '/blog', label: 'Blogs' },
 ]
 
 interface SiteSettings {
@@ -64,7 +64,6 @@ export function Navbar() {
     }).catch(() => {})
   }, [])
   const siteName = settings.siteName || 'BHUWANTA'
-  const _tagline = settings.tagline || 'Land Today. Landmark Tomorrow.'
   const ctaText = settings.ctaButtonText || 'Book Site Visit'
   const ctaLink = '/#book-visit' // Hardcoded to always scroll to the Schedule a Tour section
   const logoSrc = settings.logo ? urlFor(settings.logo).height(80).url() : null

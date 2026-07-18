@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { contactRateLimiter } from '@/lib/redis'
-import { sendContactNotification, resend } from '@/lib/resend'
+import { contactRateLimiter } from '@/lib/redis/redis'
+import { sendContactNotification, resend } from '@/lib/resend/resend'
 import { client, autoresponderQuery, writeClient } from '@/lib/sanity'
 
 async function sendDynamicAutoresponder(toName: string, toEmail: string) {
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
     const locationStr = location && location !== 'Not Sure' ? `Location: ${location} | ` : ''
     const budget = `${locationStr}Project: ${project} | Type: ${enquiryType} | Message: ${message}`
 
-    // Validation — email is optional (short-form lead capture only asks name + phone)
+    // Validation - email is optional (short-form lead capture only asks name + phone)
     if (!name || !phone) {
       return NextResponse.json(
         { error: 'Name and phone are required.' },
@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Backup into Supabase (Safety net — non-blocking)
+    // Backup into Supabase (Safety net - non-blocking)
     try {
       const supabase = createServiceClient()
       
@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
       console.error('Supabase backup insert failed (non-critical):', backupErr)
     }
 
-    // Send emails (non-blocking, don't fail the request) — the autoresponder and
+    // Send emails (non-blocking, don't fail the request) - the autoresponder and
     // reply-to both need a real email, which short-form (name + phone only) leads
     // won't have, so skip the lead-facing emails and just notify the team.
     try {

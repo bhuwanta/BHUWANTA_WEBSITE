@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -13,30 +13,32 @@ export interface LeadReportData {
   date: string;
 }
 
-export function generateExcelBuffer(leads: LeadReportData[]): Buffer {
+export async function generateExcelBuffer(leads: LeadReportData[]): Promise<Buffer> {
   // If no leads, provide a dummy row so the Excel file isn't completely blank
   const dataForExcel = leads.length > 0 ? leads : [{
     name: 'NO NEW LEADS', phone: '-', email: '-', source: '-', message: '-', project: '-', downloads: '-', date: '-'
   }];
-  const worksheet = XLSX.utils.json_to_sheet(dataForExcel);
-  
-  // Set nice column widths
-  worksheet['!cols'] = [
-    { wch: 20 }, // name
-    { wch: 15 }, // phone
-    { wch: 25 }, // email
-    { wch: 15 }, // source
-    { wch: 40 }, // message
-    { wch: 20 }, // project
-    { wch: 30 }, // downloads
-    { wch: 20 }, // date
+
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Leads');
+
+  worksheet.columns = [
+    { header: 'Name', key: 'name', width: 20 },
+    { header: 'Phone', key: 'phone', width: 15 },
+    { header: 'Email', key: 'email', width: 25 },
+    { header: 'Source', key: 'source', width: 15 },
+    { header: 'Message', key: 'message', width: 40 },
+    { header: 'Project', key: 'project', width: 20 },
+    { header: 'Downloads', key: 'downloads', width: 30 },
+    { header: 'Date', key: 'date', width: 20 }
   ];
 
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Leads");
-  
-  // Return buffer
-  return XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+  dataForExcel.forEach(lead => {
+    worksheet.addRow(lead);
+  });
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  return Buffer.from(buffer);
 }
 
 export async function generatePDFBuffer(leads: LeadReportData[], reportTitle: string): Promise<Buffer> {

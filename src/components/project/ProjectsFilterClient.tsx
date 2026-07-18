@@ -30,7 +30,7 @@ export interface ProjectEntry {
 }
 
 // Fallback slugs for the hand-authored /projects/<slug> pages, keyed by the
-// exact project name as stored in Sanity — used until/unless an editor sets
+// exact project name as stored in Sanity - used until/unless an editor sets
 // the CMS slug field, at which point project.slug?.current takes precedence.
 const KNOWN_PROJECT_SLUGS: Record<string, string> = {
   'S.V.KANAKA MAPLE HOMES': 'sv-kanaka-maple-homes',

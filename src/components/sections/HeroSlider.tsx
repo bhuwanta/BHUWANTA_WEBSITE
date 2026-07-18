@@ -27,7 +27,7 @@ export function HeroSlider({ images }: { images: { url: string; text?: string }[
   return (
     <>
       {images.map((img, index) => {
-        // Always h2 — the homepage has its own dedicated <h1>, so this
+        // Always h2 - the homepage has its own dedicated <h1>, so this
         // CMS-editable, per-slide caption (which may be empty) must never
         // compete for that role.
         const Tag = 'h2'

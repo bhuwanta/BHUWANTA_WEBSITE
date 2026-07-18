@@ -1,6 +1,6 @@
 'use client'
 
-import { fireLeadConversion } from '@/lib/gtag'
+import { fireLeadConversion } from '@/lib/website-tracker/gtag'
 
 const WHATSAPP_NUMBER = '919666504405'
 

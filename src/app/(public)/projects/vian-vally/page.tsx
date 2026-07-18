@@ -6,8 +6,8 @@ export const revalidate = 60
 export async function generateMetadata(): Promise<Metadata> {
   return buildProjectPageMetadata(
     config,
-    'Vian Vally — Shabad, NH-44 Bangalore Highway | Bhuwanta',
-    'Vian Vally — HMDA & RERA approved open plots in Shabad, on the NH-44 Bangalore Highway corridor. A curated, investor-grade land asset by Bhuwanta.'
+    'Vian Vally - Shabad, NH-44 Bangalore Highway | Bhuwanta',
+    'Vian Vally - HMDA & RERA approved open plots in Shabad, on the NH-44 Bangalore Highway corridor. A curated, investor-grade land asset by Bhuwanta.'
   )
 }
 
@@ -29,7 +29,7 @@ const config: ProjectLandingConfig = {
   faqs: [
     {
       question: 'Is Vian Vally HMDA approved?',
-      answer: 'Yes. Vian Vally is HMDA approved and RERA registered. Approval and RERA documents are available for review — request them through the enquiry form or WhatsApp.',
+      answer: 'Yes. Vian Vally is HMDA approved and RERA registered. Approval and RERA documents are available for review - request them through the enquiry form or WhatsApp.',
     },
     {
       question: 'Why invest in Shabad?',

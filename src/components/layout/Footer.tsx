@@ -73,13 +73,11 @@ export function Footer() {
   }, [])
 
   const siteName = settings.siteName || 'BHUWANTA'
-  const _tagline = settings.tagline || 'Land Today. Landmark Tomorrow.'
   const logoSrc = settings.logo ? urlFor(settings.logo).height(96).url() : null
   const footerLinks = settings.navLinks?.length ? settings.navLinks : defaultFooterLinks
   const address = settings.footerAddress || 'Alluri Trade Center, Floor #5 , Unit #406 , KPHB, Near KPHB Metro Station (opposite to pillar number # 761), hyderabad, telangana - 500072'
   const addressLabel = settings.footerAddressLabel || 'Headquarters'
   const mapsUrl = settings.googleMapsUrl || 'https://maps.app.goo.gl/USjC2iYeGiXbZ5U16'
-  const _phone = (settings.footerPhone && settings.footerPhone !== '+91 XXXXX XXXXX') ? settings.footerPhone : null
   const email = settings.footerEmail || 'info@bhuwanta.com'
   const copyright = settings.copyrightText || 'Bhuwanta. All rights reserved.'
 
@@ -207,7 +205,7 @@ export function Footer() {
             © {new Date().getFullYear()} {copyright}
           </p>
           <div className="flex gap-6 pr-4 md:pr-24 lg:pr-28 pb-20 md:pb-0">
-            <Link href="/policies" className="text-xs text-white/50 hover:text-white transition-premium">
+            <Link href="/privacy-policy" className="text-xs text-white/50 hover:text-white transition-premium">
               Terms & Privacy
             </Link>
           </div>

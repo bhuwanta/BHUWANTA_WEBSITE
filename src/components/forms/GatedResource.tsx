@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Lock, Printer } from 'lucide-react'
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth'
 import { auth } from '@/lib/firebase/config'
-import { fireLeadConversion } from '@/lib/gtag'
+import { fireLeadConversion } from '@/lib/website-tracker/gtag'
 
 export function GatedResource({
   resourceName,
@@ -85,7 +85,7 @@ export function GatedResource({
           name: formData.name,
           phone: formData.phone,
           enquiryType: `Document Download: ${resourceName}`,
-          sourcePage: `Lead Magnet — ${resourceName}`,
+          sourcePage: `Lead Magnet - ${resourceName}`,
         }),
       })
 

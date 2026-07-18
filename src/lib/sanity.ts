@@ -179,7 +179,7 @@ export const projectsQuery = `*[_type == "projects"][0]{
 
 export const projectSlugsQuery = `*[_type == "projects"][0].projectEntries[defined(slug.current)][].slug.current`
 
-// Looks a project up by its display name rather than its Sanity slug — used by
+// Looks a project up by its display name rather than its Sanity slug - used by
 // the static /projects/<name-slug> pages, which exist as hand-authored routes
 // independent of whether an editor has set the CMS slug field yet.
 export const projectByNameQuery = `*[_type == "projects"][0].projectEntries[name == $name][0]{
@@ -259,6 +259,9 @@ export const blogPostQuery = `*[_type == "blog" && slug.current == $slug][0]{
   "ogImage": ogImage.asset->url,
   canonicalUrl,
   focusKeyword,
+  whatsappContext,
+  disclaimer,
+  relatedLinks[]{ label, href },
   faqs[]{ question, answer }
 }`
 

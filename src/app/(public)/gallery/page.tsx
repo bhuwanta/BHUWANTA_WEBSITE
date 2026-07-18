@@ -8,7 +8,7 @@ import { PageBanner } from '../../../components/layout/PageBanner'
 import { CtaSection } from '@/components/sections/CtaSection'
 
 export async function generateMetadata(): Promise<Metadata> {
-  return generatePageMetadata('gallery', 'Gallery', 'See the land for yourself. Every photo is real — no renderings, no stock images. Browse site views, layouts, and development progress.')
+  return generatePageMetadata('gallery', 'Gallery', 'See the land for yourself. Every photo is real - no renderings, no stock images. Browse site views, layouts, and development progress.')
 }
 
 export const revalidate = 120

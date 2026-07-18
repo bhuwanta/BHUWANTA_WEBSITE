@@ -80,7 +80,7 @@ const PROJECT_FAQ_DATA: Record<string, { question: string; answer: string }[]> =
     },
     {
       question: 'Is it safe for NRIs to buy land in Hyderabad?',
-      answer: 'Yes. NRIs can legally purchase residential plots in India under FEMA guidelines. Bhuwanta assists NRI buyers with documentation and the purchase process for projects like Vaibhav County — contact our team via WhatsApp or the enquiry form to get started.',
+      answer: 'Yes. NRIs can legally purchase residential plots in India under FEMA guidelines. Bhuwanta assists NRI buyers with documentation and the purchase process for projects like Vaibhav County - contact our team via WhatsApp or the enquiry form to get started.',
     },
   ],
 }
@@ -111,7 +111,7 @@ export async function generateMetadata({
   if (!project) return { title: 'Project Not Found' }
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bhuwanta.com'
-  const title = { absolute: `${project.name} — ${project.location} | Bhuwanta Developers` }
+  const title = { absolute: `${project.name} - ${project.location} | Bhuwanta Developers` }
   const description = `${project.name} in ${project.location}${project.approvalBadge ? `, ${project.approvalBadge}` : ''}. ${project.description?.slice(0, 130) || 'Explore plot sizes, approvals, and pricing.'}`
 
   return {

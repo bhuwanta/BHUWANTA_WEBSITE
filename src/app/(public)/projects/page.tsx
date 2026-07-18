@@ -58,7 +58,7 @@ export default async function ProjectsPage() {
         category: 'warangal-highway',
         location: '[LOCATION], Hyderabad',
         googleMapsUrl: 'https://maps.google.com',
-        description: 'Bhuwanta\'s debut development — a carefully planned, Vastu-aligned layout in one of Hyderabad\'s fastest-growing zones. Every plot is HMDA-approved, clearly titled, and ready for construction.',
+        description: 'Bhuwanta\'s debut development - a carefully planned, Vastu-aligned layout in one of Hyderabad\'s fastest-growing zones. Every plot is HMDA-approved, clearly titled, and ready for construction.',
         plotSizes: '150 sq yd – 300 sq yd',
       }
     ]

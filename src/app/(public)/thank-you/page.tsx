@@ -3,16 +3,16 @@
 import { useEffect } from 'react'
 import Link from 'next/link'
 import { CheckCircle2 } from 'lucide-react'
-import { fireLeadConversion } from '@/lib/gtag'
+import { fireLeadConversion } from '@/lib/website-tracker/gtag'
 
 const WHATSAPP_NUMBER = '919666504405'
 
 export default function ThankYouPage() {
-  const waMessage = encodeURIComponent('Hi Bhuwanta, I just submitted an enquiry on your website — could we speak sooner on WhatsApp?')
+  const waMessage = encodeURIComponent('Hi Bhuwanta, I just submitted an enquiry on your website - could we speak sooner on WhatsApp?')
   const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${waMessage}`
 
   // Reaching this page only happens after a successful form submission
-  // (ContactForm redirects here) — fires the shared lead conversion once.
+  // (ContactForm redirects here) - fires the shared lead conversion once.
   useEffect(() => {
     fireLeadConversion()
   }, [])
@@ -21,7 +21,7 @@ export default function ThankYouPage() {
     <main className="min-h-[80vh] flex items-center justify-center bg-white px-4 pt-24">
       <div className="max-w-lg w-full text-center">
         <CheckCircle2 className="w-16 h-16 text-emerald-500 mx-auto mb-6" />
-        <h1 className="text-3xl sm:text-4xl font-bold text-[#0f1d33] mb-4">Done — We&apos;ve Got Your Enquiry</h1>
+        <h1 className="text-3xl sm:text-4xl font-bold text-[#0f1d33] mb-4">Done - We&apos;ve Got Your Enquiry</h1>
         <p className="text-[#5a6a82] mb-10 leading-relaxed">
           Our team will call you within 2 hours during business hours (Mon–Sat, 10 AM–7 PM). Want it faster?
         </p>

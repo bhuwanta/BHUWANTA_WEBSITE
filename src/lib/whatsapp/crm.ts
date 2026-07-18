@@ -30,7 +30,7 @@ export async function upsertWhatsAppLead(phone: string, name: string) {
       return existingLead
     }
 
-    // Create new lead — email and message are NOT NULL in the DB
+    // Create new lead - email and message are NOT NULL in the DB
     const { data: newLead, error } = await supabase
       .from('leads')
       .insert({

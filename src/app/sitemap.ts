@@ -11,8 +11,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${siteUrl}/projects`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
     { url: `${siteUrl}/gallery`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
     { url: `${siteUrl}/blog`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
-    { url: `${siteUrl}/policies`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.3 },
-    // /thank-you is intentionally excluded — it's disallowed in robots.txt
+    { url: `${siteUrl}/why-bhuwanta`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${siteUrl}/privacy-policy`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.3 },
+    // /thank-you is intentionally excluded - it's disallowed in robots.txt
     // (a conversion-tracking utility page, not something to index), and
     // listing a disallowed URL in the sitemap just produces a
     // "blocked by robots.txt" warning in Search Console for no benefit.
@@ -20,18 +21,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // ── Money pages (location landing pages) ──
     { url: `${siteUrl}/shabad-open-plots`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.9 },
     { url: `${siteUrl}/shadnagar-open-plots`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.9 },
-    { url: `${siteUrl}/hmda-vs-dtcp-plots-hyderabad`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.8 },
-
-    // ── Resources (gated content landing pages) ──
-    { url: `${siteUrl}/resources/hyderabad-plot-buyer-legal-checklist`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
-    { url: `${siteUrl}/resources/nh44-growth-corridor-investment-map`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
-
-    // ── Static blog articles ──
-    { url: `${siteUrl}/blog/verify-hmda-dtcp-approval-telangana`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.8 },
-    { url: `${siteUrl}/blog/open-plots-shabad-hyderabad-hmda-approved-guide`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
-    { url: `${siteUrl}/blog/dtcp-vs-hmda-plots-shadnagar-buyer-guide`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
-    { url: `${siteUrl}/blog/shabad-vs-shadnagar-investment-comparison`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
-    { url: `${siteUrl}/blog/open-plots-shadnagar-growth-story-2026`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
   ]
 
   // Hand-authored /projects/<slug> pages that exist as static routes today,

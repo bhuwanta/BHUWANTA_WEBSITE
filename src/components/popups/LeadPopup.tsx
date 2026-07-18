@@ -7,7 +7,7 @@ import Image from 'next/image'
 import logoImg from '@/images/logo.png'
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth'
 import { auth } from '@/lib/firebase/config'
-import { fireLeadConversion } from '@/lib/gtag'
+import { fireLeadConversion } from '@/lib/website-tracker/gtag'
 
 declare global {
   interface Window {

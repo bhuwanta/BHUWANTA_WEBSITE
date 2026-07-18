@@ -3,7 +3,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowRight, Calendar, Tag, BookOpen } from 'lucide-react'
 import { generatePageMetadata } from '@/lib/seo'
-import { sanityFetch, blogListQuery, projectByNameQuery } from '@/lib/sanity'
+import { sanityFetch, blogListQuery } from '@/lib/sanity'
 import { JsonLd, buildBreadcrumbSchema } from '@/components/seo/JsonLd'
 import { formatDate } from '@/lib/utils'
 import { PageBanner } from '../../../components/layout/PageBanner'
@@ -38,114 +38,19 @@ interface BlogCard {
 }
 
 const ogImage = (title: string, subtitle: string) =>
-  `https://bhuwanta.com/api/widgets_og?title=${encodeURIComponent(title)}&subtitle=${encodeURIComponent(subtitle)}`
+  `/api/widgets_og?title=${encodeURIComponent(title)}&subtitle=${encodeURIComponent(subtitle)}`
 
 // Guides about a specific project use that project's real photo instead of
-// the generated placeholder — more genuine, and matches how project/landing
+// the generated placeholder - more genuine, and matches how project/landing
 // pages already work. General/process guides (not tied to one project) keep
 // the branded /api/widgets_og image, which is entirely self-generated (the site's
 // own logo + drawn text, no stock photography) so there's no copyright
 // concern either way.
-const staticGuides: (Omit<BlogCard, 'image'> & { fallbackImage: string })[] = [
-  {
-    href: '/blog/best-real-estate-investment-telangana-andhra-pradesh',
-    title: 'Best Real Estate Investment Options in Telangana & Andhra Pradesh: 2026 Guide',
-    excerpt: 'A 2026 guide to investing in Telangana and Andhra Pradesh real estate — why HMDA/DTCP-approved open plots near growth corridors are drawing investor interest, and what to check before you buy.',
-    fallbackImage: ogImage('Best Real Estate Investment Options', 'Telangana & Andhra Pradesh — 2026 Guide'),
-    tag: 'Investment Guide',
-    publishDate: '2026-07-16',
-  },
-  {
-    href: '/blog/regional-ring-road-telangana-growth-areas',
-    title: 'Regional Ring Road (RRR): Which Areas in Telangana Will Benefit Most?',
-    excerpt: 'A look at Telangana\'s Regional Ring Road (RRR) — its decentralization goal, which growth corridors are seeing rising investor interest, and what it means for plot buyers.',
-    fallbackImage: ogImage('Regional Ring Road (RRR)', 'Which Areas in Telangana Will Benefit Most?'),
-    tag: 'Market Insight',
-    publishDate: '2026-07-16',
-  },
-  {
-    href: '/blog/nri-guide-uk-open-plots-hyderabad',
-    title: 'Buying Open Plots in Hyderabad from the UK: Complete NRI Guide 2026',
-    excerpt: 'A complete 2026 guide for UK-based NRIs buying open plots near Hyderabad — FEMA eligibility, UK tax basics, the Notary Public + FCDO apostille Power of Attorney process, and how to buy remotely.',
-    fallbackImage: ogImage('Buying Open Plots in Hyderabad from the UK', 'Complete NRI Guide 2026'),
-    tag: 'NRI Guide',
-    publishDate: '2026-07-16',
-  },
-  {
-    href: '/blog/verify-hmda-dtcp-approval-telangana',
-    title: 'How to Verify HMDA/DTCP Approval in Telangana: Step-by-Step (2026)',
-    excerpt: 'A step-by-step guide to verifying HMDA and DTCP layout approval and RERA registration in Telangana using the official government portals, before you buy a plot.',
-    fallbackImage: ogImage('How to Verify HMDA/DTCP Approval', 'Step-by-Step Guide Using Official Telangana Portals'),
-    tag: 'Blog',
-    publishDate: '2026-07-13',
-  },
-  {
-    href: '/hmda-vs-dtcp-plots-hyderabad',
-    title: 'HMDA vs DTCP Approved Plots in Hyderabad: Complete 2026 Comparison',
-    excerpt: 'HMDA vs DTCP approved plots in Hyderabad — compare pricing, infrastructure, approval process, and appreciation potential to choose the right plot for your investment goals.',
-    fallbackImage: ogImage('HMDA vs DTCP Approved Plots', 'Complete 2026 Comparison'),
-    tag: 'Blog',
-    publishDate: '2026-07-13',
-  },
-  {
-    href: '/blog/open-plots-shabad-hyderabad-hmda-approved-guide',
-    title: 'Open Plots in Shabad, Hyderabad: HMDA Approved Plots Near Bangalore Highway (2026 Guide)',
-    excerpt: 'A complete 2026 guide to open plots in Shabad, Hyderabad — HMDA approval, what drives value on the NH-44 Bangalore Highway corridor, and how to verify a plot before you buy.',
-    fallbackImage: ogImage('Open Plots in Shabad, Hyderabad', 'HMDA Approved Plots Near Bangalore Highway — 2026 Guide'),
-    tag: 'Blog',
-    publishDate: '2026-07-13',
-  },
-  {
-    href: '/blog/dtcp-vs-hmda-plots-shadnagar-buyer-guide',
-    title: "DTCP vs HMDA Approved Plots in Shadnagar: Complete Buyer's Guide (2026)",
-    excerpt: "DTCP vs HMDA approved plots in the Shadnagar area — what applies where, how to verify either approval type, and where Bhuwanta's nearest verified project fits in.",
-    fallbackImage: ogImage('DTCP vs HMDA Plots in Shadnagar', "Complete Buyer's Guide (2026)"),
-    tag: 'Blog',
-    publishDate: '2026-07-13',
-  },
-  {
-    href: '/blog/shabad-vs-shadnagar-investment-comparison',
-    title: 'Shabad vs Shadnagar: Which Growth Corridor Should You Invest In?',
-    excerpt: "Shabad vs Shadnagar — a straight comparison of Hyderabad's NH-44 growth corridor towns, who should choose which, and where verified, HMDA-approved inventory is available today.",
-    fallbackImage: ogImage('Shabad vs Shadnagar', 'Which Growth Corridor Should You Invest In?'),
-    tag: 'Blog',
-    publishDate: '2026-07-13',
-  },
-  {
-    href: '/blog/open-plots-shadnagar-growth-story-2026',
-    title: "Open Plots for Sale in Shadnagar: What's Driving the 2026 Growth Story",
-    excerpt: "Why Shadnagar is drawing buyer interest in 2026 — micro-location context, infrastructure drivers, and the red flags to check before buying any open plot in this corridor.",
-    fallbackImage: ogImage('Open Plots for Sale in Shadnagar', "What's Driving the 2026 Growth Story"),
-    tag: 'Blog',
-    publishDate: '2026-07-13',
-  },
-]
-
-// Guides directly about the Shabad/Shadnagar corridor use Vian Vally's real
-// photo — everything else keeps its own fallbackImage.
-const VIAN_VALLY_HREFS = new Set([
-  '/blog/open-plots-shabad-hyderabad-hmda-approved-guide',
-  '/blog/dtcp-vs-hmda-plots-shadnagar-buyer-guide',
-  '/blog/shabad-vs-shadnagar-investment-comparison',
-  '/blog/open-plots-shadnagar-growth-story-2026',
-])
-
 export default async function BlogPage() {
   let posts: BlogPost[] = []
-  let vianVallyImage: string | null = null
-
   try {
     const data = await sanityFetch<BlogPost[]>({ query: blogListQuery, tags: ['blog'] })
     if (data) posts = data
-  } catch { /* fallback */ }
-
-  try {
-    const vianVally = await sanityFetch<{ images?: string[] } | null>({
-      query: projectByNameQuery,
-      params: { name: 'VIAN VALLY' },
-      tags: ['projects'],
-    })
-    vianVallyImage = vianVally?.images?.[0] || null
   } catch { /* fallback */ }
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bhuwanta.com'
@@ -165,12 +70,7 @@ export default async function BlogPage() {
       publishDate: post.publishDate,
     }))
 
-  const guideCards: BlogCard[] = staticGuides.map(({ fallbackImage, ...guide }) => ({
-    ...guide,
-    image: (VIAN_VALLY_HREFS.has(guide.href) && vianVallyImage) || fallbackImage,
-  }))
-
-  const allCards = [...postCards, ...guideCards]
+  const allCards = postCards
 
   return (
     <>
@@ -191,10 +91,11 @@ export default async function BlogPage() {
                     <div className="w-full aspect-[16/9] relative overflow-hidden bg-[#f7f8fa]">
                       <Image
                         src={card.image}
-                        alt={`${card.title} — cover image`}
+                        alt={`${card.title} - cover image`}
                         fill
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        unoptimized={card.image.startsWith('/api/')}
                       />
                     </div>
                     <div className="p-6 flex flex-col flex-grow">

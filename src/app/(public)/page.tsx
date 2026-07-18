@@ -88,7 +88,7 @@ export default async function HomePage({
   ]
 
 
-  // 2. Premium Categories — only show categories of projects that have real data (image or video)
+  // 2. Premium Categories - only show categories of projects that have real data (image or video)
   const fallbackImage = 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80'
   
   const uniqueCategoriesMap = new Map<string, string>()
@@ -139,7 +139,7 @@ export default async function HomePage({
     { icon: FileCheck, title: 'Verified Documentation' },
   ]
 
-  // 6. Real site photos — used instead of testimonials until real, sourced
+  // 6. Real site photos - used instead of testimonials until real, sourced
   // client reviews/videos are available. Placeholder quotes with generic
   // names would be unverifiable and are worse than showing real project photos.
   const sitePhotos = (projectEntries)
@@ -174,14 +174,14 @@ export default async function HomePage({
         }
       `}} />
 
-      {/* ===== SECTION 1 — HERO BANNER ===== */}
+      {/* ===== SECTION 1 - HERO BANNER ===== */}
       <section className="relative min-h-[100svh] flex flex-col overflow-hidden" id="hero">
         <HeroSlider images={mappedHeroImages} />
 
         {/* Center Content */}
         <div className="relative z-20 w-full max-w-5xl mx-auto px-4 text-center flex-grow flex flex-col justify-center pt-20">
           {/*
-            Visually hidden — HeroSlider renders the visible, CMS-editable
+            Visually hidden - HeroSlider renders the visible, CMS-editable
             caption for each slide. This H1 exists so the page always has a
             real, stable, keyword-relevant heading regardless of whether an
             editor has set slide caption text (previously the page had none
@@ -215,7 +215,7 @@ export default async function HomePage({
         </div>
       </section>
 
-      {/* ===== SECTION 1.5 — STATS BAR ===== */}
+      {/* ===== SECTION 1.5 - STATS BAR ===== */}
       <section className="bg-white border-b border-[#e8ecf2] py-12 relative z-20 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-y-10 sm:gap-y-12 md:gap-8 md:divide-x md:divide-[#e8ecf2]">
@@ -231,7 +231,7 @@ export default async function HomePage({
         </div>
       </section>
 
-      {/* ===== SECTION 1.6 — CITABLE COMPANY SUMMARY (for AI/answer engines) ===== */}
+      {/* ===== SECTION 1.6 - CITABLE COMPANY SUMMARY (for AI/answer engines) ===== */}
       <section className="bg-white py-10 sm:py-14 border-b border-[#e8ecf2]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
           <p className="text-sm sm:text-base text-[#5a6a82] leading-relaxed text-center">
@@ -241,7 +241,7 @@ export default async function HomePage({
       </section>
 
 
-      {/* ===== SECTION 2 — WHY CHOOSE BHUWANTA (DARK) ===== */}
+      {/* ===== SECTION 2 - WHY CHOOSE BHUWANTA (DARK) ===== */}
       <section className="bg-[#022F3A] pt-20 pb-10 sm:pt-28 sm:pb-14 overflow-hidden" id="why-choose">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="flex justify-center mb-5">
@@ -302,7 +302,7 @@ export default async function HomePage({
 
 
 
-      {/* ===== SECTION 4 — EXPLORE OUR PREMIUM OPEN PLOT PROJECTS (WHITE) ===== */}
+      {/* ===== SECTION 4 - EXPLORE OUR PREMIUM OPEN PLOT PROJECTS (WHITE) ===== */}
       {premiumCategories.length > 0 && (
       <section className="bg-white pt-10 pb-20 sm:pt-14 sm:pb-28" id="premium-projects">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
@@ -376,7 +376,7 @@ export default async function HomePage({
       </section>
       )}
 
-      {/* ===== SECTION 5 — YOUR JOURNEY TO OWNERSHIP (BLUE) ===== */}
+      {/* ===== SECTION 5 - YOUR JOURNEY TO OWNERSHIP (BLUE) ===== */}
       <section className="bg-[#022F3A] py-20 sm:py-28 relative overflow-hidden" id="journey">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 relative">
           
@@ -442,7 +442,7 @@ export default async function HomePage({
         </div>
       </section>
 
-      {/* ===== SECTION 6 — OUR CERTIFICATIONS & APPROVALS (WHITE) ===== */}
+      {/* ===== SECTION 6 - OUR CERTIFICATIONS & APPROVALS (WHITE) ===== */}
       <section className="bg-white py-16 sm:py-24 overflow-hidden" id="certifications">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 mb-12 text-center">
           <div className="flex justify-center mb-5">
@@ -497,7 +497,7 @@ export default async function HomePage({
         </div>
       </section>
 
-      {/* ===== SECTION 7 — REAL SITES, REAL APPROVALS (BLUE) ===== */}
+      {/* ===== SECTION 7 - REAL SITES, REAL APPROVALS (BLUE) ===== */}
       {sitePhotos.length > 0 && (
       <section className="bg-[#022F3A] py-20 sm:py-28" id="testimonials">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
@@ -512,7 +512,7 @@ export default async function HomePage({
               Real Sites, <span className="text-[#c4a55a]">Real Approvals</span>
             </h2>
             <p className="text-base sm:text-lg text-white/80 max-w-3xl mx-auto leading-relaxed">
-              No stock photos, no stand-ins — these are our actual layouts. Book a free site visit and verify everything yourself before you decide.
+              No stock photos, no stand-ins - these are our actual layouts. Book a free site visit and verify everything yourself before you decide.
             </p>
           </div>
 
@@ -521,7 +521,7 @@ export default async function HomePage({
               <div key={i} className="relative aspect-[4/3] rounded-xl overflow-hidden border border-white/10 group">
                 <Image
                   src={photo.url}
-                  alt={`${photo.name} — real site photo, ${photo.location || 'Hyderabad'}`}
+                  alt={`${photo.name} - real site photo, ${photo.location || 'Hyderabad'}`}
                   fill
                   sizes="(max-width: 768px) 50vw, 33vw"
                   className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -538,7 +538,7 @@ export default async function HomePage({
       </section>
       )}
 
-      {/* ===== SECTION 8 — BOOK YOUR FREE SITE VISIT TODAY (WHITE/GRAY-50) ===== */}
+      {/* ===== SECTION 8 - BOOK YOUR FREE SITE VISIT TODAY (WHITE/GRAY-50) ===== */}
       <section className="bg-gray-50 pt-10 pb-20 sm:pt-16 sm:pb-28" id="book-visit">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
 

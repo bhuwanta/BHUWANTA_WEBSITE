@@ -108,7 +108,7 @@ export async function GET(request: Request) {
       const reportData = leads ? leads.map(formatLead) : [];
       const reportTitle = `Bhuwanta Leads - ${reportPeriod}`;
       
-      attachments.push({ filename: `leads_report_${dateStr}.xlsx`, content: generateExcelBuffer(reportData) });
+      attachments.push({ filename: `leads_report_${dateStr}.xlsx`, content: await generateExcelBuffer(reportData) });
       attachments.push({ filename: `leads_report_${dateStr}.pdf`, content: await generatePDFBuffer(reportData, reportTitle) });
 
       emailHtml = `

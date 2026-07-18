@@ -86,6 +86,36 @@ export const blogSchema = defineType({
             ],
           },
         },
+        {
+          type: 'object',
+          name: 'blogTable',
+          title: 'Table',
+          fields: [
+            {
+              name: 'headers',
+              type: 'array',
+              title: 'Table Headers',
+              of: [{ type: 'string' }],
+            },
+            {
+              name: 'rows',
+              type: 'array',
+              title: 'Table Rows',
+              of: [
+                {
+                  type: 'object',
+                  fields: [
+                    {
+                      name: 'cells',
+                      type: 'array',
+                      of: [{ type: 'string' }],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
       ],
     }),
     defineField({
@@ -103,7 +133,7 @@ export const blogSchema = defineType({
       title: 'Publish Date',
       initialValue: () => new Date().toISOString(),
     }),
-    // SEO fields — Blog is the exception that includes SEO in Sanity
+    // SEO fields - Blog is the exception that includes SEO in Sanity
     defineField({
       name: 'metaTitle',
       type: 'string',
@@ -171,6 +201,44 @@ export const blogSchema = defineType({
         },
       ],
       group: 'seo',
+    }),
+    defineField({
+      name: 'whatsappContext',
+      type: 'string',
+      title: 'WhatsApp Context',
+      description: 'The pre-filled text for the WhatsApp button CTA',
+    }),
+    defineField({
+      name: 'disclaimer',
+      type: 'text',
+      title: 'Disclaimer',
+      description: 'Legal disclaimer at the bottom of the article',
+      rows: 3,
+    }),
+    defineField({
+      name: 'relatedLinks',
+      type: 'array',
+      title: 'Related Links',
+      description: 'Links to related articles or pages',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            {
+              name: 'label',
+              type: 'string',
+              title: 'Label',
+              validation: (Rule) => Rule.required(),
+            },
+            {
+              name: 'href',
+              type: 'string',
+              title: 'URL',
+              validation: (Rule) => Rule.required(),
+            },
+          ],
+        },
+      ],
     }),
   ],
   groups: [

@@ -1,6 +1,6 @@
 'use client'
 
-import { fireLeadConversion } from '@/lib/gtag'
+import { fireLeadConversion } from '@/lib/website-tracker/gtag'
 
 // Thin client wrapper so server-component pages can drop a tracked WhatsApp
 // link in with their own bespoke styling, without needing to convert the

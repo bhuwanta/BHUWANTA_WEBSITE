@@ -9,6 +9,7 @@ import { autoresponderSchema } from './autoresponder'
 import { leadSchema } from './lead'
 import { projectCategorySchema } from './projectCategory'
 
+
 export const schemaTypes = [
   siteSettingsSchema,
   projectCategorySchema,
@@ -19,5 +20,6 @@ export const schemaTypes = [
 
   projectsSchema,
   blogSchema,
+
   gallerySchema,
 ]

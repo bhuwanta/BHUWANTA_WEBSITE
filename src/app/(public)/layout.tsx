@@ -71,7 +71,7 @@ export default async function PublicLayout({
     <>
       <JsonLd data={[websiteSchema, localBusinessSchema]} />
 
-      {/* Google Analytics + Google Ads — one gtag.js loader shared by both
+      {/* Google Analytics + Google Ads - one gtag.js loader shared by both
           IDs, per Google's own guidance ("don't add more than one Google
           tag" means don't load gtag.js twice, not that you can't config
           multiple products through the same loader). */}

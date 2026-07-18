@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { resend } from '@/lib/resend'
+import { resend } from '@/lib/resend/resend'
 
 // Required to make sure Next.js doesn't passively cache background cron runs
 export const dynamic = 'force-dynamic'

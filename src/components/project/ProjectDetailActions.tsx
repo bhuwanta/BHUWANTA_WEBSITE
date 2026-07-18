@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { MapPin, Download, CreditCard } from 'lucide-react'
 import { ProjectImageCarousel } from '@/components/project/ProjectImageCarousel'
 import { DownloadPopup } from '@/components/popups/DownloadPopup'
-import { fireLeadConversion } from '@/lib/gtag'
+import { fireLeadConversion } from '@/lib/website-tracker/gtag'
 
 interface ProjectDetailActionsProps {
   name: string

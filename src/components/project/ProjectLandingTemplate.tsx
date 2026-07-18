@@ -27,7 +27,7 @@ interface ProjectData {
 }
 
 export interface ProjectLandingConfig {
-  /** Exact name as stored in Sanity — used for the live data lookup */
+  /** Exact name as stored in Sanity - used for the live data lookup */
   sanityName: string
   /** URL slug this page is served at, e.g. "sv-kanaka-maple-homes" */
   slug: string

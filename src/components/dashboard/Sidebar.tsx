@@ -14,7 +14,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Shield,
-  MessageCircle
+  MessageCircle,
+  Image,
+  PenTool
 } from "lucide-react";
 
 const navigation = [
@@ -23,9 +25,11 @@ const navigation = [
   { name: 'WhatsApp', href: '/crm/whatsapp', icon: MessageCircle },
   { name: 'Areas', href: '/crm/areas', icon: MapPin },
   { name: 'Projects', href: '/crm/projects', icon: Building2 },
+  { name: 'Gallery', href: '/crm/gallery', icon: Image },
   { name: 'Brochures', href: '/crm/brochures', icon: FileText },
   { name: 'Layouts', href: '/crm/layouts', icon: Map },
   { name: 'Reports', href: '/crm/reports', icon: LineChart },
+  { name: 'Blogs', href: '/studio', icon: PenTool, external: true },
   { name: 'Users', href: '/crm/users', icon: Shield },
 ];
 
@@ -71,6 +75,8 @@ export function Sidebar({ isCollapsed, toggleCollapse, userRole = 'Admin' }: Sid
             <Link
               key={item.name}
               href={item.href}
+              target={item.external ? "_blank" : undefined}
+              rel={item.external ? "noopener noreferrer" : undefined}
               className={cn(
                 isActive
                   ? "bg-[#1e3a5f]/10 text-[#1e3a5f]"
