@@ -172,15 +172,16 @@ export function DownloadPopup({ isOpen, onClose, urls, projectName, documentType
             <X className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
 
-          <Image 
-            src={logoImg} 
-            alt="Bhuwanta" 
-            width={320} 
-            height={120} 
-            loading="lazy"
-            className="w-40 sm:w-48 h-auto max-h-16 object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.3)] mb-4" 
-            style={{ height: 'auto' }}
-            sizes="(max-width: 640px) 160px, 192px"
+          <div
+            className="w-40 sm:w-48 h-12 sm:h-16 mb-4"
+            style={{
+              WebkitMaskImage: `url(${logoImg.src})`,
+              WebkitMaskSize: 'contain',
+              WebkitMaskRepeat: 'no-repeat',
+              WebkitMaskPosition: 'center',
+              backgroundColor: '#c4a55a' // Gold color from Tailwind config
+            }}
+            aria-label="Bhuwanta"
           />
           <h2 className="text-white font-semibold text-lg sm:text-xl">Download {documentType}</h2>
           <p className="text-white/80 text-xs sm:text-sm mt-1">{projectName}</p>

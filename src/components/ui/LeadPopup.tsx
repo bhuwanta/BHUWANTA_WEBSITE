@@ -168,15 +168,16 @@ export function LeadPopup({ projectsList = [], locationNames = [] }: { projectsL
           </button>
 
           {/* Logo */}
-          <Image
-            src={logoImg}
-            alt="Bhuwanta"
-            width={320}
-            height={120}
-            loading="lazy"
-            className="w-56 sm:w-72 h-auto max-h-24 object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.3)]"
-            style={{ height: 'auto' }}
-            sizes="(max-width: 640px) 224px, 288px"
+          <div
+            className="w-56 sm:w-72 h-16 sm:h-20"
+            style={{
+              WebkitMaskImage: `url(${logoImg.src})`,
+              WebkitMaskSize: 'contain',
+              WebkitMaskRepeat: 'no-repeat',
+              WebkitMaskPosition: 'center',
+              backgroundColor: '#c4a55a' // Gold color from Tailwind config
+            }}
+            aria-label="Bhuwanta"
           />
         </div>
 

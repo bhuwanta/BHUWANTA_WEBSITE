@@ -58,16 +58,14 @@ export function Navbar() {
 
   useEffect(() => {
     client.fetch(`*[_type == "siteSettings"][0]{
-      siteName, tagline, logo, ctaButtonText, ctaButtonLink
+      siteName, tagline, ctaButtonText, ctaButtonLink
     }`).then((data: SiteSettings) => {
       if (data) setSettings(data)
     }).catch(() => {})
   }, [])
   const siteName = settings.siteName || 'BHUWANTA'
-  const _tagline = settings.tagline || 'Land Today. Landmark Tomorrow.'
   const ctaText = settings.ctaButtonText || 'Book Site Visit'
   const ctaLink = '/#book-visit' // Hardcoded to always scroll to the Schedule a Tour section
-  const logoSrc = settings.logo ? urlFor(settings.logo).height(80).url() : null
 
   return (
     <nav
@@ -84,7 +82,7 @@ export function Navbar() {
           <Link href="/" className="flex items-center" id="nav-logo">
             <div className="relative h-12 sm:h-16 w-auto transition-transform duration-500 hover:scale-[1.05] origin-left">
               <Image 
-                src={logoSrc || logoFallback} 
+                src={logoFallback} 
                 alt={siteName} 
                 width={180}
                 height={64}

@@ -64,7 +64,7 @@ export function Footer() {
 
   useEffect(() => {
     client.fetch(`*[_type == "siteSettings"][0]{
-      siteName, tagline, logo, navLinks[]{ label, href },
+      siteName, tagline, navLinks[]{ label, href },
       footerAddress, footerAddressLabel, googleMapsUrl,
       footerPhone, footerEmail, copyrightText, socialLinks
     }`).then((data: FooterSettings) => {
@@ -74,7 +74,7 @@ export function Footer() {
 
   const siteName = settings.siteName || 'BHUWANTA'
   const _tagline = settings.tagline || 'Land Today. Landmark Tomorrow.'
-  const logoSrc = settings.logo ? urlFor(settings.logo).height(96).url() : null
+
   const footerLinks = settings.navLinks?.length ? settings.navLinks : defaultFooterLinks
   const address = settings.footerAddress || 'Alluri Trade Center, Floor #5 , Unit #406 , KPHB, Near KPHB Metro Station (opposite to pillar number # 761), hyderabad, telangana - 500072'
   const addressLabel = settings.footerAddressLabel || 'Headquarters'
@@ -103,15 +103,16 @@ export function Footer() {
             <div className="mb-8 sm:mb-10 flex flex-col items-start">
               <Link href="/" className="flex items-center group gap-3 sm:gap-4 mb-4">
                 <div className="relative h-16 sm:h-20 w-auto transition-transform duration-500 hover:scale-[1.05] origin-left">
-                  <Image 
-                    src={logoSrc || logoFallback} 
-                    alt={siteName} 
-                    width={240}
-                    height={80}
-                    loading="lazy"
-                    sizes="(max-width: 640px) 200px, 240px"
-                    className="h-16 sm:h-20 w-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]"
-                    style={{ width: 'auto' }}
+                  <div 
+                    className="h-16 sm:h-20 w-48 sm:w-60"
+                    style={{
+                      WebkitMaskImage: `url(${logoFallback.src})`,
+                      WebkitMaskSize: 'contain',
+                      WebkitMaskRepeat: 'no-repeat',
+                      WebkitMaskPosition: 'left center',
+                      backgroundColor: '#c4a55a' // Gold color
+                    }}
+                    aria-label={settings.siteName || 'BHUWANTA'}
                   />
                 </div>
               </Link>
