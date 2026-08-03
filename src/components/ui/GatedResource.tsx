@@ -19,7 +19,7 @@ export function GatedResource({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [phoneError, setPhoneError] = useState('')
-  const [formData, setFormData] = useState({ name: '', phone: '' })
+  const [formData, setFormData] = useState({ name: '', phone: '', referredBy: '' })
 
   const [step, setStep] = useState<1 | 2>(1)
   const [otp, setOtp] = useState('')
@@ -84,6 +84,7 @@ export function GatedResource({
         body: JSON.stringify({
           name: formData.name,
           phone: formData.phone,
+          referredBy: formData.referredBy,
           enquiryType: `Document Download: ${resourceName}`,
           sourcePage: `Lead Magnet — ${resourceName}`,
         }),
@@ -166,6 +167,14 @@ export function GatedResource({
             />
             {phoneError && <p className="text-red-500 text-xs mt-1 text-left">{phoneError}</p>}
           </div>
+          <input
+            type="text"
+            placeholder="Referred by (Optional)"
+            aria-label="Referred by"
+            className="w-full px-4 py-3 bg-white border border-[#e8ecf2] rounded-xl text-sm text-[#0f1d33] placeholder:text-[#5a6a82]/60 focus:outline-none focus:ring-2 focus:ring-[#c4a55a] transition-all"
+            value={formData.referredBy}
+            onChange={(e) => setFormData({ ...formData, referredBy: e.target.value })}
+          />
           <button
             disabled={loading}
             className="w-full py-3 gradient-gold text-white font-semibold rounded-xl shadow-lg shadow-[#c4a55a]/20 hover:scale-105 transition-premium disabled:opacity-70 flex items-center justify-center"

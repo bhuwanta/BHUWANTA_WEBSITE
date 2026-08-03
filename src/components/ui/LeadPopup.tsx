@@ -34,6 +34,7 @@ export function LeadPopup({ projectsList = [], locationNames = [] }: { projectsL
     project: 'Not Sure',
     enquiryType: 'Site Visit',
     message: '',
+    referredBy: '',
   })
 
   useEffect(() => {
@@ -283,6 +284,15 @@ export function LeadPopup({ projectsList = [], locationNames = [] }: { projectsL
                         <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" /></svg>
                       </div>
                     </div>
+
+                    <input
+                      type="text"
+                      placeholder="Referred by (Optional)"
+                      aria-label="Referred by"
+                      className="w-full px-4 py-3 bg-[#f8f9fb] border border-[#e8ecf2] rounded-xl text-sm text-[#002935] placeholder:text-[#002935]/40 focus:outline-none focus:ring-2 focus:ring-[#002935]/20 focus:border-[#002935]/50 transition-all"
+                      value={formData.referredBy}
+                      onChange={(e) => setFormData({ ...formData, referredBy: e.target.value })}
+                    />
 
                     <textarea
                       placeholder="Your Message (Optional)"

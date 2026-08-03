@@ -68,6 +68,7 @@ CREATE TABLE IF NOT EXISTS leads (
   enquiry_type TEXT,
   downloaded_item TEXT,
   bot_interactions_count INTEGER DEFAULT 1,
+  referred_by TEXT,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
 );
@@ -241,3 +242,6 @@ CREATE POLICY "Authenticated users manage meta_forms" ON meta_forms FOR ALL USIN
 
 -- Add provider_id to leads
 ALTER TABLE leads ADD COLUMN IF NOT EXISTS provider_id TEXT UNIQUE;
+
+-- Add referred_by to leads
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS referred_by TEXT;

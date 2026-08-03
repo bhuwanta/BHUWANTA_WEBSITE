@@ -28,6 +28,7 @@ export function DownloadPopup({ isOpen, onClose, urls, projectName, documentType
     name: '',
     phone: '',
     email: '',
+    referredBy: '',
   })
 
   // Reset state and handle background scrolling
@@ -40,7 +41,7 @@ export function DownloadPopup({ isOpen, onClose, urls, projectName, documentType
         setError('')
         setStep(1)
         setOtp('')
-        setFormData({ name: '', phone: '', email: '' })
+        setFormData({ name: '', phone: '', email: '', referredBy: '' })
       })
       
       document.body.style.overflow = 'hidden'
@@ -242,6 +243,14 @@ export function DownloadPopup({ isOpen, onClose, urls, projectName, documentType
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   />
                 </div>
+
+                <input
+                  type="text"
+                  placeholder="Referred by (Optional)"
+                  className="w-full px-4 py-3 bg-[#f8f9fb] border border-[#e8ecf2] rounded-xl text-sm text-[#002935] placeholder:text-[#002935]/40 focus:outline-none focus:ring-2 focus:ring-[#002935]/20 focus:border-[#002935]/50 transition-all"
+                  value={formData.referredBy}
+                  onChange={(e) => setFormData({ ...formData, referredBy: e.target.value })}
+                />
               </div>
 
               <div id="download-recaptcha-container"></div>

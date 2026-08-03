@@ -16,6 +16,7 @@ export async function sendContactNotification(lead: {
   enquiryType?: string
   message?: string
   sourcePage?: string
+  referredBy?: string
 }) {
   if (!resend) {
     console.warn('Resend not configured, skipping email')
@@ -34,16 +35,17 @@ export async function sendContactNotification(lead: {
     ...(lead.email ? { replyTo: lead.email } : {}),
     subject: `New Lead: ${lead.name} — ${lead.project || 'General Inquiry'}`,
     html: `
-      <h2>New Contact Form Submission</h2>
-      <table style="border-collapse: collapse; width: 100%;">
-        <tr><td style="padding: 8px; font-weight: bold;">Name:</td><td style="padding: 8px;">${lead.name}</td></tr>
-        ${lead.email ? `<tr><td style="padding: 8px; font-weight: bold;">Email:</td><td style="padding: 8px;"><a href="mailto:${lead.email}">${lead.email}</a></td></tr>` : ''}
-        ${lead.phone ? `<tr><td style="padding: 8px; font-weight: bold;">Phone:</td><td style="padding: 8px;">${lead.phone}</td></tr>` : ''}
-        <tr><td style="padding: 8px; font-weight: bold;">Location:</td><td style="padding: 8px;">${lead.location || 'Not Sure'}</td></tr>
-        <tr><td style="padding: 8px; font-weight: bold;">Project:</td><td style="padding: 8px;">${lead.project || 'Not Sure'}</td></tr>
-        <tr><td style="padding: 8px; font-weight: bold;">Type:</td><td style="padding: 8px;">${lead.enquiryType || 'Site Visit'}</td></tr>
-        <tr><td style="padding: 8px; font-weight: bold;">Message:</td><td style="padding: 8px; white-space: pre-wrap;">${lead.message || 'No message provided'}</td></tr>
-        <tr><td style="padding: 8px; font-weight: bold;">Source:</td><td style="padding: 8px;">${lead.sourcePage || 'Website'}</td></tr>
+      <h2>New Lead from ${escapeHtml(lead.sourcePage || 'Website')}</h2>
+      <table style="text-align: left; border-collapse: collapse; width: 100%;">
+        <tr><td style="padding: 8px; font-weight: bold;">Name:</td><td style="padding: 8px;">${escapeHtml(lead.name)}</td></tr>
+        <tr><td style="padding: 8px; font-weight: bold;">Email:</td><td style="padding: 8px;">${escapeHtml(lead.email || 'N/A')}</td></tr>
+        <tr><td style="padding: 8px; font-weight: bold;">Phone:</td><td style="padding: 8px;">${escapeHtml(lead.phone || 'N/A')}</td></tr>
+        <tr><td style="padding: 8px; font-weight: bold;">Location:</td><td style="padding: 8px;">${escapeHtml(lead.location || 'All')}</td></tr>
+        <tr><td style="padding: 8px; font-weight: bold;">Project:</td><td style="padding: 8px;">${escapeHtml(lead.project || 'Not Sure')}</td></tr>
+        <tr><td style="padding: 8px; font-weight: bold;">Type:</td><td style="padding: 8px;">${escapeHtml(lead.enquiryType || 'Site Visit')}</td></tr>
+        <tr><td style="padding: 8px; font-weight: bold;">Message:</td><td style="padding: 8px; white-space: pre-wrap;">${escapeHtml(lead.message || 'No message provided')}</td></tr>
+        <tr><td style="padding: 8px; font-weight: bold;">Source:</td><td style="padding: 8px;">${escapeHtml(lead.sourcePage || 'Website')}</td></tr>
+        ${lead.referredBy ? `<tr><td style="padding: 8px; font-weight: bold;">Referred By:</td><td style="padding: 8px;">${escapeHtml(lead.referredBy)}</td></tr>` : ''}
       </table>
     `,
   })

@@ -32,6 +32,7 @@ export function ContactForm({ projectsList = [], locationNames = [], initialProj
     project: matchedProject,
     enquiryType: 'Site Visit',
     message: '',
+    referredBy: '',
     agree: false,
   })
 
@@ -129,6 +130,7 @@ export function ContactForm({ projectsList = [], locationNames = [], initialProj
           project: formData.project,
           enquiryType: formData.enquiryType,
           message: formData.message,
+          referredBy: formData.referredBy,
           sourcePage: 'Website - Home - Contact Section',
         })
       })
@@ -253,6 +255,18 @@ export function ContactForm({ projectsList = [], locationNames = [], initialProj
                 id="email"
                 name="email"
                 value={formData.email}
+                onChange={handleChange}
+                className="w-full bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-3 py-2.5 text-[#0f1d33] text-sm focus:outline-none focus:ring-2 focus:ring-[#c4a55a] focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="referredBy" className="block text-sm font-medium text-[#0f1d33] mb-1">Referred By (Optional)</label>
+              <input
+                type="text"
+                id="referredBy"
+                name="referredBy"
+                value={formData.referredBy}
                 onChange={handleChange}
                 className="w-full bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-3 py-2.5 text-[#0f1d33] text-sm focus:outline-none focus:ring-2 focus:ring-[#c4a55a] focus:border-transparent"
               />

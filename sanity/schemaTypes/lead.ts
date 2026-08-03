@@ -39,6 +39,12 @@ export const leadSchema = defineType({
       readOnly: true,
     }),
     defineField({
+      name: 'referredBy',
+      type: 'string',
+      title: 'Referred By',
+      readOnly: true,
+    }),
+    defineField({
       name: 'status',
       type: 'string',
       title: 'Lead Status',

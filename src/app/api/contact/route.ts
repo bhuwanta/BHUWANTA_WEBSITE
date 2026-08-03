@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, email, phone, location, project, enquiryType, message, sourcePage } = body
+    const { name, email, phone, location, project, enquiryType, message, sourcePage, referredBy } = body
 
     // Create a summarized budget string for CRM (Sanity/Supabase) backwards compatibility
     const locationStr = location && location !== 'Not Sure' ? `Location: ${location} | ` : ''
@@ -105,6 +105,7 @@ export async function POST(request: NextRequest) {
         phone: phone || '',
         budget: budget || '',
         sourcePage: sourcePage || 'Website',
+        referredBy: referredBy || '',
         status: 'new',
       })
     } catch (dbError) {
@@ -133,6 +134,7 @@ export async function POST(request: NextRequest) {
         enquiry_type: enquiryType || 'Website Inquiry',
         downloaded_item: downloadedItem,
         source_page: sourcePage || 'Website',
+        referred_by: referredBy || null,
         status: 'new',
       })
     } catch (backupErr) {
@@ -144,7 +146,7 @@ export async function POST(request: NextRequest) {
     // won't have, so skip the lead-facing emails and just notify the team.
     try {
       await Promise.all([
-        sendContactNotification({ name, email, phone, location, project, enquiryType, message, sourcePage }),
+        sendContactNotification({ name, email, phone, location, project, enquiryType, message, sourcePage, referredBy }),
         ...(email ? [sendDynamicAutoresponder(name, email)] : []),
       ])
     } catch (emailError) {
