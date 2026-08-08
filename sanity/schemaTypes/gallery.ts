@@ -13,6 +13,27 @@ export const gallerySchema = defineType({
       initialValue: 'Our Gallery',
     }),
     defineField({
+      name: 'siteVisitImages',
+      type: 'array',
+      title: 'Site Visit Images',
+      of: [{ type: 'image', options: { hotspot: true } }],
+      description: 'Upload images from site visits.'
+    }),
+    defineField({
+      name: 'siteVisitVideos',
+      type: 'array',
+      title: 'Site Visit Videos (MP4)',
+      of: [{ type: 'file', options: { accept: 'video/*' } }],
+      description: 'Upload MP4 videos from site visits.'
+    }),
+    defineField({
+      name: 'siteVisitYoutubeUrls',
+      type: 'array',
+      title: 'Site Visit YouTube Video URLs',
+      of: [{ type: 'url' }],
+      description: 'Provide YouTube links for site visits.'
+    }),
+    defineField({
       name: 'generalImages',
       type: 'array',
       title: 'General Gallery Images',

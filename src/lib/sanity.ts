@@ -146,6 +146,9 @@ export const galleryQuery = `{
   },
   "galleryData": *[_type == "gallery"][0]{
     pageHeading,
+    "siteVisitImages": siteVisitImages[].asset->url,
+    "siteVisitVideos": siteVisitVideos[].asset->url,
+    siteVisitYoutubeUrls,
     "generalImages": generalImages[].asset->url,
     "generalVideos": generalVideos[].asset->url,
     generalYoutubeUrls

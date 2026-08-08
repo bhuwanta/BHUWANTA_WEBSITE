@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Image as ImageIcon, Film, X, Share2 } from 'lucide-react'
+import { Image as ImageIcon, Film, X, Share2, MapPin } from 'lucide-react'
 import Image from 'next/image'
 
 interface ProjectGallery {
@@ -14,6 +14,9 @@ interface ProjectGallery {
 
 interface GalleryData {
   pageHeading?: string
+  siteVisitImages?: string[]
+  siteVisitVideos?: string[]
+  siteVisitYoutubeUrls?: string[]
   generalImages?: string[]
   generalVideos?: string[]
   generalYoutubeUrls?: string[]
@@ -25,19 +28,22 @@ interface GalleryGridProps {
 }
 
 export function GalleryGrid({ projects = [], gallerySingleton = null }: GalleryGridProps) {
-  const [activeTab, setActiveTab] = useState<'social_media' | 'photos' | 'videos'>('photos')
+  const [activeTab, setActiveTab] = useState<'site_visits' | 'videos' | 'photos' | 'social_media'>('site_visits')
   const [lightboxImage, setLightboxImage] = useState<{ url: string; alt: string } | null>(null)
 
   // Append General Gallery images as a pseudo-project
   const projectsWithImages = [...projects]
-  if (gallerySingleton?.generalImages && gallerySingleton.generalImages.length > 0) {
-    projectsWithImages.push({
-      name: 'General Gallery',
-      categoryTitle: 'Other',
-      images: gallerySingleton.generalImages,
-      videoUrls: [],
-      youtubeIds: []
-    })
+  if (gallerySingleton?.generalImages) {
+    const validGeneralImages = gallerySingleton.generalImages.filter(Boolean)
+    if (validGeneralImages.length > 0) {
+      projectsWithImages.push({
+        name: 'General Gallery',
+        categoryTitle: 'Other',
+        images: validGeneralImages,
+        videoUrls: [],
+        youtubeIds: []
+      })
+    }
   }
   const filteredProjectsWithImages = projectsWithImages.filter((p) => p.images.length > 0)
 
@@ -52,12 +58,13 @@ export function GalleryGrid({ projects = [], gallerySingleton = null }: GalleryG
     }).filter(Boolean) as string[]
   }
 
-  if ((gallerySingleton?.generalVideos && gallerySingleton.generalVideos.length > 0) || generalYoutubeIds.length > 0) {
+  const validGeneralVideos = gallerySingleton?.generalVideos ? gallerySingleton.generalVideos.filter(Boolean) : []
+  if (validGeneralVideos.length > 0 || generalYoutubeIds.length > 0) {
     projectsWithVideos.push({
       name: 'General Videos',
       categoryTitle: 'Other',
       images: [],
-      videoUrls: gallerySingleton?.generalVideos || [],
+      videoUrls: validGeneralVideos,
       youtubeIds: generalYoutubeIds
     })
   }
@@ -84,14 +91,24 @@ export function GalleryGrid({ projects = [], gallerySingleton = null }: GalleryG
         <div className="flex justify-start sm:justify-center mb-10 sm:mb-16 overflow-x-auto no-scrollbar pb-4 sm:pb-0 -mx-4 px-4 sm:mx-0 sm:px-0 snap-x">
           <div className="bg-white border border-[#e8ecf2] p-1.5 rounded-xl inline-flex shadow-sm min-w-max snap-center">
             <button
-              onClick={() => setActiveTab('social_media')}
+              onClick={() => setActiveTab('site_visits')}
               className={`flex items-center gap-1.5 sm:gap-2 px-4 sm:px-8 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold transition-premium ${
-                activeTab === 'social_media'
+                activeTab === 'site_visits'
                   ? 'gradient-gold text-white shadow-md'
                   : 'text-[#5a6a82] hover:text-[#0f1d33] hover:bg-[#f3f5f8]'
               }`}
             >
-              <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Social Media
+              <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Site Visits
+            </button>
+            <button
+              onClick={() => setActiveTab('videos')}
+              className={`flex items-center gap-1.5 sm:gap-2 px-4 sm:px-8 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold transition-premium ${
+                activeTab === 'videos'
+                  ? 'gradient-gold text-white shadow-md'
+                  : 'text-[#5a6a82] hover:text-[#0f1d33] hover:bg-[#f3f5f8]'
+              }`}
+            >
+              <Film className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Videos
             </button>
             <button
               onClick={() => setActiveTab('photos')}
@@ -104,17 +121,118 @@ export function GalleryGrid({ projects = [], gallerySingleton = null }: GalleryG
               <ImageIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Photos
             </button>
             <button
-              onClick={() => setActiveTab('videos')}
+              onClick={() => setActiveTab('social_media')}
               className={`flex items-center gap-1.5 sm:gap-2 px-4 sm:px-8 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold transition-premium ${
-                activeTab === 'videos'
+                activeTab === 'social_media'
                   ? 'gradient-gold text-white shadow-md'
                   : 'text-[#5a6a82] hover:text-[#0f1d33] hover:bg-[#f3f5f8]'
               }`}
             >
-              <Film className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Videos
+              <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Social Media
             </button>
           </div>
         </div>
+
+        {/* Site Visits Tab Content */}
+        {activeTab === 'site_visits' && (() => {
+          const validSiteVisitImages = gallerySingleton?.siteVisitImages ? gallerySingleton.siteVisitImages.filter(Boolean) : []
+          const validSiteVisitVideos = gallerySingleton?.siteVisitVideos ? gallerySingleton.siteVisitVideos.filter(Boolean) : []
+          const validSiteVisitYoutube = gallerySingleton?.siteVisitYoutubeUrls ? gallerySingleton.siteVisitYoutubeUrls.filter(Boolean) : []
+
+          return (
+            <div className="space-y-12">
+              {(!validSiteVisitImages.length && !validSiteVisitVideos.length && !validSiteVisitYoutube.length) ? (
+                <div className="text-center py-12">
+                  <MapPin className="w-16 h-16 text-[#e8ecf2] mx-auto mb-4" />
+                  <p className="text-[#5a6a82] text-lg">No site visit updates available at the moment.</p>
+                </div>
+              ) : (
+                <section className="bg-white rounded-2xl shadow-sm border border-[#e8ecf2] overflow-hidden">
+                  <div className="pt-8 sm:pt-10 mb-8 text-center px-4">
+                    <p className="text-sm text-[#c4a55a] uppercase tracking-widest font-bold mb-2">Live Updates</p>
+                    <h2 className="text-3xl sm:text-4xl font-bold text-[#0f1d33]">Site Visits</h2>
+                  </div>
+                  
+                  {/* Site Visit Videos */}
+                  {(validSiteVisitVideos.length > 0 || validSiteVisitYoutube.length > 0) ? (
+                    <div className="px-6 sm:px-10 pb-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+                      {/* YouTube */}
+                      {validSiteVisitYoutube.map((url, yIdx) => {
+                        const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|shorts\/|watch\?v=|watch\?.+&v=))([^&?]+)/)
+                        const youtubeId = match ? match[1] : null
+                        if (!youtubeId) return null
+                        return (
+                          <div key={`sv-yt-${yIdx}`} className="bg-white border border-[#e8ecf2] shadow-sm rounded-xl overflow-hidden group hover:shadow-md transition-premium h-fit">
+                            <div className="aspect-video relative bg-[#f3f5f8]">
+                              <iframe 
+                                src={`https://www.youtube.com/embed/${youtubeId}`}
+                                title={`Site Visit - YouTube Video ${yIdx + 1}`}
+                                className="w-full h-full border-0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                              />
+                            </div>
+                            <div className="p-4 sm:p-6">
+                              <h3 className="text-lg font-bold text-[#0f1d33]">Site Visit Update</h3>
+                              <p className="text-sm text-[#5a6a82] mt-1">YouTube Video</p>
+                            </div>
+                          </div>
+                        )
+                      })}
+                      {/* Uploaded Videos */}
+                      {validSiteVisitVideos.map((videoUrl, vIdx) => (
+                        <div key={`sv-vid-${vIdx}`} className="bg-white border border-[#e8ecf2] shadow-sm rounded-xl overflow-hidden group hover:shadow-md transition-premium h-fit">
+                          <div className="relative bg-black flex items-center justify-center">
+                            <video 
+                              src={videoUrl}
+                              controls
+                              className="w-full h-auto max-h-[70vh] object-contain"
+                              preload="metadata"
+                            />
+                          </div>
+                          <div className="p-4 sm:p-6">
+                            <h3 className="text-lg font-bold text-[#0f1d33]">Site Visit Update</h3>
+                            <p className="text-sm text-[#5a6a82] mt-1">Uploaded Video</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+
+                  {/* Site Visit Images */}
+                  {validSiteVisitImages.length > 0 && (
+                    <div className="overflow-hidden group/marquee w-full bg-[#f7f8fa] py-8 border-y border-[#e8ecf2]">
+                      <div className="flex gap-4 sm:gap-6 w-max px-4 sm:px-6 animate-scroll-left group-hover/marquee:[animation-play-state:paused]">
+                        {/* Duplicate images twice for seamless loop */}
+                        {[...validSiteVisitImages, ...validSiteVisitImages].map((url, i) => {
+                          const imageAlt = `Site visit photo ${(i % validSiteVisitImages.length) + 1}`
+                          return (
+                            <div
+                              key={i}
+                              className="flex-shrink-0 w-64 sm:w-72 md:w-80 cursor-pointer group/card"
+                              onClick={() => setLightboxImage({ url, alt: imageAlt })}
+                            >
+                              <div className="aspect-[4/3] bg-white border border-[#e8ecf2] shadow-sm rounded-xl overflow-hidden relative transition-premium group-hover/card:border-[#c4a55a]/30 group-hover/card:shadow-md">
+                                <Image
+                                  src={url}
+                                  alt={imageAlt}
+                                  fill
+                                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                  className="object-cover transition-transform duration-500 group-hover/card:scale-105"
+                                />
+                                <div className="absolute inset-0 bg-[#1e3a5f]/5 group-hover/card:bg-transparent transition-colors"></div>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </section>
+              )}
+            </div>
+          )
+        })()}
 
         {/* Social Media Tab Content */}
         {activeTab === 'social_media' && (

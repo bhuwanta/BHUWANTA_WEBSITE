@@ -6,6 +6,16 @@ export const resend = process.env.RESEND_API_KEY
 
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'noreply@bhuwanta.com'
 
+const escapeHtml = (unsafe: string) => {
+  if (!unsafe) return ''
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;")
+}
+
 // Send notification to team when a new lead comes in
 export async function sendContactNotification(lead: {
   name: string

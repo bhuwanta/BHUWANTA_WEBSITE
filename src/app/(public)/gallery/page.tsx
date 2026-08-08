@@ -25,6 +25,9 @@ interface ProjectEntry {
 
 interface GalleryData {
   pageHeading?: string
+  siteVisitImages?: string[]
+  siteVisitVideos?: string[]
+  siteVisitYoutubeUrls?: string[]
   generalImages?: string[]
   generalVideos?: string[]
   generalYoutubeUrls?: string[]
@@ -57,7 +60,7 @@ export default async function GalleryPage() {
         .map((p) => {
           const videoUrls = []
           if (p.videoUrl) videoUrls.push(p.videoUrl)
-          if (p.videoUrls) videoUrls.push(...p.videoUrls)
+          if (p.videoUrls) videoUrls.push(...p.videoUrls.filter(Boolean))
 
           const youtubeIds = []
           if (p.youtubeUrl) {
@@ -91,8 +94,9 @@ export default async function GalleryPage() {
   ])
 
   const projectImages = projects.flatMap((p) => p.images)
+  const siteVisitImages = gallerySingleton?.siteVisitImages || []
   const generalImages = gallerySingleton?.generalImages || []
-  const allImages = [...projectImages, ...generalImages]
+  const allImages = [...projectImages, ...siteVisitImages, ...generalImages]
 
   const gallerySchema = allImages.length > 0
     ? buildImageGallerySchema(allImages.map(url => ({ url, caption: '' })))
