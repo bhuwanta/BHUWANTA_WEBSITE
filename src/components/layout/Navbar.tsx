@@ -14,7 +14,7 @@ const navLinks = [
   { href: '/about', label: 'About' },
   { href: '/projects', label: 'Projects' },
   { href: '/why-bhuwanta', label: 'Why Bhuwanta' },
-  { href: '#', label: 'Reviews' },
+  { href: '/reviews', label: 'Reviews' },
   { href: '/gallery', label: 'Gallery' },
   { href: '/blog', label: 'Blog' },
 ]
@@ -142,6 +142,14 @@ export function Navbar() {
                 {ctaText}
               </Link>
 
+              <Link
+                href="/REALESTATE_SOFTWARE/login"
+                id="nav-login"
+                className="hidden sm:inline-flex px-5 py-2.5 text-sm font-semibold rounded-lg transition-premium hover:scale-105 glow-gold gradient-gold text-white"
+              >
+                Login
+              </Link>
+
               {/* Mobile hamburger */}
               <button
                 className={cn(
@@ -194,6 +202,13 @@ export function Navbar() {
             className="block px-4 py-3 text-sm font-semibold text-center rounded-lg gradient-gold text-white mt-3"
           >
             {ctaText}
+          </Link>
+          <Link
+            href="/REALESTATE_SOFTWARE/login"
+            onClick={() => setIsOpen(false)}
+            className="block px-4 py-3 text-sm font-semibold text-center rounded-lg gradient-gold text-white mt-3"
+          >
+            Login
           </Link>
         </div>
       </div>
