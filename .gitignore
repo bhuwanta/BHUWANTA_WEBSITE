@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Ignore Real Estate DB Schemas
+DB_Schemas.sql
+
+# Ignore local doubts
+src/app/(REALESTATE_SOFTWARE)/REALESTATE_SOFTWARE/Doubts/
