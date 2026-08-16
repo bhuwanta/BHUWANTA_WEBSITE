@@ -142,13 +142,6 @@ export function Navbar() {
                 {ctaText}
               </Link>
 
-              <Link
-                href="/REALESTATE_SOFTWARE/login"
-                id="nav-login"
-                className="hidden sm:inline-flex px-5 py-2.5 text-sm font-semibold rounded-lg transition-premium hover:scale-105 glow-gold gradient-gold text-white"
-              >
-                Login
-              </Link>
 
               {/* Mobile hamburger */}
               <button
@@ -171,7 +164,7 @@ export function Navbar() {
       <div
         className={cn(
           'md:hidden overflow-hidden transition-all duration-500',
-          isOpen ? 'max-h-[400px] border-t border-[#e8ecf2] bg-white' : 'max-h-0'
+          isOpen ? 'max-h-[600px] border-t border-[#e8ecf2] bg-white' : 'max-h-0'
         )}
       >
         <div className="px-4 py-4 space-y-1">
@@ -203,13 +196,7 @@ export function Navbar() {
           >
             {ctaText}
           </Link>
-          <Link
-            href="/REALESTATE_SOFTWARE/login"
-            onClick={() => setIsOpen(false)}
-            className="block px-4 py-3 text-sm font-semibold text-center rounded-lg gradient-gold text-white mt-3"
-          >
-            Login
-          </Link>
+
         </div>
       </div>
     </nav>
