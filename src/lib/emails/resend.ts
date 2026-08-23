@@ -25,7 +25,7 @@ export async function sendWelcomeEmail(email: string, name: string, phone: strin
             <p style="margin: 0;"><strong>Password:</strong> ${password}</p>
           </div>
           <p>Please log in and update your password from your settings page as soon as possible.</p>
-          <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/REALESTATE_SOFTWARE/login" style="display: inline-block; background-color: #c4a55a; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold; margin-top: 10px;">Login Now</a>
+          <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://bhuwanta.com'}/REALESTATE_SOFTWARE/login" style="display: inline-block; background-color: #c4a55a; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold; margin-top: 10px;">Login Now</a>
           <p style="font-size: 12px; color: #5a6a82; margin-top: 30px;">If you did not request this account, please contact Bhuwanta IT support.</p>
         </div>
       `
