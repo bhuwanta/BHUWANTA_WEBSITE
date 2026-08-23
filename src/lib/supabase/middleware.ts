@@ -66,7 +66,7 @@ export async function updateSession(request: NextRequest) {
 
   // RBAC for Telecallers: Restrict to /crm/leads
   if (
-    user && 
+    user &&
     user.user_metadata?.role === 'Telecaller' &&
     request.nextUrl.pathname.startsWith('/crm') &&
     !request.nextUrl.pathname.startsWith('/crm/leads') &&
@@ -77,5 +77,53 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // REALESTATE_SOFTWARE RBAC — defense-in-depth alongside each page's own
+  // requireRole() call (role/_shared/auth.ts). That per-page check is the
+  // primary guard; this is a second, independent layer at the edge so a
+  // page that ever forgot to call it wouldn't be silently unprotected.
+  // Uses the anon-key client (already built above with the visitor's own
+  // cookies) against S_realestate_users' "Users can view own profile" RLS
+  // policy (auth.uid() = id) — deliberately NOT the service-role client,
+  // since that requires a Node `require()` that Edge middleware can't run.
+  if (request.nextUrl.pathname.startsWith('/REALESTATE_SOFTWARE/role/')) {
+    const segment = request.nextUrl.pathname.split('/')[3]
+    const expectedRole = REALESTATE_ROLE_BY_PATH_SEGMENT[segment]
+
+    if (expectedRole) {
+      const loginUrl = request.nextUrl.clone()
+      loginUrl.pathname = '/REALESTATE_SOFTWARE/login'
+
+      if (!user) {
+        return NextResponse.redirect(loginUrl)
+      }
+
+      const { data: profile } = await supabase
+        .from('s_realestate_users')
+        .select('role, is_active')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      if (!profile || profile.role !== expectedRole || !profile.is_active) {
+        return NextResponse.redirect(loginUrl)
+      }
+    }
+  }
+
   return supabaseResponse
+}
+
+const REALESTATE_ROLE_BY_PATH_SEGMENT: Record<string, string> = {
+  it: 'it',
+  ceo: 'ceo',
+  GoverningCouncil: 'governing_council',
+  OperationManager: 'operation_manager',
+  Customer: 'customer',
+  director: 'director',
+  sr_core: 'sr_core',
+  core: 'core',
+  gm: 'gm',
+  agm: 'agm',
+  rm: 'rm',
+  lio: 'lio',
+  lia: 'lia',
 }
