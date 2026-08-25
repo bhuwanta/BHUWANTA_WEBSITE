@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ClipboardPlus, Loader2, AlertCircle, CheckCircle2, IndianRupee } from 'lucide-react';
+import { ClipboardPlus, Loader2, AlertCircle, CheckCircle2, IndianRupee, ChevronDown } from 'lucide-react';
 import { getMyProjectsAction } from '../my-projects/actions';
 import { createRegistrationAction } from '../../registrations/actions';
 import { notifyRegistrationsChanged } from '../../registrations-notify';
@@ -90,7 +90,7 @@ export default function NewRegistrationPage() {
             <ClipboardPlus className="w-6 h-6 text-[#c4a55a]" />
             New Registration
           </h1>
-          <p className="text-[#5a6a82] text-sm mt-1">Submit a new plot sale. It goes to your Director&apos;s queue while the property registration happens externally.</p>
+          <p className="text-[#5a6a82] text-sm mt-1">Submit a new plot sale. The Operation Manager processes it once the customer completes payment.</p>
         </div>
 
         {message && (
@@ -106,7 +106,7 @@ export default function NewRegistrationPage() {
           </div>
         ) : projects.length === 0 ? (
           <div className="bg-amber-50 border border-amber-200 p-6 rounded-xl text-amber-800 text-sm">
-            Your Director isn&apos;t assigned to any Project yet — ask IT, CEO, or Governing Council to assign one before you can submit a New Registration.
+            No Project is available for you to sell yet — ask IT, CEO, or Governing Council to assign one before you can submit a New Registration.
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="bg-white border border-[#e8ecf2] shadow-sm rounded-xl p-6 space-y-5">
@@ -115,45 +115,51 @@ export default function NewRegistrationPage() {
                 <label className="block text-sm font-semibold text-[#0f1d33] mb-2">
                   Area <span className="text-red-500">*</span>
                 </label>
-                <select
-                  required
-                  value={areaId}
-                  onChange={(e) => {
-                    setAreaId(e.target.value);
-                    setProjectId('');
-                  }}
-                  className="w-full bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-3 py-2.5 text-[#0f1d33] text-sm focus:outline-none focus:border-[#1e3a5f] focus:ring-1 focus:ring-[#1e3a5f]"
-                >
-                  <option value="" disabled>
-                    Select an Area
-                  </option>
-                  {areas.map((area: any) => (
-                    <option key={area.id} value={area.id}>
-                      {area.name}
+                <div className="relative">
+                  <select
+                    required
+                    value={areaId}
+                    onChange={(e) => {
+                      setAreaId(e.target.value);
+                      setProjectId('');
+                    }}
+                    className="w-full appearance-none bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-3 py-2.5 pr-9 text-[#0f1d33] text-sm focus:outline-none focus:border-[#1e3a5f] focus:ring-1 focus:ring-[#1e3a5f]"
+                  >
+                    <option value="" disabled>
+                      Select an Area
                     </option>
-                  ))}
-                </select>
+                    {areas.map((area: any) => (
+                      <option key={area.id} value={area.id}>
+                        {area.name}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="w-4 h-4 text-[#5a6a82] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-semibold text-[#0f1d33] mb-2">
                   Project <span className="text-red-500">*</span>
                 </label>
-                <select
-                  required
-                  disabled={!areaId}
-                  value={projectId}
-                  onChange={(e) => setProjectId(e.target.value)}
-                  className="w-full bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-3 py-2.5 text-[#0f1d33] text-sm focus:outline-none focus:border-[#1e3a5f] focus:ring-1 focus:ring-[#1e3a5f] disabled:opacity-50"
-                >
-                  <option value="" disabled>
-                    {areaId ? 'Select a Project' : 'Select an Area first'}
-                  </option>
-                  {projectsInArea.map((p: any) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
+                <div className="relative">
+                  <select
+                    required
+                    disabled={!areaId}
+                    value={projectId}
+                    onChange={(e) => setProjectId(e.target.value)}
+                    className="w-full appearance-none bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-3 py-2.5 pr-9 text-[#0f1d33] text-sm focus:outline-none focus:border-[#1e3a5f] focus:ring-1 focus:ring-[#1e3a5f] disabled:opacity-50"
+                  >
+                    <option value="" disabled>
+                      {areaId ? 'Select a Project' : 'Select an Area first'}
                     </option>
-                  ))}
-                </select>
+                    {projectsInArea.map((p: any) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="w-4 h-4 text-[#5a6a82] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
               </div>
             </div>
 

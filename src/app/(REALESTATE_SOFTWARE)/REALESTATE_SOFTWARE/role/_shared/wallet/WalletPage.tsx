@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Wallet, Loader2, Clock, CheckCircle2, XCircle, RefreshCw, User, Search, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import { getMyPayoutsAction } from './actions';
+import { getSalesRoleOrderAction } from '../admin/commission-rates/actions';
 import { ROLE_LABELS, type RealEstateRole } from '../permissions';
 
 const STATUS_META: Record<string, { label: string; className: string; icon: any }> = {
@@ -22,17 +23,24 @@ export default function WalletPage() {
   const [sortCol, setSortCol] = useState<SortCol>('srno');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [error, setError] = useState('');
+  // ROLE_LABELS only covers the 5 fixed roles + the 8 built-in
+  // sales-tier ones — a role renamed (or newly created) via the Roles/
+  // Commissions page isn't reflected there, so every label lookup on
+  // this page falls back to this dynamic map via roleLabel().
+  const [dynamicLabels, setDynamicLabels] = useState<Record<string, string>>({});
+  const roleLabel = (role: string): string => dynamicLabels[role] || ROLE_LABELS[role as RealEstateRole] || role;
 
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const res = await getMyPayoutsAction();
+      const [res, roleOrderRes] = await Promise.all([getMyPayoutsAction(), getSalesRoleOrderAction()]);
       if (res.success) {
         setPayouts(res.data);
         setTotals(res.totals);
       } else if (res.error) {
         setError(res.error);
       }
+      setDynamicLabels(Object.fromEntries(roleOrderRes.data.map((r) => [r.role_code, r.label])));
       setLoading(false);
     })();
   }, []);
@@ -61,7 +69,7 @@ export default function WalletPage() {
           reg?.s_projects?.name,
           reg?.s_areas?.name,
           reg?.seller?.full_name,
-          reg?.seller?.role ? ROLE_LABELS[reg.seller.role as RealEstateRole] : '',
+          reg?.seller?.role ? roleLabel(reg.seller.role) : '',
           STATUS_META[p.payout_status]?.label,
         ]
           .filter(Boolean)
@@ -86,8 +94,8 @@ export default function WalletPage() {
         cmp = (ra?.seller?.full_name || '').localeCompare(rb?.seller?.full_name || '');
         break;
       case 'role':
-        cmp = (ra?.seller?.role ? ROLE_LABELS[ra.seller.role as RealEstateRole] : '').localeCompare(
-          rb?.seller?.role ? ROLE_LABELS[rb.seller.role as RealEstateRole] : ''
+        cmp = (ra?.seller?.role ? roleLabel(ra.seller.role) : '').localeCompare(
+          rb?.seller?.role ? roleLabel(rb.seller.role) : ''
         );
         break;
       case 'percentage':
@@ -199,7 +207,7 @@ export default function WalletPage() {
                       </td>
                       <td className="p-4 whitespace-nowrap">
                         {seller?.role ? (
-                          <span className="px-2.5 py-1 rounded text-xs font-semibold bg-[#1e3a5f]/10 text-[#1e3a5f]">{ROLE_LABELS[seller.role as RealEstateRole]}</span>
+                          <span className="px-2.5 py-1 rounded text-xs font-semibold bg-[#1e3a5f]/10 text-[#1e3a5f]">{roleLabel(seller.role)}</span>
                         ) : (
                           <span className="text-[#a0abbb]">—</span>
                         )}

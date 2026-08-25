@@ -34,6 +34,24 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  // A Server Action POSTs to the exact same URL as the page it's called
+  // from, carrying this header (next/dist/esm/client/components/
+  // app-router-headers.js's ACTION_HEADER). If any of the redirect
+  // branches below fire for one of these requests, the browser's
+  // fetchServerAction gets back an HTML redirect instead of the
+  // RSC-encoded action result it expects and throws "An unexpected
+  // response was received from the server" — not a code bug in the
+  // action itself, just this proxy stepping on the action protocol.
+  // Safe to skip: every mutating action in this codebase already calls
+  // verifyCaller() (and the RBAC blocks below are explicitly documented
+  // as a second, independent layer on top of that per-page/per-action
+  // check, not the only one), so unauthenticated/wrong-role callers
+  // still get rejected — as a normal JSON {success:false} response
+  // instead of a redirect that breaks the client action fetcher.
+  if (request.headers.get('next-action')) {
+    return supabaseResponse
+  }
+
   // If no user and trying to access admin dashboard, redirect to login
   if (
     !user &&
@@ -87,7 +105,14 @@ export async function updateSession(request: NextRequest) {
   // since that requires a Node `require()` that Edge middleware can't run.
   if (request.nextUrl.pathname.startsWith('/REALESTATE_SOFTWARE/role/')) {
     const segment = request.nextUrl.pathname.split('/')[3]
-    const expectedRole = REALESTATE_ROLE_BY_PATH_SEGMENT[segment]
+    // Falls back to the raw segment itself for any role not in the
+    // static map — every sales-tier role's URL segment already equals
+    // its role code by convention (director, rm, sr_core, ...), which
+    // is exactly how a role created via the Commission Rates page
+    // (migration 008 / S_role_definitions) is routed too. Only the
+    // PascalCase admin-peer/standalone exceptions (GoverningCouncil,
+    // OperationManager, Customer) need the static map at all.
+    const expectedRole = REALESTATE_ROLE_BY_PATH_SEGMENT[segment] || segment
 
     if (expectedRole) {
       const loginUrl = request.nextUrl.clone()

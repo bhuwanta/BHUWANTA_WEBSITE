@@ -38,7 +38,7 @@ export async function runCommissionPayout(supabaseAdmin: ServiceClient, registra
       return { success: false, error: 'Commission pool is zero or invalid (check plot size and Base Price) — no payouts created.' }
     }
 
-    const uplineChain = await getUplineChain(supabaseAdmin, registration.submitted_by)
+    const uplineChain = await getUplineChain(supabaseAdmin, registration.submitted_by, sellerRole)
 
     const { data: ratesData } = await supabaseAdmin.from('s_commission_rates').select('role, percentage')
     const rates: CommissionRatesMap = {}

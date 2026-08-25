@@ -12,6 +12,15 @@ import { findUplineDirectorId } from '../../downline'
  * used to populate the Project dropdown on the New Registration form —
  * a seller can only submit against a Project their Director is actually
  * assigned to.
+ *
+ * CEO is the one exception: CEO isn't part of any Director's downline
+ * (parent_id is always NULL — admin peers sit above the whole tree, §2),
+ * so findUplineDirectorId can never resolve anything for them. Rather
+ * than always returning empty (which would make CEO's own New
+ * Registration page permanently unusable), CEO gets every Project
+ * company-wide — matching how CEO already sees everything company-wide
+ * elsewhere (Areas & Projects, Registrations, Payouts), not scoped to
+ * one Director's assignments the way every sales-tier role is.
  */
 export async function getMyProjectsAction() {
   try {
@@ -19,6 +28,15 @@ export async function getMyProjectsAction() {
     if (!caller) return { success: false, data: [] as any[], error: 'Not authenticated.' }
 
     const supabaseAdmin = createServiceClient()
+
+    if (caller.role === 'ceo') {
+      const { data, error } = await supabaseAdmin
+        .from('s_projects')
+        .select('id, name, location, google_maps_url, base_price, mrp_default, s_areas ( id, name )')
+      if (error) throw error
+      return { success: true, data: data || [] }
+    }
+
     const directorId = await findUplineDirectorId(supabaseAdmin, caller.id, caller.role)
     if (!directorId) return { success: true, data: [] as any[] }
 

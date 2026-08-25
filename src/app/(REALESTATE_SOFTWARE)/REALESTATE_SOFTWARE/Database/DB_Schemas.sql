@@ -96,7 +96,14 @@ CREATE TABLE public.S_realestate_users (
     bhuwanta_id VARCHAR(20) UNIQUE,
     phone VARCHAR(20) UNIQUE NOT NULL,
     full_name VARCHAR(100),
-    role public.realestate_role NOT NULL,
+    -- VARCHAR, not the public.realestate_role enum (migration 008) — the
+    -- 8 sales-tier values (director..lia) are now admin-editable data in
+    -- S_role_definitions below, not a fixed enum. it/ceo/governing_council/
+    -- operation_manager/customer stay as fixed, hardcoded strings; role
+    -- validity as a whole is enforced in code (createExecutiveAction),
+    -- same as everywhere else in this app — the enum was never the
+    -- primary access-control layer to begin with.
+    role VARCHAR(50) NOT NULL,
     -- The person who created/manages this profile — their direct upline
     -- in the commission/visibility chain (HIERARCHY.md §6's resolved
     -- open question: parent_id self-reference, not a closure table).
@@ -187,6 +194,41 @@ CREATE TABLE public.S_modules (
 );
 
 -- ==========================================
+-- DYNAMIC SALES-TIER ROLES (migration 008)
+-- ==========================================
+
+-- 8b. Role Definitions Table — the sales-tier cascade order (Director
+-- through LIA) as data instead of a hardcoded TypeScript array
+-- (SALES_RANK_ORDER in role/_shared/permissions.ts), so IT/CEO/
+-- Governing Council can create a brand-new sales-tier role from the
+-- Commission Rates page with no code deploy. rank is NUMERIC so a new
+-- role can be inserted anywhere — including above Director — via one
+-- averaged value between its two neighbors, without renumbering the
+-- rest of the table. Only covers the sales-tier cascade: it/ceo/
+-- governing_council/operation_manager/customer are NOT rows here and
+-- stay fully hardcoded — they aren't rank-compared against this table.
+CREATE TABLE public.S_role_definitions (
+    role_code VARCHAR(50) PRIMARY KEY,
+    label VARCHAR(100) NOT NULL,
+    rank NUMERIC(10,4) NOT NULL UNIQUE,
+    is_system BOOLEAN DEFAULT false,
+    created_by UUID REFERENCES public.S_realestate_users(id),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Seed with the current 8 sales-tier roles at their current order —
+-- matches SALES_RANK_ORDER exactly, pure data, zero behavior change.
+INSERT INTO public.S_role_definitions (role_code, label, rank, is_system) VALUES
+    ('director', 'Director', 1, true),
+    ('sr_core', 'Sr. Core', 2, true),
+    ('core', 'Core', 3, true),
+    ('gm', 'GM', 4, true),
+    ('agm', 'AGM', 5, true),
+    ('rm', 'RM', 6, true),
+    ('lio', 'LIO', 7, true),
+    ('lia', 'LIA', 8, true);
+
+-- ==========================================
 -- COMMISSION RATES (HIERARCHY.md §3a)
 -- ==========================================
 
@@ -195,7 +237,9 @@ CREATE TABLE public.S_modules (
 -- enforced at the application layer, same as everywhere else in this
 -- schema.
 CREATE TABLE public.S_commission_rates (
-    role public.realestate_role PRIMARY KEY,
+    -- VARCHAR, not the enum — see S_realestate_users.role's comment
+    -- above (migration 008).
+    role VARCHAR(50) PRIMARY KEY,
     percentage DECIMAL(5,2) NOT NULL,
     updated_by UUID REFERENCES public.S_realestate_users(id),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
@@ -345,7 +389,9 @@ CREATE TABLE public.S_sales_payouts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     registration_id UUID REFERENCES public.S_new_registrations(id) NOT NULL,
     payee_id UUID REFERENCES public.S_realestate_users(id) NOT NULL,
-    role public.realestate_role NOT NULL,
+    -- VARCHAR, not the enum — see S_realestate_users.role's comment
+    -- above (migration 008).
+    role VARCHAR(50) NOT NULL,
     -- Snapshot of the rate actually used for this payout line (not a
     -- live join to S_commission_rates — rates can change later without
     -- rewriting history).

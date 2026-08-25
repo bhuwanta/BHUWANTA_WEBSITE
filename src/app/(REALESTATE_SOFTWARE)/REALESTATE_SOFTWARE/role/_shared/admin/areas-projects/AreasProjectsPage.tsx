@@ -434,43 +434,45 @@ function ProjectsTab() {
           <form onSubmit={handleSubmitProject} className="p-6">
             {message?.type === 'error' && <ErrorBanner text={message.text} />}
 
-            <div className="mb-4">
-              <label className="block text-sm font-semibold text-[#0f1d33] mb-2">
-                Project Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                required
-                value={projectName}
-                onChange={(e) => setProjectName(e.target.value)}
-                placeholder="e.g. Prestige Falcon City"
-                className="w-full bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-4 py-2 text-[#0f1d33] text-sm focus:outline-none focus:border-[#1e3a5f] focus:ring-1 focus:ring-[#1e3a5f]"
-              />
-            </div>
-
-            <div className="mb-4">
-              <label className="block text-sm font-semibold text-[#0f1d33] mb-2">
-                Area <span className="text-red-500">*</span>
-              </label>
-              {areas.length === 0 ? (
-                <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg text-amber-800 text-sm">You need to create an Area first before creating a project.</div>
-              ) : (
-                <select
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-semibold text-[#0f1d33] mb-2">
+                  Project Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
                   required
-                  value={projectAreaId}
-                  onChange={(e) => setProjectAreaId(e.target.value)}
+                  value={projectName}
+                  onChange={(e) => setProjectName(e.target.value)}
+                  placeholder="e.g. Prestige Falcon City"
                   className="w-full bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-4 py-2 text-[#0f1d33] text-sm focus:outline-none focus:border-[#1e3a5f] focus:ring-1 focus:ring-[#1e3a5f]"
-                >
-                  <option value="" disabled>
-                    Select an Area (a Project belongs to exactly one)
-                  </option>
-                  {areas.map((area) => (
-                    <option key={area.id} value={area.id}>
-                      {area.name}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-[#0f1d33] mb-2">
+                  Area <span className="text-red-500">*</span>
+                </label>
+                {areas.length === 0 ? (
+                  <div className="bg-amber-50 border border-amber-200 p-2.5 rounded-lg text-amber-800 text-xs">You need to create an Area first.</div>
+                ) : (
+                  <select
+                    required
+                    value={projectAreaId}
+                    onChange={(e) => setProjectAreaId(e.target.value)}
+                    className="w-full bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-4 py-2 text-[#0f1d33] text-sm focus:outline-none focus:border-[#1e3a5f] focus:ring-1 focus:ring-[#1e3a5f]"
+                  >
+                    <option value="" disabled>
+                      Select an Area
                     </option>
-                  ))}
-                </select>
-              )}
+                    {areas.map((area) => (
+                      <option key={area.id} value={area.id}>
+                        {area.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -498,8 +500,8 @@ function ProjectsTab() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-semibold text-[#0f1d33] mb-2">Base Price (₹/sq.yard)</label>
-                <p className="text-xs text-[#5a6a82] mb-2">Used only for commission calculation — never shown to customers.</p>
+                <label className="block text-sm font-semibold text-[#0f1d33] mb-1">Base Price (₹/sq.yard)</label>
+                <p className="text-xs text-[#5a6a82] mb-2">Commission calc only — never shown to customers.</p>
                 <div className="relative">
                   <IndianRupee className="absolute left-3 top-2.5 w-4 h-4 text-[#5a6a82]" />
                   <input
@@ -513,8 +515,8 @@ function ProjectsTab() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-[#0f1d33] mb-2">Default MRP (₹/sq.yard)</label>
-                <p className="text-xs text-[#5a6a82] mb-2">Pre-fills on New Registration — sellers can adjust per sale.</p>
+                <label className="block text-sm font-semibold text-[#0f1d33] mb-1">Default MRP (₹/sq.yard)</label>
+                <p className="text-xs text-[#5a6a82] mb-2">Pre-fills on New Registration — sellers can adjust.</p>
                 <div className="relative">
                   <IndianRupee className="absolute left-3 top-2.5 w-4 h-4 text-[#5a6a82]" />
                   <input
@@ -537,13 +539,22 @@ function ProjectsTab() {
               {directors.length === 0 ? (
                 <div className="bg-[#f3f5f8] border border-[#e8ecf2] p-4 rounded-lg text-[#5a6a82] text-sm">No Director accounts exist yet — assign later once one is created.</div>
               ) : (
-                <div className="bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg p-3 max-h-40 overflow-y-auto space-y-2">
-                  {directors.map((director) => (
-                    <label key={director.id} className="flex items-center gap-3 p-2 hover:bg-white rounded-md cursor-pointer transition-colors border border-transparent hover:border-[#e8ecf2]">
-                      <input type="checkbox" checked={selectedDirectorIds.includes(director.id)} onChange={() => toggleDirectorSelection(director.id)} className="w-4 h-4 text-[#1e3a5f] border-[#e8ecf2] rounded focus:ring-[#1e3a5f]" />
-                      <span className="text-sm font-medium text-[#0f1d33]">{director.full_name}</span>
-                    </label>
-                  ))}
+                <div className="flex flex-wrap gap-2">
+                  {directors.map((director) => {
+                    const selected = selectedDirectorIds.includes(director.id);
+                    return (
+                      <button
+                        key={director.id}
+                        type="button"
+                        onClick={() => toggleDirectorSelection(director.id)}
+                        className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all border ${
+                          selected ? 'bg-[#0f1d33] text-white border-[#0f1d33]' : 'bg-white text-[#5a6a82] border-[#e8ecf2] hover:border-[#c4a55a]'
+                        }`}
+                      >
+                        {director.full_name}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -826,7 +837,7 @@ function DocumentsTab() {
 function Modal({ title, icon: Icon, onClose, children, wide }: { title: string; icon: any; onClose: () => void; children: React.ReactNode; wide?: boolean }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto py-10">
-      <div className={`bg-white rounded-xl shadow-2xl w-full ${wide ? 'max-w-lg' : 'max-w-md'} overflow-hidden animate-in fade-in zoom-in-95 duration-200`}>
+      <div className={`bg-white rounded-xl shadow-2xl w-full ${wide ? 'max-w-3xl' : 'max-w-md'} overflow-hidden animate-in fade-in zoom-in-95 duration-200`}>
         <div className="flex items-center justify-between p-5 border-b border-[#e8ecf2] bg-[#f7f8fa]">
           <h3 className="text-lg font-bold text-[#0f1d33] flex items-center gap-2">
             <Icon className="w-5 h-5 text-[#1e3a5f]" />

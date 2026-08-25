@@ -315,7 +315,13 @@ export async function createRegistrationAction(input: {
   try {
     const caller = await verifyCaller()
     if (!caller) return { success: false, error: 'Not authenticated.' }
-    if (!isSalesRole(caller.role)) return { success: false, error: 'Only sales-tier roles can submit a New Registration.' }
+    // CEO can also submit a sale directly — the one admin peer allowed
+    // to (§7d-style explicit exception, not the usual isAdminPeer
+    // treatment of it/ceo/governing_council as equal; IT and Governing
+    // Council still cannot submit a registration).
+    if (!isSalesRole(caller.role) && caller.role !== 'ceo') {
+      return { success: false, error: 'Only sales-tier roles (and CEO) can submit a New Registration.' }
+    }
 
     if (!input.plotSizeSqyd || input.plotSizeSqyd <= 0) {
       return { success: false, error: 'Enter a valid plot size.' }
@@ -326,19 +332,28 @@ export async function createRegistrationAction(input: {
 
     const supabaseAdmin = createServiceClient()
 
-    const directorId = await findUplineDirectorId(supabaseAdmin, caller.id, caller.role)
-    if (!directorId) {
-      return { success: false, error: 'No Director found in your chain — cannot determine which Projects you may sell.' }
-    }
+    // CEO isn't in any Director's downline (parent_id is always NULL for
+    // admin peers, §2), so there's no "assigned Project" concept to
+    // check — CEO may sell any Project company-wide, same scope as
+    // getMyProjectsAction gives them for the dropdown itself.
+    if (caller.role === 'ceo') {
+      const { data: projectExists } = await supabaseAdmin.from('s_projects').select('id').eq('id', input.projectId).maybeSingle()
+      if (!projectExists) return { success: false, error: 'Project not found.' }
+    } else {
+      const directorId = await findUplineDirectorId(supabaseAdmin, caller.id, caller.role)
+      if (!directorId) {
+        return { success: false, error: 'No Director found in your chain — cannot determine which Projects you may sell.' }
+      }
 
-    const { data: assignment } = await supabaseAdmin
-      .from('s_director_projects')
-      .select('project_id')
-      .eq('director_id', directorId)
-      .eq('project_id', input.projectId)
-      .maybeSingle()
-    if (!assignment) {
-      return { success: false, error: 'This Project is not assigned to your Director — you cannot sell it.' }
+      const { data: assignment } = await supabaseAdmin
+        .from('s_director_projects')
+        .select('project_id')
+        .eq('director_id', directorId)
+        .eq('project_id', input.projectId)
+        .maybeSingle()
+      if (!assignment) {
+        return { success: false, error: 'This Project is not assigned to your Director — you cannot sell it.' }
+      }
     }
 
     const { data: project } = await supabaseAdmin.from('s_projects').select('id, area_id, base_price, mrp_default').eq('id', input.projectId).single()
@@ -427,7 +442,7 @@ export async function createRegistrationAction(input: {
     })
     if (insertError) throw insertError
 
-    return { success: true, message: 'Registration submitted. It now appears in your Director’s Registrations queue.' }
+    return { success: true, message: 'Registration submitted. The Operation Manager will process it once the customer completes payment.' }
   } catch (error: any) {
     console.error('Error creating registration:', error)
     return { success: false, error: error.message || 'Failed to submit registration.' }
@@ -511,5 +526,78 @@ export async function markPaymentPaidAction(registrationId: string) {
   } catch (error: any) {
     console.error('Error marking payment paid:', error)
     return { success: false, error: error.message || 'Failed to record payment.' }
+  }
+}
+
+/** Permanently deletes a registration row from the database. Deliberately
+ * IT-only — not the usual isAdminPeer check that treats it/ceo/
+ * governing_council as equal peers everywhere else in this app. CEO and
+ * Governing Council share this same company-wide Registrations page but
+ * do NOT get this button; this is the one place those three roles
+ * aren't equal, by explicit product decision, not an oversight.
+ *
+ * By default, blocked if the registration has any commission payout
+ * rows against it (S_sales_payouts has no ON DELETE CASCADE on
+ * registration_id, by design — real, possibly already-paid money should
+ * never be silently deleted alongside a registration). Passing
+ * `deletePayoutsToo: true` is an explicit, deliberate override: it
+ * deletes every payout row for this registration first, THEN the
+ * registration — an IT-only escape hatch for cleaning up test/bad data,
+ * not something the UI reaches for without the caller having already
+ * seen exactly how many payout rows (and how many are already marked
+ * completed/paid) are about to be erased.
+ */
+export async function deleteRegistrationAction(registrationId: string, deletePayoutsToo: boolean = false) {
+  try {
+    const caller = await verifyCaller()
+    if (!caller) return { success: false, error: 'Not authenticated.' }
+    if (caller.role !== 'it') return { success: false, error: 'Only IT can delete a registration.' }
+
+    const supabaseAdmin = createServiceClient()
+
+    const { data: registration } = await supabaseAdmin
+      .from('s_new_registrations')
+      .select('id, customer_name, status')
+      .eq('id', registrationId)
+      .maybeSingle()
+    if (!registration) return { success: false, error: 'Registration not found — it may already be deleted.' }
+
+    const { data: payoutRows, error: payoutCheckError } = await supabaseAdmin
+      .from('s_sales_payouts')
+      .select('id, payout_status')
+      .eq('registration_id', registrationId)
+    if (payoutCheckError) throw payoutCheckError
+
+    const payoutCount = payoutRows?.length || 0
+    const completedCount = (payoutRows || []).filter((p: any) => p.payout_status === 'completed').length
+
+    if (payoutCount > 0 && !deletePayoutsToo) {
+      return {
+        success: false,
+        blockedByPayouts: true,
+        payoutCount,
+        completedCount,
+        error: `This sale has ${payoutCount} commission payout${payoutCount === 1 ? '' : 's'} recorded against it${completedCount > 0 ? ` (${completedCount} already marked paid)` : ''}. Delete those payout records too?`,
+      }
+    }
+
+    if (payoutCount > 0 && deletePayoutsToo) {
+      const { error: deletePayoutsError } = await supabaseAdmin.from('s_sales_payouts').delete().eq('registration_id', registrationId)
+      if (deletePayoutsError) throw deletePayoutsError
+    }
+
+    const { error } = await supabaseAdmin.from('s_new_registrations').delete().eq('id', registrationId)
+    if (error) throw error
+
+    return {
+      success: true,
+      message:
+        payoutCount > 0
+          ? `Deleted the registration for ${registration.customer_name || 'this customer'} and its ${payoutCount} payout record${payoutCount === 1 ? '' : 's'}.`
+          : `Deleted the registration for ${registration.customer_name || 'this customer'}.`,
+    }
+  } catch (error: any) {
+    console.error('Error deleting registration:', error)
+    return { success: false, error: error.message || 'Failed to delete registration.' }
   }
 }

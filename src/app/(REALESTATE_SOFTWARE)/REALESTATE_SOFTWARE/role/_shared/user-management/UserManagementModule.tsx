@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { UserPlus, UserCheck, Loader2, AlertCircle, Search, ChevronLeft, ChevronRight, X, Eye, EyeOff, Edit2, Trash2, CheckCircle2 } from 'lucide-react';
+import { UserPlus, UserCheck, Loader2, AlertCircle, Search, ChevronLeft, ChevronRight, X, Eye, EyeOff, Edit2, Trash2, CheckCircle2, Users } from 'lucide-react';
 import {
   createExecutiveAction,
   getExecutivesAction,
@@ -10,6 +10,7 @@ import {
   deleteExecutiveAction,
   getCreatableRolesAction,
 } from './actions';
+import { getSalesRoleOrderAction } from '../admin/commission-rates/actions';
 import { ROLE_LABELS, type RealEstateRole } from '../permissions';
 
 const ROLE_BADGE_CLASS: Record<RealEstateRole, string> = {
@@ -54,6 +55,12 @@ export default function UserManagementModule({ currentUserRole, currentUserId }:
   const [totalUsers, setTotalUsers] = useState(0);
   const [loadingData, setLoadingData] = useState(true);
   const itemsPerPage = 50;
+  // ROLE_LABELS only covers the 5 fixed roles + the 8 built-in
+  // sales-tier ones — a role renamed (or newly created) via the Roles/
+  // Commissions page isn't reflected there, so every label lookup on
+  // this page falls back to this dynamic map via roleLabel().
+  const [dynamicLabels, setDynamicLabels] = useState<Record<string, string>>({});
+  const roleLabel = (role: string): string => dynamicLabels[role] || ROLE_LABELS[role as RealEstateRole] || role;
 
   useEffect(() => {
     document.body.style.overflow = isModalOpen ? 'hidden' : 'unset';
@@ -64,6 +71,9 @@ export default function UserManagementModule({ currentUserRole, currentUserId }:
 
   useEffect(() => {
     getCreatableRolesAction(currentUserRole).then(setCreatableRoles);
+    getSalesRoleOrderAction().then((res) => {
+      setDynamicLabels(Object.fromEntries(res.data.map((r) => [r.role_code, r.label])));
+    });
   }, [currentUserRole]);
 
   const fetchUsers = async (showLoading = true) => {
@@ -215,22 +225,8 @@ export default function UserManagementModule({ currentUserRole, currentUserId }:
       </div>
 
       <div className="bg-white border border-[#e8ecf2] shadow-sm rounded-xl flex-1 flex flex-col min-h-0">
-        <div className="p-4 border-b border-[#e8ecf2] flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-white shrink-0">
-          <div className="relative w-full md:w-80">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5a6a82]" />
-            <input
-              type="text"
-              placeholder="Search users..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg pl-9 pr-4 py-2 text-sm text-[#0f1d33] focus:outline-none focus:ring-1 focus:ring-[#c4a55a]"
-            />
-          </div>
-
-          <div className="flex bg-[#f3f5f8] p-1 rounded-lg w-full md:w-auto overflow-x-auto hide-scrollbar">
+        <div className="p-4 border-b border-[#e8ecf2] flex flex-col gap-4 bg-white shrink-0">
+          <div className="flex bg-[#f3f5f8] p-1 rounded-lg w-full overflow-x-auto hide-scrollbar">
             <button
               onClick={() => {
                 setRoleFilter('all');
@@ -253,9 +249,39 @@ export default function UserManagementModule({ currentUserRole, currentUserId }:
                   roleFilter === role ? 'bg-white text-[#c4a55a] shadow-sm' : 'text-[#5a6a82] hover:text-[#0f1d33]'
                 }`}
               >
-                {ROLE_LABELS[role]}
+                {roleLabel(role)}
               </button>
             ))}
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="relative w-full md:w-80">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5a6a82]" />
+              <input
+                type="text"
+                placeholder="Search users..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg pl-9 pr-4 py-2 text-sm text-[#0f1d33] focus:outline-none focus:ring-1 focus:ring-[#c4a55a]"
+              />
+            </div>
+            {!loadingData && (
+              <div
+                className="shrink-0 bg-white border border-[#e8ecf2] shadow-sm rounded-xl px-4 py-2 flex items-center gap-3"
+                title={roleFilter !== 'all' || searchQuery ? 'Matches the current search/filter' : undefined}
+              >
+                <div className="w-9 h-9 rounded-lg bg-[#1e3a5f]/10 flex items-center justify-center shrink-0">
+                  <Users className="w-4 h-4 text-[#1e3a5f]" />
+                </div>
+                <div>
+                  <p className="text-[10px] text-[#5a6a82] font-semibold uppercase tracking-wide leading-none">Total Users</p>
+                  <p className="text-lg font-bold text-[#0f1d33] leading-tight mt-0.5">{totalUsers}</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -297,8 +323,8 @@ export default function UserManagementModule({ currentUserRole, currentUserId }:
                     <td className="py-4 px-5 font-mono text-sm text-[#0f1d33] font-semibold whitespace-nowrap">{user.bhuwanta_id || 'Pending...'}</td>
                     <td className="py-4 px-5 font-medium text-[#0f1d33] whitespace-nowrap">{user.full_name}</td>
                     <td className="py-4 px-5 whitespace-nowrap">
-                      <span className={`px-2.5 py-1 rounded text-xs font-semibold ${ROLE_BADGE_CLASS[user.role as RealEstateRole] || 'bg-[#f3f5f8] text-[#5a6a82]'}`}>
-                        {ROLE_LABELS[user.role as RealEstateRole] || user.role}
+                      <span className={`px-2.5 py-1 rounded text-xs font-semibold ${ROLE_BADGE_CLASS[user.role as RealEstateRole] || 'bg-emerald-50 text-emerald-600'}`}>
+                        {roleLabel(user.role)}
                       </span>
                     </td>
                     <td className="py-4 px-5 text-[#5a6a82] font-mono whitespace-nowrap">
@@ -410,7 +436,7 @@ export default function UserManagementModule({ currentUserRole, currentUserId }:
                           roleSelection === role ? 'bg-[#0f1d33] text-white border-[#0f1d33]' : 'bg-white text-[#5a6a82] border-[#e8ecf2] hover:border-[#c4a55a]'
                         }`}
                       >
-                        {ROLE_LABELS[role]}
+                        {roleLabel(role)}
                       </button>
                     ))}
                   </div>
@@ -487,7 +513,7 @@ export default function UserManagementModule({ currentUserRole, currentUserId }:
                     className="w-full bg-[#0f1d33] text-white font-semibold rounded-lg py-2.5 flex items-center justify-center gap-2 hover:bg-[#1e3a5f] transition-colors disabled:opacity-50"
                   >
                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : isEditMode ? <Edit2 className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
-                    {loading ? (isEditMode ? 'Updating...' : 'Creating...') : `${isEditMode ? 'Update' : 'Create'} ${roleSelection ? ROLE_LABELS[roleSelection] : 'User'}`}
+                    {loading ? (isEditMode ? 'Updating...' : 'Creating...') : `${isEditMode ? 'Update' : 'Create'} ${roleSelection ? roleLabel(roleSelection) : 'User'}`}
                   </button>
                 </div>
               </form>

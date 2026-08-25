@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ClipboardList, Loader2, CheckCircle2, Clock, Ban, AlertCircle, Search, ArrowUp, ArrowDown, ArrowUpDown, BellOff, XCircle } from 'lucide-react';
-import { getRegistrationsAction, markRegistrationDoneAction, cancelRegistrationAction, markRegistrationsReadAction, markOneRegistrationReadAction } from './actions';
+import { ClipboardList, Loader2, CheckCircle2, Clock, Ban, AlertCircle, Search, ArrowUp, ArrowDown, ArrowUpDown, BellOff, XCircle, Trash2 } from 'lucide-react';
+import { getRegistrationsAction, markRegistrationDoneAction, cancelRegistrationAction, markRegistrationsReadAction, markOneRegistrationReadAction, deleteRegistrationAction } from './actions';
 import { notifyRegistrationsChanged } from '../registrations-notify';
+import { getSalesRoleOrderAction } from '../admin/commission-rates/actions';
 import { ROLE_LABELS, type RealEstateRole } from '../permissions';
 
 interface RegistrationsPageProps {
@@ -25,7 +26,7 @@ const STATUS_LABEL: Record<string, string> = {
 
 type SortCol = 'srno' | 'project' | 'customer' | 'plotSize' | 'basePrice' | 'soldBy' | 'role' | 'payment' | 'status';
 
-export default function RegistrationsPage({ currentUserId }: RegistrationsPageProps) {
+export default function RegistrationsPage({ currentUserRole, currentUserId }: RegistrationsPageProps) {
   const [registrations, setRegistrations] = useState<any[]>([]);
   const [canMarkDone, setCanMarkDone] = useState(false);
   const [companyWide, setCompanyWide] = useState(false);
@@ -36,11 +37,18 @@ export default function RegistrationsPage({ currentUserId }: RegistrationsPagePr
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [markingId, setMarkingId] = useState<string | null>(null);
   const [markingRead, setMarkingRead] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState('');
+  // ROLE_LABELS only covers the 5 fixed roles + the 8 built-in
+  // sales-tier ones — a role renamed (or newly created) via the Roles/
+  // Commissions page isn't reflected there, so every label lookup on
+  // this page falls back to this dynamic map via roleLabel().
+  const [dynamicLabels, setDynamicLabels] = useState<Record<string, string>>({});
+  const roleLabel = (role: string): string => dynamicLabels[role] || ROLE_LABELS[role as RealEstateRole] || role;
 
   const load = async () => {
     setLoading(true);
-    const res = await getRegistrationsAction();
+    const [res, roleOrderRes] = await Promise.all([getRegistrationsAction(), getSalesRoleOrderAction()]);
     if (res.success) {
       setRegistrations(res.data);
       setCanMarkDone(res.canMarkDone);
@@ -48,6 +56,7 @@ export default function RegistrationsPage({ currentUserId }: RegistrationsPagePr
     } else if (res.error) {
       setError(res.error);
     }
+    setDynamicLabels(Object.fromEntries(roleOrderRes.data.map((r) => [r.role_code, r.label])));
     setLoading(false);
   };
 
@@ -84,6 +93,41 @@ export default function RegistrationsPage({ currentUserId }: RegistrationsPagePr
       alert(res.error);
     }
     setMarkingId(null);
+  };
+
+  // IT-only, permanent — see deleteRegistrationAction's comment for why
+  // this is the one place CEO/Governing Council don't share the same
+  // capability as IT on this page. Two-step confirm when payouts exist:
+  // the first attempt always runs WITHOUT deletePayoutsToo, so the
+  // server can tell us exactly how many payout rows (and how many are
+  // already paid) are in the way before IT decides whether to take them
+  // down too — never silently cascades on the first click.
+  const handleDelete = async (id: string, customerName: string) => {
+    const confirmed = window.confirm(`Permanently delete the registration for "${customerName}"? This removes it from the database entirely and cannot be undone.`);
+    if (!confirmed) return;
+
+    setDeletingId(id);
+    let res = await deleteRegistrationAction(id);
+
+    if (!res.success && (res as any).blockedByPayouts) {
+      const proceedWithPayouts = window.confirm(
+        `${res.error}\n\nDelete the registration AND all ${(res as any).payoutCount} of its payout records? This cannot be undone.`
+      );
+      if (proceedWithPayouts) {
+        res = await deleteRegistrationAction(id, true);
+      } else {
+        setDeletingId(null);
+        return;
+      }
+    }
+
+    if (res.success) {
+      load();
+      notifyRegistrationsChanged();
+    } else {
+      alert(res.error);
+    }
+    setDeletingId(null);
   };
 
   const handleMarkAllRead = async () => {
@@ -141,7 +185,7 @@ export default function RegistrationsPage({ currentUserId }: RegistrationsPagePr
           r.customer_name,
           r.customer_phone,
           r.seller?.full_name,
-          r.seller?.role ? ROLE_LABELS[r.seller.role as RealEstateRole] : '',
+          r.seller?.role ? roleLabel(r.seller.role) : '',
         ]
           .filter(Boolean)
           .some((field: string) => String(field).toLowerCase().includes(q))
@@ -172,8 +216,8 @@ export default function RegistrationsPage({ currentUserId }: RegistrationsPagePr
         cmp = (a.seller?.full_name || '').localeCompare(b.seller?.full_name || '');
         break;
       case 'role':
-        cmp = (a.seller?.role ? ROLE_LABELS[a.seller.role as RealEstateRole] : '').localeCompare(
-          b.seller?.role ? ROLE_LABELS[b.seller.role as RealEstateRole] : ''
+        cmp = (a.seller?.role ? roleLabel(a.seller.role) : '').localeCompare(
+          b.seller?.role ? roleLabel(b.seller.role) : ''
         );
         break;
       case 'payment':
@@ -253,28 +297,44 @@ export default function RegistrationsPage({ currentUserId }: RegistrationsPagePr
           <thead className="bg-[#f7f8fa] sticky top-0 z-10 shadow-[0_1px_0_#e8ecf2]">
             <tr className="text-[12px] uppercase tracking-wider text-[#5a6a82]">
               <th className="py-3 px-2 font-semibold w-10 cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('srno')}>
-                # <SortIcon col="srno" />
+                <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                  # <SortIcon col="srno" />
+                </span>
               </th>
               <th className="py-3 px-2 font-semibold w-[13%] cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('project')}>
-                Project <SortIcon col="project" />
+                <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                  Project <SortIcon col="project" />
+                </span>
               </th>
               <th className="py-3 px-2 font-semibold w-[12%] cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('customer')}>
-                Customer <SortIcon col="customer" />
+                <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                  Customer <SortIcon col="customer" />
+                </span>
               </th>
               <th className="py-3 px-2 font-semibold w-[7%] cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('plotSize')}>
-                Plot <SortIcon col="plotSize" />
+                <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                  Plot <SortIcon col="plotSize" />
+                </span>
               </th>
-              <th className="py-3 px-2 font-semibold w-[8%] cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('basePrice')}>
-                Base Price <SortIcon col="basePrice" />
+              <th className="py-3 px-2 font-semibold w-[9%] cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('basePrice')}>
+                <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                  Base Price <SortIcon col="basePrice" />
+                </span>
               </th>
               <th className="py-3 px-2 font-semibold w-[13%] cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('soldBy')}>
-                Sold By <SortIcon col="soldBy" />
+                <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                  Sold By <SortIcon col="soldBy" />
+                </span>
               </th>
               <th className="py-3 px-2 font-semibold w-[7%] cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('payment')}>
-                Pay <SortIcon col="payment" />
+                <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                  Pay <SortIcon col="payment" />
+                </span>
               </th>
-              <th className="py-3 px-2 font-semibold w-[10%] cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('status')}>
-                Status <SortIcon col="status" />
+              <th className="py-3 px-2 font-semibold w-[9%] cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('status')}>
+                <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                  Status <SortIcon col="status" />
+                </span>
               </th>
               <th className="py-3 px-2 font-semibold text-right w-[24%]">Action</th>
             </tr>
@@ -321,7 +381,7 @@ export default function RegistrationsPage({ currentUserId }: RegistrationsPagePr
                     <div className="flex items-center gap-1.5 min-w-0">
                       <span className="font-medium truncate" title={reg.seller?.full_name}>{reg.seller?.full_name || '—'}</span>
                       {reg.seller?.role && (
-                        <span className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#1e3a5f]/10 text-[#1e3a5f]">{ROLE_LABELS[reg.seller.role as RealEstateRole]}</span>
+                        <span className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#1e3a5f]/10 text-[#1e3a5f]">{roleLabel(reg.seller.role)}</span>
                       )}
                     </div>
                   </td>
@@ -339,41 +399,57 @@ export default function RegistrationsPage({ currentUserId }: RegistrationsPagePr
                     </span>
                   </td>
                   <td className="py-2.5 px-2 text-right">
-                    {reg.status === 'pending_registration' && (
-                      <div className="flex items-center justify-end gap-1">
-                        {!reg.isRead && (
-                          <button
-                            onClick={() => handleMarkOneRead(reg.id)}
-                            title="Clears this from your notification count — doesn't change its status"
-                            className="text-[#1e3a5f] text-xs font-semibold px-2 py-1.5 rounded-lg border border-[#1e3a5f]/20 hover:bg-[#1e3a5f]/10 transition-colors inline-flex items-center gap-1 shrink-0 whitespace-nowrap"
-                          >
-                            <BellOff className="w-3.5 h-3.5" />
-                            Mark as read
-                          </button>
-                        )}
-                        {reg.submitted_by === currentUserId && (
-                          <button
-                            onClick={() => handleCancel(reg.id)}
-                            disabled={markingId === reg.id}
-                            title="Cancel"
-                            className="text-red-500 p-1.5 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50 shrink-0"
-                          >
-                            <XCircle className="w-3.5 h-3.5" />
-                          </button>
-                        )}
-                        {canMarkDone && (
-                          <button
-                            onClick={() => handleMarkDone(reg.id)}
-                            disabled={markingId === reg.id || reg.payment_status !== 'paid'}
-                            title={reg.payment_status !== 'paid' ? 'Waiting on customer payment' : 'Mark Done'}
-                            className="gradient-gold text-white text-xs font-semibold px-2.5 py-1.5 rounded-lg shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1 shrink-0"
-                          >
-                            {markingId === reg.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-                            Done
-                          </button>
-                        )}
-                      </div>
-                    )}
+                    <div className="flex items-center justify-end gap-1">
+                      {reg.status === 'pending_registration' && (
+                        <>
+                          {!reg.isRead && (
+                            <button
+                              onClick={() => handleMarkOneRead(reg.id)}
+                              title="Clears this from your notification count — doesn't change its status"
+                              className="text-[#1e3a5f] text-xs font-semibold px-2 py-1.5 rounded-lg border border-[#1e3a5f]/20 hover:bg-[#1e3a5f]/10 transition-colors inline-flex items-center gap-1 shrink-0 whitespace-nowrap"
+                            >
+                              <BellOff className="w-3.5 h-3.5" />
+                              Mark as read
+                            </button>
+                          )}
+                          {reg.submitted_by === currentUserId && (
+                            <button
+                              onClick={() => handleCancel(reg.id)}
+                              disabled={markingId === reg.id}
+                              title="Cancel"
+                              className="text-red-500 p-1.5 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50 shrink-0"
+                            >
+                              <XCircle className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                          {canMarkDone && (
+                            <button
+                              onClick={() => handleMarkDone(reg.id)}
+                              disabled={markingId === reg.id || reg.payment_status !== 'paid'}
+                              title={reg.payment_status !== 'paid' ? 'Waiting on customer payment' : 'Mark Done'}
+                              className="gradient-gold text-white text-xs font-semibold px-2.5 py-1.5 rounded-lg shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1 shrink-0"
+                            >
+                              {markingId === reg.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                              Done
+                            </button>
+                          )}
+                        </>
+                      )}
+                      {/* IT-only, works regardless of status — the server
+                          blocks it if the sale already has payout rows,
+                          so this is safe to always show rather than
+                          gating by status here too. */}
+                      {currentUserRole === 'it' && (
+                        <button
+                          onClick={() => handleDelete(reg.id, reg.customer_name)}
+                          disabled={deletingId === reg.id}
+                          title="Permanently delete from the database"
+                          className="text-red-500 p-1.5 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50 shrink-0"
+                        >
+                          {deletingId === reg.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))

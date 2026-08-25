@@ -35,10 +35,30 @@ export async function getDownlineIds(supabaseAdmin: ServiceClient, rootId: strin
  * explicit that "CEO's cut is computed on every sale," and §1 that GC/
  * CEO sit structurally above every Director — that's an organizational
  * fact, not something parent_id alone can be relied on to encode, since
- * a Director may have literally been created by IT rather than GC. */
+ * a Director may have literally been created by IT rather than GC.
+ *
+ * `sellerRole` matters here beyond just being the starting point of the
+ * walk: if the SELLER themselves is already Governing Council or CEO
+ * (both can now submit a New Registration directly), the "always
+ * append GC/CEO" step below must not re-add someone already at or above
+ * the seller's own rank — the `chain.some(...)` check alone only looks
+ * at walked ANCESTORS, not the seller's own role.
+ *
+ * A CEO seller needs BOTH skipped, not just CEO itself: CEO is the apex
+ * of the whole hierarchy, so nothing — not even Governing Council — sits
+ * above them on their own sale. Skipping only the CEO append and still
+ * appending GC would fix the literal duplicate-CEO-payout bug but leave
+ * a spurious, structurally meaningless Governing Council line on every
+ * CEO sale (harmless in raw rupees, since clampNonNegative floors its
+ * marginal percentage to 0 when GC's 26% comes after CEO's 28% in the
+ * chain — but it's still a payout row that shouldn't exist, since GC
+ * had nothing to do with the sale). A Governing Council seller only
+ * needs GC itself skipped — CEO is still genuinely above GC, and still
+ * earns a real marginal cut on a GC seller's own sale. */
 export async function getUplineChain(
   supabaseAdmin: ServiceClient,
-  sellerId: string
+  sellerId: string,
+  sellerRole: RealEstateRole
 ): Promise<{ id: string; role: RealEstateRole }[]> {
   const chain: { id: string; role: RealEstateRole }[] = []
   let currentId = sellerId
@@ -54,8 +74,8 @@ export async function getUplineChain(
     currentId = parent.id
   }
 
-  const alreadyHasGC = chain.some((c) => c.role === 'governing_council')
-  const alreadyHasCEO = chain.some((c) => c.role === 'ceo')
+  const alreadyHasGC = sellerRole === 'governing_council' || sellerRole === 'ceo' || chain.some((c) => c.role === 'governing_council')
+  const alreadyHasCEO = sellerRole === 'ceo' || chain.some((c) => c.role === 'ceo')
 
   if (!alreadyHasGC) {
     const { data: gc } = await supabaseAdmin.from('s_realestate_users').select('id').eq('role', 'governing_council').eq('is_active', true).limit(1).maybeSingle()
