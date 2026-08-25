@@ -54,8 +54,6 @@ export async function loginAction(email: string, password: string) {
       .eq('id', signInData.user.id)
       .single()
       
-    const SALES_TIER_ROLES = ['director', 'sr_core', 'core', 'gm', 'agm', 'rm', 'lio', 'lia']
-
     if (userData) {
       switch(userData.role) {
         case 'it': redirectPath = '/REALESTATE_SOFTWARE/role/it'; break;
@@ -64,12 +62,15 @@ export async function loginAction(email: string, password: string) {
         case 'operation_manager': redirectPath = '/REALESTATE_SOFTWARE/role/OperationManager'; break;
         case 'customer': redirectPath = '/REALESTATE_SOFTWARE/role/Customer'; break;
         default:
-          // director/sr_core/core/gm/agm/rm/lio/lia all share one
-          // route pattern — the role string IS the URL segment
-          // (HIERARCHY.md §8, §10 item 6).
-          redirectPath = SALES_TIER_ROLES.includes(userData.role)
-            ? `/REALESTATE_SOFTWARE/role/${userData.role}`
-            : '/REALESTATE_SOFTWARE/role/it';
+          // Every sales-tier role — director/sr_core/.../lia, or a
+          // role created via the Commission Rates page (migration 008 /
+          // S_role_definitions) — shares one route pattern, the role
+          // string IS the URL segment (HIERARCHY.md §8, §10 item 6).
+          // No allow-list needed here: createExecutiveAction never lets
+          // a role reach the DB that isn't one of the 5 cases above or
+          // a real S_role_definitions row, so anything falling through
+          // to this branch is valid by construction.
+          redirectPath = `/REALESTATE_SOFTWARE/role/${userData.role}`;
       }
     } else {
       // Fallback for some reason, maybe they are just an auth user with no profile yet

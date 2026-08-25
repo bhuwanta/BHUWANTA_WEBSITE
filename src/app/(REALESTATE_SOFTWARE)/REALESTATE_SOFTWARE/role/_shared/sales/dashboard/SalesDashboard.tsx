@@ -47,7 +47,7 @@ export default function SalesDashboard({ currentUserRole }: SalesDashboardProps)
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {hasDownline && <StatCard icon={Users} label="My Team" value={stats.downlineCount} />}
         <StatCard icon={ClipboardList} label="Total Registrations" value={stats.totalRegistrations} />
-        {stats.commissionPercentage != null && <StatCard icon={Percent} label="My Commission %" value={`${stats.commissionPercentage}%`} />}
+        {stats.commissionPercentage != null && <StatCard icon={Percent} label="My Commission" value={`${stats.commissionPercentage}%`} />}
         {earnings && <StatCard icon={IndianRupee} label="Paid Out To Date" value={formatCurrency(earnings.totalPaid)} accent />}
       </div>
 

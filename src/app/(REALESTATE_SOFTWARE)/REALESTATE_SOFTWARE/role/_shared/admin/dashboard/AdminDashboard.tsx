@@ -54,7 +54,7 @@ export default function AdminDashboard({ currentUserRole, currentUserId }: Admin
         <StatCard icon={Users} label="Total Users" value={stats.totalUsers} />
         <StatCard icon={MapPin} label="Areas" value={stats.totalAreas} />
         <StatCard icon={Building2} label="Projects" value={stats.totalProjects} />
-        {stats.commissionPercentage != null && <StatCard icon={Percent} label="My Commission %" value={`${stats.commissionPercentage}%`} />}
+        {stats.commissionPercentage != null && <StatCard icon={Percent} label="My Commission" value={`${stats.commissionPercentage}%`} />}
         {earnings && (
           <StatCard icon={IndianRupee} label="Paid Out To Date" value={formatCurrency(earnings.totalPaid)} accent />
         )}

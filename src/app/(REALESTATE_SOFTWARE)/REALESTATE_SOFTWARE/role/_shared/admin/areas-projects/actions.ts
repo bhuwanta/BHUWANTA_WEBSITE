@@ -139,12 +139,27 @@ export async function createProjectAction(input: {
       throw projectError
     }
 
-    if (input.directorIds && input.directorIds.length > 0) {
-      const mappings = input.directorIds.map((directorId) => ({ project_id: project.id, director_id: directorId }))
-      const { error: mapError } = await supabaseAdmin.from('s_director_projects').insert(mappings)
-      if (mapError) {
-        console.error('Error assigning directors:', mapError)
-        return { success: false, error: 'Project created, but failed to assign Director(s).' }
+    // A new Project auto-assigns to every existing Director by default —
+    // symmetric to createExecutiveAction auto-assigning every existing
+    // Project to a brand-new Director. Without this, a Project would sit
+    // unusable until someone manually ticked every Director in this
+    // modal, the same problem the Director-side fix solved. Any
+    // explicitly-selected directorIds from the modal are merged in (a
+    // no-op today since that would already be every Director, but keeps
+    // the manual picker meaningful if that ever changes) and
+    // de-duplicated so nobody gets a duplicate-key insert error.
+    const { data: allDirectors, error: directorsError } = await supabaseAdmin.from('s_realestate_users').select('id').eq('role', 'director').eq('is_active', true)
+    if (directorsError) {
+      console.error('Error fetching directors for default Project assignment:', directorsError)
+    } else {
+      const directorIds = Array.from(new Set([...(allDirectors || []).map((d: { id: string }) => d.id), ...(input.directorIds || [])]))
+      if (directorIds.length > 0) {
+        const mappings = directorIds.map((directorId) => ({ project_id: project.id, director_id: directorId }))
+        const { error: mapError } = await supabaseAdmin.from('s_director_projects').insert(mappings)
+        if (mapError) {
+          console.error('Error assigning directors:', mapError)
+          return { success: false, error: 'Project created, but failed to assign Director(s).' }
+        }
       }
     }
 

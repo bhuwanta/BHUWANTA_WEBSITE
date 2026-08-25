@@ -2,7 +2,7 @@
 
 import { createServiceClient } from '@/lib/supabase/server'
 import { verifyCaller } from '../../auth'
-import { ROLE_LABELS, SALES_RANK_ORDER } from '../../permissions'
+import { ROLE_LABELS, getSalesRoleOrder } from '../../permissions'
 
 /** CEO/GC earn commission (§3a); IT doesn't, so IT's dashboard skips
  * this call entirely (see AdminDashboard.tsx). Deliberately takes no
@@ -66,11 +66,19 @@ export async function getAdminDashboardStatsAction() {
     });
 
     // Present in a stable, meaningful order (admin peers first, then the
-    // sales chain top-to-bottom) rather than whatever order the DB returns.
-    const roleOrder = ['it', 'ceo', 'governing_council', ...SALES_RANK_ORDER, 'customer'];
+    // real sales-tier cascade top-to-bottom — built-in + any
+    // admin-created roles, from S_role_definitions) rather than
+    // whatever order the DB returns.
+    const salesRoleOrder = await getSalesRoleOrder(supabaseAdmin)
+    const roleOrder = ['it', 'ceo', 'governing_council', ...salesRoleOrder.map((r) => r.role_code), 'customer'];
+    const dynamicLabels = new Map(salesRoleOrder.map((r) => [r.role_code, r.label]));
     const usersByRoleOrdered = roleOrder
       .filter((r) => usersByRole[r])
-      .map((r) => ({ role: r, label: ROLE_LABELS[r as keyof typeof ROLE_LABELS], count: usersByRole[r] }));
+      // dynamicLabels checked first — see the identical comment in
+      // CommissionRatesPage.tsx's roleLabel(): the 8 built-in sales-tier
+      // roles already have a static ROLE_LABELS entry, which would
+      // otherwise always shadow a rename.
+      .map((r) => ({ role: r, label: dynamicLabels.get(r) || ROLE_LABELS[r as keyof typeof ROLE_LABELS] || r, count: usersByRole[r] }));
 
     return {
       success: true,

@@ -1,22 +1,30 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CheckCircle2, ShieldAlert, X, type LucideIcon } from 'lucide-react';
 import { toggleModuleRoleAction } from './actions';
-import { ROLE_LABELS, SALES_RANK_ORDER } from '../../permissions';
-
-// Module toggles apply to the sales chain only (Director→LIA) — IT/CEO/GC
-// always have full access to everything (§2 peer rule), so there's
-// nothing to toggle for them.
-const TOGGLEABLE_ROLES = SALES_RANK_ORDER.map((id) => ({ id, label: ROLE_LABELS[id] }));
+import { getSalesRoleOrderAction } from '../commission-rates/actions';
 
 export function ModuleCard({ mod, icon: Icon, onUpdate }: { mod: any; icon: LucideIcon; onUpdate: () => void }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeRoles, setActiveRoles] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+  // Module toggles apply to the sales chain only (Director→LIA and any
+  // admin-created role among them) — IT/CEO/GC always have full access
+  // to everything (§2 peer rule), so there's nothing to toggle for
+  // them. Fetched via getSalesRoleOrderAction (not the old hardcoded
+  // SALES_RANK_ORDER) so a newly created role can be toggled on
+  // immediately, with no code change.
+  const [toggleableRoles, setToggleableRoles] = useState<{ id: string; label: string }[]>([]);
+
+  useEffect(() => {
+    getSalesRoleOrderAction().then((res) => {
+      setToggleableRoles(res.data.map((r) => ({ id: r.role_code, label: r.label })));
+    });
+  }, []);
 
   const handleOpenModal = () => {
-    const validRoles = (mod.enabled_roles || []).filter((r: string) => TOGGLEABLE_ROLES.some((ar) => ar.id === r));
+    const validRoles = (mod.enabled_roles || []).filter((r: string) => toggleableRoles.some((ar) => ar.id === r));
     setActiveRoles(validRoles);
     setIsModalOpen(true);
   };
@@ -58,7 +66,7 @@ export function ModuleCard({ mod, icon: Icon, onUpdate }: { mod: any; icon: Luci
               <span className="text-xs text-[#a0abbb] italic">No roles enabled</span>
             ) : (
               mod.enabled_roles.map((role: string) => {
-                const matchedRole = TOGGLEABLE_ROLES.find((r) => r.id === role);
+                const matchedRole = toggleableRoles.find((r) => r.id === role);
                 if (!matchedRole) return null;
                 return (
                   <span key={role} className="text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-1 rounded font-medium flex items-center gap-1">
@@ -93,7 +101,7 @@ export function ModuleCard({ mod, icon: Icon, onUpdate }: { mod: any; icon: Luci
               </div>
 
               <div className="space-y-3">
-                {TOGGLEABLE_ROLES.map((role) => {
+                {toggleableRoles.map((role) => {
                   const isChecked = activeRoles.includes(role.id);
                   return (
                     <label

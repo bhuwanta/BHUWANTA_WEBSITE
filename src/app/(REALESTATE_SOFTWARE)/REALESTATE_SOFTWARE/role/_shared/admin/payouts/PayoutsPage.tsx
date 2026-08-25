@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Landmark, Loader2, Clock, CheckCircle2, RefreshCw, XCircle, ChevronDown, ChevronRight, User, MapPin, Ruler, ShoppingBag, Search, ArrowUp, ArrowDown } from 'lucide-react';
 import { getAllPayoutsAction, markPayoutCompletedAction, type SaleTotals } from './actions';
+import { getSalesRoleOrderAction } from '../commission-rates/actions';
 import { ROLE_LABELS, type RealEstateRole } from '../../permissions';
 
 const STATUS_META: Record<string, { label: string; className: string; icon: any }> = {
@@ -11,13 +12,6 @@ const STATUS_META: Record<string, { label: string; className: string; icon: any 
   completed: { label: 'Completed', className: 'bg-emerald-50 text-emerald-600', icon: CheckCircle2 },
   failed: { label: 'Failed', className: 'bg-red-50 text-red-600', icon: XCircle },
 };
-
-// Fixed bottom-to-top rank of the commission chain (§1) — used to order
-// each sale's payout lines seller-first-up-to-CEO regardless of the
-// order rows happened to be inserted/returned in, so the tree always
-// reads as a real flow: whoever closed the sale at the bottom, CEO at
-// the top.
-const CHAIN_RANK: RealEstateRole[] = ['lia', 'lio', 'rm', 'agm', 'gm', 'core', 'sr_core', 'director', 'governing_council', 'ceo'];
 
 export default function PayoutsPage() {
   const [payouts, setPayouts] = useState<any[]>([]);
@@ -30,19 +24,43 @@ export default function PayoutsPage() {
   const [markingId, setMarkingId] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [error, setError] = useState('');
+  // Bottom-to-top rank of the commission chain — used to order each
+  // sale's payout lines seller-first-up-to-CEO regardless of the order
+  // rows happened to be inserted/returned in, so the tree always reads
+  // as a real flow: whoever closed the sale at the bottom, CEO at the
+  // top. Built from the real, current sales-tier cascade (built-in +
+  // any admin-created roles) via getSalesRoleOrderAction — that order
+  // is top-to-bottom (Director-first), so it's reversed here and
+  // governing_council/ceo appended, same shape as the old hardcoded
+  // CHAIN_RANK array this replaces.
+  const [chainRank, setChainRank] = useState<string[]>([]);
+  // ROLE_LABELS only covers the 5 fixed roles + the 8 built-in
+  // sales-tier ones — a role created via Commission Rates isn't in it,
+  // so every label lookup in this file falls back to this dynamic map
+  // (populated from the same getSalesRoleOrderAction call) via the
+  // roleLabel() helper below.
+  const [dynamicLabels, setDynamicLabels] = useState<Record<string, string>>({});
 
   const load = async () => {
     setLoading(true);
-    const res = await getAllPayoutsAction();
-    if (res.success) {
-      setPayouts(res.data);
-      setSaleTotals(res.saleTotals);
-      setCanApprove(res.canApprove);
-    } else if (res.error) {
-      setError(res.error);
+    const [payoutsRes, roleOrderRes] = await Promise.all([getAllPayoutsAction(), getSalesRoleOrderAction()]);
+    if (payoutsRes.success) {
+      setPayouts(payoutsRes.data);
+      setSaleTotals(payoutsRes.saleTotals);
+      setCanApprove(payoutsRes.canApprove);
+    } else if (payoutsRes.error) {
+      setError(payoutsRes.error);
     }
+    setChainRank([...roleOrderRes.data.map((r) => r.role_code)].reverse().concat(['governing_council', 'ceo']));
+    setDynamicLabels(Object.fromEntries(roleOrderRes.data.map((r) => [r.role_code, r.label])));
     setLoading(false);
   };
+
+  // dynamicLabels checked first — see the identical comment in
+  // CommissionRatesPage.tsx's roleLabel(): the 8 built-in sales-tier
+  // roles already have a static ROLE_LABELS entry, which would
+  // otherwise always shadow a rename made on the Roles/Commissions page.
+  const roleLabel = (role: string): string => dynamicLabels[role] || ROLE_LABELS[role as RealEstateRole] || role;
 
   useEffect(() => {
     load();
@@ -108,8 +126,8 @@ export default function PayoutsPage() {
       // not an array position — and every line always renders.
       const lines = group.lines
         .slice()
-        .sort((a, b) => CHAIN_RANK.indexOf(a.role as RealEstateRole) - CHAIN_RANK.indexOf(b.role as RealEstateRole))
-        .map((p, i, arr) => ({ ...p, previousRoleLabel: i === 0 ? null : ROLE_LABELS[arr[i - 1].role as RealEstateRole] }));
+        .sort((a, b) => chainRank.indexOf(a.role) - chainRank.indexOf(b.role))
+        .map((p, i, arr) => ({ ...p, previousRoleLabel: i === 0 ? null : roleLabel(arr[i - 1].role) }));
 
       return {
         ...group,
@@ -131,9 +149,9 @@ export default function PayoutsPage() {
         reg?.s_projects?.name,
         reg?.s_areas?.name,
         reg?.seller?.full_name,
-        reg?.seller?.role ? ROLE_LABELS[reg.seller.role as RealEstateRole] : '',
+        reg?.seller?.role ? roleLabel(reg.seller.role) : '',
         ...g.lines.map((p: any) => p.payee?.full_name),
-        ...g.lines.map((p: any) => ROLE_LABELS[p.role as RealEstateRole]),
+        ...g.lines.map((p: any) => roleLabel(p.role)),
       ]
         .filter(Boolean)
         .some((field: string) => String(field).toLowerCase().includes(q));
@@ -225,7 +243,7 @@ export default function PayoutsPage() {
                       <div className="flex items-center gap-3 mt-1 text-xs text-[#5a6a82]">
                         <span className="flex items-center gap-1">
                           <User className="w-3 h-3" />
-                          Sold by <span className="font-medium text-[#0f1d33]">{reg?.seller?.full_name || '—'}</span> ({reg?.seller?.role ? ROLE_LABELS[reg.seller.role as RealEstateRole] : '—'})
+                          Sold by <span className="font-medium text-[#0f1d33]">{reg?.seller?.full_name || '—'}</span> ({reg?.seller?.role ? roleLabel(reg.seller.role) : '—'})
                         </span>
                         <span className="flex items-center gap-1">
                           <Ruler className="w-3 h-3" />
@@ -288,10 +306,10 @@ export default function PayoutsPage() {
                           <div className="flex-1 pb-4">
                             <p className="text-[11px] text-[#a0abbb] italic mb-1.5">
                               {isSeller ? (
-                                <>Made the sale — earns their full {Number(p.tier_percentage)}% {ROLE_LABELS[p.role as RealEstateRole]} rate</>
+                                <>Made the sale — earns their full {Number(p.tier_percentage)}% {roleLabel(p.role)} rate</>
                               ) : (
                                 <>
-                                  {ROLE_LABELS[p.role as RealEstateRole]} rate {Number(p.tier_percentage)}% − {p.previousRoleLabel} rate {Number(p.previous_tier_percentage)}% = <span className="font-semibold not-italic text-[#5a6a82]">{Number(p.commission_percentage)}%</span>
+                                  {roleLabel(p.role)} rate {Number(p.tier_percentage)}% − {p.previousRoleLabel} rate {Number(p.previous_tier_percentage)}% = <span className="font-semibold not-italic text-[#5a6a82]">{Number(p.commission_percentage)}%</span>
                                 </>
                               )}
                             </p>
@@ -301,7 +319,7 @@ export default function PayoutsPage() {
                                 <div className="min-w-0">
                                   <p className="text-sm font-semibold text-[#0f1d33] truncate">{p.payee?.full_name || '—'}</p>
                                   <p className="text-xs text-[#5a6a82]">
-                                    {ROLE_LABELS[p.role as RealEstateRole]} · {Number(p.commission_percentage)}%
+                                    {roleLabel(p.role)} · {Number(p.commission_percentage)}%
                                   </p>
                                 </div>
                               </div>

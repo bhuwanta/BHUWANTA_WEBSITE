@@ -87,7 +87,14 @@ export async function updateSession(request: NextRequest) {
   // since that requires a Node `require()` that Edge middleware can't run.
   if (request.nextUrl.pathname.startsWith('/REALESTATE_SOFTWARE/role/')) {
     const segment = request.nextUrl.pathname.split('/')[3]
-    const expectedRole = REALESTATE_ROLE_BY_PATH_SEGMENT[segment]
+    // Falls back to the raw segment itself for any role not in the
+    // static map — every sales-tier role's URL segment already equals
+    // its role code by convention (director, rm, sr_core, ...), which
+    // is exactly how a role created via the Commission Rates page
+    // (migration 008 / S_role_definitions) is routed too. Only the
+    // PascalCase admin-peer/standalone exceptions (GoverningCouncil,
+    // OperationManager, Customer) need the static map at all.
+    const expectedRole = REALESTATE_ROLE_BY_PATH_SEGMENT[segment] || segment
 
     if (expectedRole) {
       const loginUrl = request.nextUrl.clone()

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ClipboardPlus, Loader2, AlertCircle, CheckCircle2, IndianRupee } from 'lucide-react';
+import { ClipboardPlus, Loader2, AlertCircle, CheckCircle2, IndianRupee, ChevronDown } from 'lucide-react';
 import { getMyProjectsAction } from '../my-projects/actions';
 import { createRegistrationAction } from '../../registrations/actions';
 import { notifyRegistrationsChanged } from '../../registrations-notify';
@@ -90,7 +90,7 @@ export default function NewRegistrationPage() {
             <ClipboardPlus className="w-6 h-6 text-[#c4a55a]" />
             New Registration
           </h1>
-          <p className="text-[#5a6a82] text-sm mt-1">Submit a new plot sale. It goes to your Director&apos;s queue while the property registration happens externally.</p>
+          <p className="text-[#5a6a82] text-sm mt-1">Submit a new plot sale. The Operation Manager processes it once the customer completes payment.</p>
         </div>
 
         {message && (
@@ -106,7 +106,7 @@ export default function NewRegistrationPage() {
           </div>
         ) : projects.length === 0 ? (
           <div className="bg-amber-50 border border-amber-200 p-6 rounded-xl text-amber-800 text-sm">
-            Your Director isn&apos;t assigned to any Project yet — ask IT, CEO, or Governing Council to assign one before you can submit a New Registration.
+            No Project is available for you to sell yet — ask IT, CEO, or Governing Council to assign one before you can submit a New Registration.
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="bg-white border border-[#e8ecf2] shadow-sm rounded-xl p-6 space-y-5">

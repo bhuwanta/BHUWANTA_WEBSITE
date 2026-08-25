@@ -3,7 +3,7 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { verifyCaller } from '../auth'
 import { sendSetupPasswordEmail } from '@/lib/emails/resend'
-import { canCreateRole, canManageRole, canViewRole, isAdminPeer, isOperationManager, SALES_RANK_ORDER, type RealEstateRole } from '../permissions'
+import { canCreateRoleDynamic, canManageRoleDynamic, canViewRole, isAdminPeer, isOperationManager, getSalesRoleOrder, type RealEstateRole } from '../permissions'
 import { getDownlineIds } from '../downline'
 import { validatePassword } from '../password-policy'
 
@@ -60,11 +60,12 @@ export async function createExecutiveAction(
     if (!verified.ok) return { success: false, error: verified.error };
     const { id: callerId, role: callerRole } = verified;
 
-    if (!canCreateRole(callerRole, data.role)) {
+    const supabaseAdmin = createServiceClient()
+
+    const rankOrder = await getSalesRoleOrder(supabaseAdmin)
+    if (!canCreateRoleDynamic(callerRole, data.role, rankOrder)) {
       return { success: false, error: `A ${callerRole.replace('_', ' ')} cannot create a ${data.role.replace('_', ' ')} profile.` };
     }
-
-    const supabaseAdmin = createServiceClient()
 
     // No admin-set password, ever — matches how a New Registration
     // auto-creates a Customer account (registrations/actions.ts): only
@@ -112,6 +113,28 @@ export async function createExecutiveAction(
       console.error('Error creating user profile (trigger may have failed):', profileError);
       await supabaseAdmin.auth.admin.deleteUser(userId)
       return { success: false, error: `Profile Error: ${profileError.message}` }
+    }
+
+    // 2b. A brand-new Director starts assigned to every existing
+    // Project — their whole downline (Sr.Core through LIA) inherits
+    // these assignments (§5), so without this a fresh Director's team
+    // couldn't submit a single New Registration until someone manually
+    // ticked every checkbox in the Areas & Projects modal. Non-fatal:
+    // this is a convenience default, not a requirement for the account
+    // itself to exist, so a failure here is logged but doesn't roll
+    // back the account that was already successfully created above.
+    if (data.role === 'director') {
+      const { data: allProjects, error: projectsError } = await supabaseAdmin.from('s_projects').select('id')
+      if (projectsError) {
+        console.error('Error fetching projects for default Director assignment:', projectsError)
+      } else if (allProjects && allProjects.length > 0) {
+        const { error: assignError } = await supabaseAdmin
+          .from('s_director_projects')
+          .insert(allProjects.map((p: { id: string }) => ({ project_id: p.id, director_id: userId })))
+        if (assignError) {
+          console.error('Error auto-assigning projects to new Director:', assignError)
+        }
+      }
     }
 
     // 3. Email them a secure link to set their own password.
@@ -173,7 +196,8 @@ export async function getExecutivesAction(
       query = query.in('id', downlineIds);
 
       if (roleFilter !== 'all') {
-        if (!canCreateRole(callerRole, roleFilter as RealEstateRole)) {
+        const rankOrder = await getSalesRoleOrder(supabaseAdmin)
+        if (!canCreateRoleDynamic(callerRole, roleFilter as RealEstateRole, rankOrder)) {
           return { success: false, data: [], count: 0, error: 'Unauthorized role filter' };
         }
         query = query.eq('role', roleFilter);
@@ -235,11 +259,12 @@ export async function updateExecutiveAction(
     if (!verified.ok) return { success: false, error: verified.error };
     const { id: callerId, role: callerRole } = verified;
 
-    if (!canManageRole(callerRole, data.role)) {
+    const supabaseAdmin = createServiceClient()
+
+    const rankOrder = await getSalesRoleOrder(supabaseAdmin)
+    if (!canManageRoleDynamic(callerRole, data.role, rankOrder)) {
       return { success: false, error: `A ${callerRole.replace('_', ' ')} cannot manage a ${data.role.replace('_', ' ')} profile.` };
     }
-
-    const supabaseAdmin = createServiceClient()
 
     if (!isAdminPeer(callerRole)) {
       const downlineIds = await getDownlineIds(supabaseAdmin, callerId);
@@ -354,7 +379,8 @@ export async function deleteExecutiveAction(
     const supabaseAdmin = createServiceClient()
 
     const { data: targetUser } = await supabaseAdmin.from('s_realestate_users').select('role').eq('id', id).single();
-    if (!targetUser || !canManageRole(callerRole, targetUser.role as RealEstateRole)) {
+    const rankOrder = await getSalesRoleOrder(supabaseAdmin)
+    if (!targetUser || !canManageRoleDynamic(callerRole, targetUser.role as RealEstateRole, rankOrder)) {
       return { success: false, error: 'You are not authorized to delete this profile.' };
     }
 
@@ -409,10 +435,22 @@ export async function deleteExecutiveAction(
 
 /** Roles this caller is allowed to pick when creating/editing a profile
  * — drives the role picker in the UI so it never shows an option the
- * server would reject anyway. */
+ * server would reject anyway. Reads the real, current sales-tier order
+ * (built-in + any admin-created roles) via getSalesRoleOrder, not the
+ * static SALES_RANK_ORDER — a newly created role shows up here the
+ * moment it exists, no code change needed. */
 export async function getCreatableRolesAction(callerRole: RealEstateRole): Promise<RealEstateRole[]> {
+  const supabaseAdmin = createServiceClient()
+  const rankOrder = await getSalesRoleOrder(supabaseAdmin)
+  const salesRoleCodes = rankOrder.map((r) => r.role_code) as RealEstateRole[]
+
   if (isAdminPeer(callerRole)) {
-    return ['it', 'ceo', 'governing_council', 'operation_manager', ...SALES_RANK_ORDER] as RealEstateRole[];
+    // IT and Operation Manager sit outside the commission chain, so
+    // they're kept together at the front rather than interrupting the
+    // CEO→LIA run — everyone from CEO down to LIA reads as one
+    // unbroken, strictly descending-by-percentage ladder (salesRoleCodes
+    // is already highest-rank-first from getSalesRoleOrder).
+    return ['it', 'operation_manager', 'ceo', 'governing_council', ...salesRoleCodes] as RealEstateRole[];
   }
-  return (SALES_RANK_ORDER as RealEstateRole[]).filter((r) => canCreateRole(callerRole, r));
+  return salesRoleCodes.filter((r) => canCreateRoleDynamic(callerRole, r, rankOrder));
 }

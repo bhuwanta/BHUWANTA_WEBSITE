@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, Building2, Percent, ClipboardList, Landmark, Blocks, Wallet, Settings, LogOut, ChevronLeft, ChevronRight, Menu } from 'lucide-react';
+import { LayoutDashboard, Users, Building2, Percent, ClipboardList, ClipboardPlus, Landmark, Blocks, Wallet, Settings, LogOut, ChevronLeft, ChevronRight, Menu } from 'lucide-react';
 import { getPendingRegistrationCountAction } from '../registrations/actions';
 import { onRegistrationsChanged } from '../registrations-notify';
 
@@ -20,9 +20,15 @@ interface AdminLayoutProps {
   /** Defaults to false. Only CEO/Governing Council earn commission
    * (§3a) — IT never gets this page since it'd always be empty. */
   showWallet?: boolean;
+  /** Defaults to false. CEO-only exception: the sole admin peer who can
+   * submit a sale directly (createRegistrationAction/getMyProjectsAction
+   * both special-case caller.role === 'ceo' for this). IT and Governing
+   * Council never get this page — company-wide oversight only, same as
+   * before. */
+  showNewRegistration?: boolean;
 }
 
-export default function AdminLayout({ children, basePath, roleLabel, showModules = true, showWallet = false }: AdminLayoutProps) {
+export default function AdminLayout({ children, basePath, roleLabel, showModules = true, showWallet = false, showNewRegistration = false }: AdminLayoutProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
@@ -44,7 +50,8 @@ export default function AdminLayout({ children, basePath, roleLabel, showModules
     { path: '', label: 'Dashboard', icon: LayoutDashboard, exact: true },
     { path: '/users', label: 'User Management', icon: Users },
     { path: '/areas-projects', label: 'Areas & Projects', icon: Building2 },
-    { path: '/commission-rates', label: 'Commission Rates', icon: Percent },
+    { path: '/commission-rates', label: 'Roles / Commissions', icon: Percent },
+    ...(showNewRegistration ? [{ path: '/new-registration', label: 'New Registration', icon: ClipboardPlus }] : []),
     { path: '/registrations', label: 'Registrations', icon: ClipboardList },
     { path: '/payouts', label: 'Payouts', icon: Landmark },
     ...(showWallet ? [{ path: '/wallet', label: 'My Wallet', icon: Wallet }] : []),
