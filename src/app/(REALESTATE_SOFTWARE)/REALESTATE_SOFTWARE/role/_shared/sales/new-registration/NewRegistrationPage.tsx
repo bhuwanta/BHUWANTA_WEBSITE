@@ -115,45 +115,51 @@ export default function NewRegistrationPage() {
                 <label className="block text-sm font-semibold text-[#0f1d33] mb-2">
                   Area <span className="text-red-500">*</span>
                 </label>
-                <select
-                  required
-                  value={areaId}
-                  onChange={(e) => {
-                    setAreaId(e.target.value);
-                    setProjectId('');
-                  }}
-                  className="w-full bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-3 py-2.5 text-[#0f1d33] text-sm focus:outline-none focus:border-[#1e3a5f] focus:ring-1 focus:ring-[#1e3a5f]"
-                >
-                  <option value="" disabled>
-                    Select an Area
-                  </option>
-                  {areas.map((area: any) => (
-                    <option key={area.id} value={area.id}>
-                      {area.name}
+                <div className="relative">
+                  <select
+                    required
+                    value={areaId}
+                    onChange={(e) => {
+                      setAreaId(e.target.value);
+                      setProjectId('');
+                    }}
+                    className="w-full appearance-none bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-3 py-2.5 pr-9 text-[#0f1d33] text-sm focus:outline-none focus:border-[#1e3a5f] focus:ring-1 focus:ring-[#1e3a5f]"
+                  >
+                    <option value="" disabled>
+                      Select an Area
                     </option>
-                  ))}
-                </select>
+                    {areas.map((area: any) => (
+                      <option key={area.id} value={area.id}>
+                        {area.name}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="w-4 h-4 text-[#5a6a82] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-semibold text-[#0f1d33] mb-2">
                   Project <span className="text-red-500">*</span>
                 </label>
-                <select
-                  required
-                  disabled={!areaId}
-                  value={projectId}
-                  onChange={(e) => setProjectId(e.target.value)}
-                  className="w-full bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-3 py-2.5 text-[#0f1d33] text-sm focus:outline-none focus:border-[#1e3a5f] focus:ring-1 focus:ring-[#1e3a5f] disabled:opacity-50"
-                >
-                  <option value="" disabled>
-                    {areaId ? 'Select a Project' : 'Select an Area first'}
-                  </option>
-                  {projectsInArea.map((p: any) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
+                <div className="relative">
+                  <select
+                    required
+                    disabled={!areaId}
+                    value={projectId}
+                    onChange={(e) => setProjectId(e.target.value)}
+                    className="w-full appearance-none bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-3 py-2.5 pr-9 text-[#0f1d33] text-sm focus:outline-none focus:border-[#1e3a5f] focus:ring-1 focus:ring-[#1e3a5f] disabled:opacity-50"
+                  >
+                    <option value="" disabled>
+                      {areaId ? 'Select a Project' : 'Select an Area first'}
                     </option>
-                  ))}
-                </select>
+                    {projectsInArea.map((p: any) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="w-4 h-4 text-[#5a6a82] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
               </div>
             </div>
 

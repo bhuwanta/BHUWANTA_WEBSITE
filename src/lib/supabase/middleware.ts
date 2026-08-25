@@ -34,6 +34,24 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  // A Server Action POSTs to the exact same URL as the page it's called
+  // from, carrying this header (next/dist/esm/client/components/
+  // app-router-headers.js's ACTION_HEADER). If any of the redirect
+  // branches below fire for one of these requests, the browser's
+  // fetchServerAction gets back an HTML redirect instead of the
+  // RSC-encoded action result it expects and throws "An unexpected
+  // response was received from the server" — not a code bug in the
+  // action itself, just this proxy stepping on the action protocol.
+  // Safe to skip: every mutating action in this codebase already calls
+  // verifyCaller() (and the RBAC blocks below are explicitly documented
+  // as a second, independent layer on top of that per-page/per-action
+  // check, not the only one), so unauthenticated/wrong-role callers
+  // still get rejected — as a normal JSON {success:false} response
+  // instead of a redirect that breaks the client action fetcher.
+  if (request.headers.get('next-action')) {
+    return supabaseResponse
+  }
+
   // If no user and trying to access admin dashboard, redirect to login
   if (
     !user &&

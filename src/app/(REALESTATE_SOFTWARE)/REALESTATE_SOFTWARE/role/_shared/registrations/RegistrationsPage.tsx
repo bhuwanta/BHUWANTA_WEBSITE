@@ -297,28 +297,44 @@ export default function RegistrationsPage({ currentUserRole, currentUserId }: Re
           <thead className="bg-[#f7f8fa] sticky top-0 z-10 shadow-[0_1px_0_#e8ecf2]">
             <tr className="text-[12px] uppercase tracking-wider text-[#5a6a82]">
               <th className="py-3 px-2 font-semibold w-10 cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('srno')}>
-                # <SortIcon col="srno" />
+                <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                  # <SortIcon col="srno" />
+                </span>
               </th>
               <th className="py-3 px-2 font-semibold w-[13%] cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('project')}>
-                Project <SortIcon col="project" />
+                <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                  Project <SortIcon col="project" />
+                </span>
               </th>
               <th className="py-3 px-2 font-semibold w-[12%] cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('customer')}>
-                Customer <SortIcon col="customer" />
+                <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                  Customer <SortIcon col="customer" />
+                </span>
               </th>
               <th className="py-3 px-2 font-semibold w-[7%] cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('plotSize')}>
-                Plot <SortIcon col="plotSize" />
+                <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                  Plot <SortIcon col="plotSize" />
+                </span>
               </th>
-              <th className="py-3 px-2 font-semibold w-[8%] cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('basePrice')}>
-                Base Price <SortIcon col="basePrice" />
+              <th className="py-3 px-2 font-semibold w-[9%] cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('basePrice')}>
+                <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                  Base Price <SortIcon col="basePrice" />
+                </span>
               </th>
               <th className="py-3 px-2 font-semibold w-[13%] cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('soldBy')}>
-                Sold By <SortIcon col="soldBy" />
+                <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                  Sold By <SortIcon col="soldBy" />
+                </span>
               </th>
               <th className="py-3 px-2 font-semibold w-[7%] cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('payment')}>
-                Pay <SortIcon col="payment" />
+                <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                  Pay <SortIcon col="payment" />
+                </span>
               </th>
-              <th className="py-3 px-2 font-semibold w-[10%] cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('status')}>
-                Status <SortIcon col="status" />
+              <th className="py-3 px-2 font-semibold w-[9%] cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('status')}>
+                <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                  Status <SortIcon col="status" />
+                </span>
               </th>
               <th className="py-3 px-2 font-semibold text-right w-[24%]">Action</th>
             </tr>
