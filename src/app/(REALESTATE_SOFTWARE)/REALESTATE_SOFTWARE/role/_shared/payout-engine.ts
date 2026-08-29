@@ -69,18 +69,32 @@ export async function runCommissionPayout(supabaseAdmin: ServiceClient, registra
 
     const scheduledFor = new Date(Date.now() + PAYOUT_DELAY_MS).toISOString()
 
-    const rows = lines.map((line, i) => ({
-      registration_id: registrationId,
-      payee_id: eligibleChain[i].id,
-      role: line.role,
-      commission_percentage: line.percentage,
-      tier_percentage: line.tierPercentage,
-      previous_tier_percentage: line.previousTierPercentage,
-      computed_amount: line.rawAmount,
-      amount: line.amount,
-      payout_status: 'pending' as const,
-      scheduled_for: scheduledFor,
-    }))
+    // Zip payee ids in by position FIRST, then drop the zero-amount
+    // lines — filtering before the zip would shift every index and pay
+    // the wrong people. A line can legitimately land on 0%: a tier whose
+    // rate sits at or below the tier beneath it in this particular chain
+    // (clampNonNegative in commission.ts), most notably the Governing
+    // Council entry that exists purely to anchor the baseline when a CEO
+    // is the seller. Those carry no money, so writing them would just be
+    // ₹0 noise in everyone's Payouts and Wallet views.
+    const rows = lines
+      .map((line, i) => ({
+        registration_id: registrationId,
+        payee_id: eligibleChain[i].id,
+        role: line.role,
+        commission_percentage: line.percentage,
+        tier_percentage: line.tierPercentage,
+        previous_tier_percentage: line.previousTierPercentage,
+        computed_amount: line.rawAmount,
+        amount: line.amount,
+        payout_status: 'pending' as const,
+        scheduled_for: scheduledFor,
+      }))
+      .filter((row) => row.amount > 0)
+
+    if (rows.length === 0) {
+      return { success: false, error: 'Every commission line computed to zero for this chain — no payouts created.' }
+    }
 
     const { error: insertError } = await supabaseAdmin.from('s_sales_payouts').insert(rows)
     if (insertError) {

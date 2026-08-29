@@ -40,7 +40,7 @@ export default function SelfSettingsPage() {
 
   return (
     <div className="p-4 md:p-6 bg-[#f7f8fa] h-full">
-      <div className="max-w-md mx-auto">
+      <div className="max-w-md">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-[#0f1d33] flex items-center gap-2">
             <Settings className="w-6 h-6 text-[#c4a55a]" />
@@ -90,13 +90,18 @@ export default function SelfSettingsPage() {
 
           <div>
             <label className="block text-sm font-semibold text-[#0f1d33] mb-2">Confirm Password</label>
-            <input
-              type={showPassword ? 'text' : 'password'}
-              required
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-3 py-2.5 text-[#0f1d33] text-sm focus:outline-none focus:border-[#c4a55a] focus:ring-1 focus:ring-[#c4a55a]"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-3 py-2.5 pr-10 text-[#0f1d33] text-sm focus:outline-none focus:border-[#c4a55a] focus:ring-1 focus:ring-[#c4a55a]"
+              />
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#5a6a82] hover:text-[#0f1d33]">
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
             {confirmPassword.length > 0 && !passwordsMatch && <p className="text-xs text-red-600 mt-1.5">Passwords do not match.</p>}
           </div>
 

@@ -1,8 +1,27 @@
 'use server'
 
 import { createServiceClient } from '@/lib/supabase/server'
+import { verifyCaller } from '../../auth'
+import { isAdminPeer } from '../../permissions'
+
+/** Areas & Projects is viewable by every non-Customer role (IT through
+ * LIA), but only IT/CEO/Governing Council — the same admin-peer set that
+ * already manages everything else in this app — can create/edit/delete
+ * an Area, Project, or document. The page itself hides that UI for
+ * everyone else, but a Server Action is a directly POST-able endpoint
+ * regardless of which page rendered the button that calls it, so the
+ * real gate has to live here. */
+async function requireManagePermission() {
+  const caller = await verifyCaller()
+  if (!caller || !isAdminPeer(caller.role)) {
+    return { success: false as const, error: 'Only IT, CEO, or Governing Council can manage Areas & Projects.' }
+  }
+  return null
+}
 
 export async function createAreaAction(name: string) {
+  const denied = await requireManagePermission()
+  if (denied) return denied
   try {
     const supabaseAdmin = createServiceClient()
     const { data, error } = await supabaseAdmin
@@ -25,6 +44,8 @@ export async function createAreaAction(name: string) {
 }
 
 export async function updateAreaAction(id: string, name: string) {
+  const denied = await requireManagePermission()
+  if (denied) return denied
   try {
     const supabaseAdmin = createServiceClient()
     const { error } = await supabaseAdmin
@@ -46,6 +67,8 @@ export async function updateAreaAction(id: string, name: string) {
 }
 
 export async function deleteAreaAction(id: string) {
+  const denied = await requireManagePermission()
+  if (denied) return denied
   try {
     const supabaseAdmin = createServiceClient()
     const { error } = await supabaseAdmin
@@ -112,6 +135,8 @@ export async function createProjectAction(input: {
   mrpDefault?: number
   directorIds?: string[]
 }) {
+  const denied = await requireManagePermission()
+  if (denied) return denied
   try {
     if (!input.areaId) {
       return { success: false, error: 'A Project must belong to exactly one Area.' }
@@ -182,6 +207,8 @@ export async function updateProjectAction(
     directorIds?: string[]
   }
 ) {
+  const denied = await requireManagePermission()
+  if (denied) return denied
   try {
     if (!input.areaId) {
       return { success: false, error: 'A Project must belong to exactly one Area.' }
@@ -222,6 +249,42 @@ export async function updateProjectAction(
   }
 }
 
+/** Replaces a Project's Director assignments only, without touching any
+ * of its other fields. updateProjectAction could do this, but it demands
+ * the full project payload (name/area/prices), so driving it from a
+ * directors-only dialog would mean echoing those values back and risking
+ * clobbering an edit someone else made in between. */
+export async function setProjectDirectorsAction(projectId: string, directorIds: string[]) {
+  const denied = await requireManagePermission()
+  if (denied) return denied
+  try {
+    const supabaseAdmin = createServiceClient()
+
+    const { data: project } = await supabaseAdmin.from('s_projects').select('id, name').eq('id', projectId).maybeSingle()
+    if (!project) return { success: false, error: 'Project not found.' }
+
+    // Same wholesale replace as updateProjectAction — simpler and safe
+    // at this scale than diffing adds/removes.
+    const { error: deleteError } = await supabaseAdmin.from('s_director_projects').delete().eq('project_id', projectId)
+    if (deleteError) throw deleteError
+
+    const unique = Array.from(new Set(directorIds))
+    if (unique.length > 0) {
+      const mappings = unique.map((directorId) => ({ project_id: projectId, director_id: directorId }))
+      const { error: insertError } = await supabaseAdmin.from('s_director_projects').insert(mappings)
+      if (insertError) throw insertError
+    }
+
+    return {
+      success: true,
+      message: unique.length === 0 ? `${project.name} now has no Directors assigned.` : `${project.name} now has ${unique.length} Director${unique.length === 1 ? '' : 's'} assigned.`,
+    }
+  } catch (error: any) {
+    console.error('Error setting project directors:', error)
+    return { success: false, error: error.message || 'Failed to update Directors.' }
+  }
+}
+
 /** Deletes a Project. `s_director_projects` and `s_project_documents`
  * rows cascade automatically (ON DELETE CASCADE — they're pure
  * associations, safe to drop with the project). `s_new_registrations`
@@ -229,6 +292,8 @@ export async function updateProjectAction(
  * shouldn't be deletable out from under those records, surfaced here as
  * a friendly error rather than a raw FK violation. */
 export async function deleteProjectAction(id: string) {
+  const denied = await requireManagePermission()
+  if (denied) return denied
   try {
     const supabaseAdmin = createServiceClient()
     const { error } = await supabaseAdmin
@@ -297,6 +362,8 @@ export async function getDocumentsAction() {
 }
 
 export async function uploadDocumentAction(formData: FormData) {
+  const denied = await requireManagePermission()
+  if (denied) return denied
   try {
     const file = formData.get('file') as File
     const projectId = formData.get('projectId') as string
@@ -354,6 +421,8 @@ export async function uploadDocumentAction(formData: FormData) {
 }
 
 export async function deleteDocumentAction(id: string, fileUrl: string, docType: string) {
+  const denied = await requireManagePermission()
+  if (denied) return denied
   try {
     const supabaseAdmin = createServiceClient()
 

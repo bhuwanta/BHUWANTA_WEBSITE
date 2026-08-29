@@ -3,5 +3,5 @@ import AreasProjectsPage from '../../_shared/admin/areas-projects/AreasProjectsP
 
 export default async function CEOAreasProjectsPage() {
   await requireRole('ceo');
-  return <AreasProjectsPage />;
+  return <AreasProjectsPage canManage />;
 }

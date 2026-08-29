@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, ClipboardList, Landmark, Settings, LogOut, ChevronLeft, ChevronRight, Menu } from 'lucide-react';
+import { LayoutDashboard, ClipboardList, Landmark, Map, Settings, LogOut, ChevronLeft, ChevronRight, Menu } from 'lucide-react';
 import { getPendingRegistrationCountAction } from '../registrations/actions';
 import { onRegistrationsChanged } from '../registrations-notify';
 
@@ -11,8 +11,9 @@ const BASE_PATH = '/REALESTATE_SOFTWARE/role/OperationManager';
 
 const NAV_ITEMS = [
   { path: '', label: 'Dashboard', icon: LayoutDashboard, exact: true },
-  { path: '/registrations', label: 'Registrations', icon: ClipboardList },
+  { path: '/registrations', label: 'Registration Status', icon: ClipboardList },
   { path: '/payouts', label: 'Payouts', icon: Landmark },
+  { path: '/areas-projects', label: 'Areas & Projects', icon: Map },
   { path: '/settings', label: 'Settings', icon: Settings },
 ];
 

@@ -20,6 +20,7 @@ export async function getMyRegistrationsAction() {
       .select(`
         id, plot_size_sqyd, mrp_at_submission, status, payment_status,
         submitted_at, registration_done_at, cancelled_at, refund_status,
+        payment_rejected_at, payment_rejection_note,
         s_areas ( name ),
         s_projects ( id, name, google_maps_url ),
         seller:s_realestate_users!submitted_by ( full_name, phone )

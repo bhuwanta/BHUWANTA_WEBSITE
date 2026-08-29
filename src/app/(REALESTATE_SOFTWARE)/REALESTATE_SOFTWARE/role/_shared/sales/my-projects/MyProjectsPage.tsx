@@ -41,7 +41,6 @@ export default function MyProjectsPage() {
             <Building2 className="w-6 h-6 text-[#c4a55a]" />
             My Projects
           </h1>
-          <p className="text-[#5a6a82] text-sm mt-1">The Project(s) your Director is assigned to — inherited automatically, read-only.</p>
         </div>
         <div className="relative w-full md:w-72">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5a6a82]" />

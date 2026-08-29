@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, Building2, Percent, ClipboardList, ClipboardPlus, Landmark, Blocks, Wallet, Settings, LogOut, ChevronLeft, ChevronRight, Menu } from 'lucide-react';
+import { LayoutDashboard, Users, Building2, Percent, Scale, ClipboardList, ClipboardPlus, Landmark, Blocks, Wallet, Settings, LogOut, ChevronLeft, ChevronRight, Menu } from 'lucide-react';
 import { getPendingRegistrationCountAction } from '../registrations/actions';
 import { onRegistrationsChanged } from '../registrations-notify';
 
@@ -26,9 +26,15 @@ interface AdminLayoutProps {
    * Council never get this page — company-wide oversight only, same as
    * before. */
   showNewRegistration?: boolean;
+  /** Defaults to false — IT only. Payout Rules configures WHO earns on a
+   * sale (S_payout_rules / earns_commission, migration 010), which is
+   * money-critical and deliberately kept to the single technical-owner
+   * role rather than shared with the other admin peers. CEO/Governing
+   * Council still manage the rates themselves on Roles / Commissions. */
+  showPayoutRules?: boolean;
 }
 
-export default function AdminLayout({ children, basePath, roleLabel, showModules = true, showWallet = false, showNewRegistration = false }: AdminLayoutProps) {
+export default function AdminLayout({ children, basePath, roleLabel, showModules = true, showWallet = false, showNewRegistration = false, showPayoutRules = false }: AdminLayoutProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
@@ -51,8 +57,9 @@ export default function AdminLayout({ children, basePath, roleLabel, showModules
     { path: '/users', label: 'User Management', icon: Users },
     { path: '/areas-projects', label: 'Areas & Projects', icon: Building2 },
     { path: '/commission-rates', label: 'Roles / Commissions', icon: Percent },
+    ...(showPayoutRules ? [{ path: '/payout-rules', label: 'Payout Rules', icon: Scale }] : []),
     ...(showNewRegistration ? [{ path: '/new-registration', label: 'New Registration', icon: ClipboardPlus }] : []),
-    { path: '/registrations', label: 'Registrations', icon: ClipboardList },
+    { path: '/registrations', label: 'Registration Status', icon: ClipboardList },
     { path: '/payouts', label: 'Payouts', icon: Landmark },
     ...(showWallet ? [{ path: '/wallet', label: 'My Wallet', icon: Wallet }] : []),
     ...(showModules ? [{ path: '/modules', label: 'Modules', icon: Blocks }] : []),
