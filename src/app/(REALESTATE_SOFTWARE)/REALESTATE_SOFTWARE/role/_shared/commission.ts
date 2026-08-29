@@ -85,6 +85,27 @@ export function computePool(plotSizeSqyd: number, basePricePerSqyd: number): num
   return fromPaise(poolPaise);
 }
 
+/** Inverse of computePool: given the TOTAL a customer is to pay for a
+ * plot, derives the equivalent ₹/sq.yd rate — for the New Registration
+ * form's "Final MRP Customer Should Pay", which is filled in as a total
+ * (what a seller actually negotiates with a customer), not a rate, but
+ * is stored as mrp_at_submission for parity with base_price_at_submission
+ * and because computePool(plotSize, mrp_at_submission) is how every
+ * downstream reader (the customer portal's Total Amount) reconstructs
+ * it. Same paisa-safe integer approach as computePool, run in reverse —
+ * computePool(plotSizeSqyd, computeRatePerSqyd(total, plotSizeSqyd))
+ * reproduces `total` exactly for any total/plotSize that are themselves
+ * already whole-paisa/whole-centi-sqyd values (true for every real
+ * input here — plot size is DECIMAL(10,2), totals are whole rupees). */
+export function computeRatePerSqyd(totalAmount: number, plotSizeSqyd: number): number {
+  const plotSizeCenti = Math.round(plotSizeSqyd * 100);
+  if (plotSizeCenti <= 0) return 0;
+  const totalPaise = Math.round(totalAmount * 100);
+  // rate×100 (paise) = (total×100 paise) × 100 / (plotSize×100 centi-sqyd)
+  const ratePaise = Math.round((totalPaise * 100) / plotSizeCenti);
+  return fromPaise(ratePaise);
+}
+
 /** A marginal percentage should never be negative under a correctly
  * ascending rate table (§3a), but the rate table is editable and
  * nothing stops it from being edited into a non-ascending shape (e.g.
@@ -95,6 +116,21 @@ export function computePool(plotSizeSqyd: number, basePricePerSqyd: number): num
  * the point money actually changes hands. */
 function clampNonNegative(value: number): number {
   return value < 0 ? 0 : value;
+}
+
+/** The highest rate in the table strictly below `rate` — i.e. the tier
+ * structurally beneath this one, independent of any particular chain.
+ * Used only for a colleague sharing the seller's own tier, where the
+ * chain itself contains nothing lower to measure against (see the call
+ * site). Returns 0 when this is the lowest tier, which correctly leaves
+ * such a peer earning their full rate. */
+function nextLowerRate(rate: number, rates: CommissionRatesMap): number {
+  let best = 0;
+  for (const candidate of Object.values(rates)) {
+    if (candidate == null) continue;
+    if (candidate < rate && candidate > best) best = candidate;
+  }
+  return best;
 }
 
 /**
@@ -109,13 +145,20 @@ function clampNonNegative(value: number): number {
  * - Everyone above gets the difference between their percentage and the
  *   percentage of whoever is immediately below them in this specific
  *   chain — applied to the SAME pool, not a shrinking remainder.
- * - This telescopes at the rawAmount level: raw amounts always sum to
- *   exactly the highest participating tier's percentage of the pool.
- *   Once each line is independently rounded UP to the next rupee
- *   (product decision — see file header), the *paid* total can exceed
- *   that exact figure by up to ~₹1 per line (worst case ~₹8-9 across a
- *   full 9-tier chain) — an accepted, intentional cost of always
- *   rounding in the payee's favor, not a bug.
+ * - With at most one person per tier this telescopes at the rawAmount
+ *   level: raw amounts sum to exactly the highest participating tier's
+ *   percentage of the pool. Once each line is independently rounded UP
+ *   to the next rupee (product decision — see file header), the *paid*
+ *   total can exceed that exact figure by up to ~₹1 per line (worst
+ *   case ~₹8-9 across a full 9-tier chain) — an accepted, intentional
+ *   cost of always rounding in the payee's favor, not a bug.
+ * - It deliberately stops telescoping when a tier is held by SEVERAL
+ *   active people (e.g. three active CEOs): each of them earns that
+ *   tier's full marginal percentage, so the total exceeds the top
+ *   tier's percentage by one extra tier-share per additional holder
+ *   (three CEOs on a 28% chain pay out 32%, not 28%). That is the
+ *   intended rule, not double-payment — see the same-tier handling in
+ *   the loop below and the CEO/GC fan-out in downline.ts.
  * - `pool` is `plot_size_sqyd × base_price_at_submission` (§3b/§3d) —
  *   NOT the MRP/customer-facing amount. Use computePool() above to get
  *   this precisely rather than a plain `*`.
@@ -138,11 +181,37 @@ export function computeCommissionBreakdown(
   if (pool <= 0) return lines; // nothing to pay out on a zero/invalid pool
 
   const poolPaise = toPaise(pool);
+  // `previousRate` is the rate of the tier directly BELOW the one being
+  // paid — which is not simply "the last role processed", because a
+  // single tier can be held by several people at once (e.g. several
+  // active CEOs, who each earn that tier). Advancing on every iteration
+  // would give the second holder rate − rate = 0%, so it only advances
+  // when the role actually changes.
   let previousRate = 0;
+  let lastRole: RealEstateRole | null = null;
+  let lastRate = 0;
 
-  for (const role of chain) {
+  for (let i = 0; i < chain.length; i++) {
+    const role = chain[i];
     const rate = rates[role];
     if (rate == null) continue;
+
+    if (lastRole !== null && role !== lastRole) {
+      previousRate = lastRate;
+    } else if (i > 0 && role === lastRole && previousRate === 0) {
+      // A colleague sharing the SELLER's own tier. The seller sits at
+      // the bottom of the ladder, so their baseline is 0 and they earn
+      // their full rate for making the sale — but a peer inheriting that
+      // same zero baseline would be paid the full rate too (three CEOs
+      // on a CEO's own sale => 84% of the pool, two GCs on a GC's sale
+      // => 58%). A peer earns the tier's real margin instead, measured
+      // against the tier structurally beneath theirs in the rate table
+      // rather than against anything in this chain — nothing lower is
+      // present in it to measure from.
+      previousRate = nextLowerRate(rate, rates);
+    }
+    lastRole = role;
+    lastRate = rate;
 
     const marginalPercentage = clampNonNegative(rate - previousRate);
 
@@ -161,11 +230,12 @@ export function computeCommissionBreakdown(
 
     lines.push({ role, percentage: marginalPercentage, tierPercentage: rate, previousTierPercentage: previousRate, rawAmount, amount });
 
-    // previousRate only advances for roles actually present in the rate
-    // table — a role missing a rate is skipped entirely (not treated as
-    // 0%), so the next present role's marginal % is still measured
+    // NOTE: previousRate is deliberately NOT advanced here — that now
+    // happens at the top of the loop, and only when the role changes
+    // (see the comment there). A role missing from the rate table is
+    // still skipped entirely via the `continue` above rather than being
+    // treated as 0%, so the next present role's marginal % is measured
     // against the last real participant, not a phantom gap.
-    previousRate = rate;
   }
 
   return lines;

@@ -113,6 +113,12 @@ CREATE TABLE public.S_realestate_users (
     -- created them, all the way down to lia.
     parent_id UUID REFERENCES public.S_realestate_users(id),
     is_active BOOLEAN DEFAULT true,
+    -- (migration 010) When false this person is excluded from every
+    -- commission chain but keeps their role, login and permissions —
+    -- set from the IT-only Payout Rules page. Note for a wing-scoped
+    -- ('chain') role: excluding the only holder of a tier does not
+    -- delete that tier's share, the gap flows up to the tier above.
+    earns_commission BOOLEAN NOT NULL DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
@@ -227,6 +233,34 @@ INSERT INTO public.S_role_definitions (role_code, label, rank, is_system) VALUES
     ('rm', 'RM', 6, true),
     ('lio', 'LIO', 7, true),
     ('lia', 'LIA', 8, true);
+
+-- Per-role payout policy (migration 010). Read by getUplineChain
+-- (role/_shared/downline.ts) to decide WHO is paid on a sale, separately
+-- from S_commission_rates below which decides HOW MUCH. A role with no
+-- row here is treated as 'chain' — the restrictive default. Seeded to
+-- reproduce the behaviour that used to be hardcoded in downline.ts.
+CREATE TABLE public.S_payout_rules (
+    role_code VARCHAR(50) PRIMARY KEY,
+    -- 'chain'        = paid only when this role appears in the seller's
+    --                  own parent_id upline (wing-scoped).
+    -- 'company_wide' = every active holder is paid on every sale.
+    scope VARCHAR(20) NOT NULL DEFAULT 'chain',
+    updated_by UUID REFERENCES public.S_realestate_users(id),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    CONSTRAINT s_payout_rules_scope_check CHECK (scope IN ('chain', 'company_wide'))
+);
+
+INSERT INTO public.S_payout_rules (role_code, scope) VALUES
+    ('director', 'chain'),
+    ('sr_core', 'chain'),
+    ('core', 'chain'),
+    ('gm', 'chain'),
+    ('agm', 'chain'),
+    ('rm', 'chain'),
+    ('lio', 'chain'),
+    ('lia', 'chain'),
+    ('governing_council', 'company_wide'),
+    ('ceo', 'company_wide');
 
 -- ==========================================
 -- COMMISSION RATES (HIERARCHY.md §3a)
@@ -376,7 +410,14 @@ CREATE TABLE public.S_new_registrations (
     -- registration_done_at is set; irreversible after (§3d).
     cancelled_by UUID REFERENCES public.S_realestate_users(id),
     cancelled_at TIMESTAMP WITH TIME ZONE,
-    refund_status VARCHAR(20) DEFAULT 'not_applicable'
+    refund_status VARCHAR(20) DEFAULT 'not_applicable',
+    -- Migration 009: set when the Operation Manager undoes a payment the
+    -- customer self-declared (payment_status becomes 'rejected'). The
+    -- note is shown to the customer so a reversed payment is never a
+    -- silent, unexplained regression on their dashboard.
+    payment_rejected_by UUID REFERENCES public.S_realestate_users(id),
+    payment_rejected_at TIMESTAMP WITH TIME ZONE,
+    payment_rejection_note TEXT
 );
 
 -- 16. Sales & Payouts Table — revised to key off a registration (not a

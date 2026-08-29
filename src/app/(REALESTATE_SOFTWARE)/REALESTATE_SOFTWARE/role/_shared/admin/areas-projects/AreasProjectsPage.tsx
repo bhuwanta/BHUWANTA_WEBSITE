@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Loader2, MapPin, Building2, AlertCircle, X, CheckCircle2, FileText, Download, Trash2, Edit2, Filter, IndianRupee, Search } from 'lucide-react';
+import { Plus, Loader2, MapPin, Building2, AlertCircle, X, CheckCircle2, FileText, Download, Trash2, Edit2, Filter, IndianRupee, Search, Users } from 'lucide-react';
 import {
   createAreaAction,
   updateAreaAction,
@@ -12,6 +12,7 @@ import {
   getAreasAction,
   getProjectsAction,
   getDirectorsListAction,
+  setProjectDirectorsAction,
   getDocumentsAction,
   uploadDocumentAction,
   deleteDocumentAction,
@@ -19,7 +20,15 @@ import {
 
 type Message = { type: 'success' | 'error'; text: string } | null;
 
-export default function AreasProjectsPage() {
+interface AreasProjectsPageProps {
+  /** Only IT/CEO/Governing Council pass true (see requireManagePermission
+   * in actions.ts, which enforces the same rule server-side regardless of
+   * this prop — this only controls whether the create/edit/delete/upload
+   * UI renders at all). Every other role gets a read-only browse view. */
+  canManage?: boolean;
+}
+
+export default function AreasProjectsPage({ canManage = false }: AreasProjectsPageProps) {
   const [activeTab, setActiveTab] = useState<'projects' | 'documents'>('projects');
 
   return (
@@ -27,7 +36,9 @@ export default function AreasProjectsPage() {
       <div className="max-w-7xl mx-auto space-y-6">
         <div>
           <h1 className="text-3xl font-bold text-[#0f1d33]">Areas & Projects</h1>
-          <p className="text-[#5a6a82] mt-1">Manage geographical areas, projects, pricing, Director assignments, and documents.</p>
+          <p className="text-[#5a6a82] mt-1">
+            {canManage ? 'Manage geographical areas, projects, pricing, Director assignments, and documents.' : 'Browse every geographical area and project company-wide, with pricing and documents.'}
+          </p>
         </div>
 
         <div className="flex items-center gap-2 bg-white p-1.5 rounded-xl border border-[#e8ecf2] w-fit shadow-sm">
@@ -45,13 +56,13 @@ export default function AreasProjectsPage() {
           </button>
         </div>
 
-        {activeTab === 'projects' ? <ProjectsTab /> : <DocumentsTab />}
+        {activeTab === 'projects' ? <ProjectsTab canManage={canManage} /> : <DocumentsTab canManage={canManage} />}
       </div>
     </div>
   );
 }
 
-function ProjectsTab() {
+function ProjectsTab({ canManage }: { canManage: boolean }) {
   const [areas, setAreas] = useState<any[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
   const [directors, setDirectors] = useState<any[]>([]);
@@ -70,6 +81,12 @@ function ProjectsTab() {
   const [basePrice, setBasePrice] = useState('');
   const [mrpDefault, setMrpDefault] = useState('');
   const [selectedDirectorIds, setSelectedDirectorIds] = useState<string[]>([]);
+
+  // Directors dialog — per-project, opened from the Director(s) column.
+  const [directorsProject, setDirectorsProject] = useState<any | null>(null);
+  const [directorsDraft, setDirectorsDraft] = useState<string[]>([]);
+  const [directorSearch, setDirectorSearch] = useState('');
+  const [savingDirectors, setSavingDirectors] = useState(false);
 
   const [selectedFilterAreaId, setSelectedFilterAreaId] = useState<string | null>(null);
   const [areaSearchQuery, setAreaSearchQuery] = useState('');
@@ -193,6 +210,31 @@ function ProjectsTab() {
     setIsProjectModalOpen(true);
   };
 
+  const openDirectorsModal = (project: any) => {
+    setDirectorsProject(project);
+    setDirectorsDraft((project.s_director_projects || []).map((dp: any) => dp.director_id));
+    setDirectorSearch('');
+    setMessage(null);
+  };
+
+  const toggleDirectorDraft = (id: string) => {
+    setDirectorsDraft((prev) => (prev.includes(id) ? prev.filter((d) => d !== id) : [...prev, id]));
+  };
+
+  const handleSaveDirectors = async () => {
+    if (!directorsProject) return;
+    setSavingDirectors(true);
+    const res = await setProjectDirectorsAction(directorsProject.id, directorsDraft);
+    if (res.success) {
+      setMessage({ type: 'success', text: res.message! });
+      setDirectorsProject(null);
+      fetchData();
+    } else {
+      setMessage({ type: 'error', text: res.error! });
+    }
+    setSavingDirectors(false);
+  };
+
   const toggleDirectorSelection = (id: string) => {
     setSelectedDirectorIds((prev) => (prev.includes(id) ? prev.filter((d) => d !== id) : [...prev, id]));
   };
@@ -223,19 +265,21 @@ function ProjectsTab() {
                 <MapPin className="w-5 h-5 text-[#c4a55a]" />
                 All Areas
               </h2>
-              <button
-                onClick={() => {
-                  setMessage(null);
-                  setAreaName('');
-                  setEditingAreaId(null);
-                  setIsAreaModalOpen(true);
-                }}
-                className="flex items-center gap-1.5 bg-white border border-[#e8ecf2] text-[#0f1d33] px-3 py-1.5 rounded-lg font-semibold shadow-sm hover:bg-[#f3f5f8] transition-colors text-xs"
-                title="Create Area"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                Create
-              </button>
+              {canManage && (
+                <button
+                  onClick={() => {
+                    setMessage(null);
+                    setAreaName('');
+                    setEditingAreaId(null);
+                    setIsAreaModalOpen(true);
+                  }}
+                  className="flex items-center gap-1.5 bg-white border border-[#e8ecf2] text-[#0f1d33] px-3 py-1.5 rounded-lg font-semibold shadow-sm hover:bg-[#f3f5f8] transition-colors text-xs"
+                  title="Create Area"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Create
+                </button>
+              )}
             </div>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5a6a82]" />
@@ -274,14 +318,16 @@ function ProjectsTab() {
                     >
                       {area.name}
                     </span>
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => openEditArea(area)} className="p-1.5 text-[#5a6a82] hover:text-[#1e3a5f] hover:bg-[#1e3a5f]/10 rounded transition-colors" title="Edit Area">
-                        <Edit2 className="w-3.5 h-3.5" />
-                      </button>
-                      <button onClick={() => handleDeleteArea(area.id, area.name)} className="p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors" title="Delete Area">
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
+                    {canManage && (
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={() => openEditArea(area)} className="p-1.5 text-[#5a6a82] hover:text-[#1e3a5f] hover:bg-[#1e3a5f]/10 rounded transition-colors" title="Edit Area">
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button onClick={() => handleDeleteArea(area.id, area.name)} className="p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors" title="Delete Area">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -311,18 +357,20 @@ function ProjectsTab() {
                   className="w-full bg-white border border-[#e8ecf2] rounded-lg pl-9 pr-3 py-2 text-sm text-[#0f1d33] focus:outline-none focus:ring-1 focus:ring-[#1e3a5f]"
                 />
               </div>
-              <button
-                onClick={() => {
-                  resetProjectForm();
-                  setMessage(null);
-                  setIsProjectModalOpen(true);
-                }}
-                className="shrink-0 flex items-center gap-1.5 gradient-gold text-white px-3 py-2 rounded-lg font-semibold shadow-lg shadow-[#c4a55a]/20 transition-all text-xs"
-                title="Create Project"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                Create
-              </button>
+              {canManage && (
+                <button
+                  onClick={() => {
+                    resetProjectForm();
+                    setMessage(null);
+                    setIsProjectModalOpen(true);
+                  }}
+                  className="shrink-0 flex items-center gap-1.5 gradient-gold text-white px-3 py-2 rounded-lg font-semibold shadow-lg shadow-[#c4a55a]/20 transition-all text-xs"
+                  title="Create Project"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Create
+                </button>
+              )}
             </div>
           </div>
           <div className="p-0 overflow-y-auto flex-1">
@@ -342,7 +390,7 @@ function ProjectsTab() {
                       <th className="p-4">Base Price</th>
                       <th className="p-4">MRP (Default)</th>
                       <th className="p-4">Director(s)</th>
-                      <th className="p-4 text-right">Actions</th>
+                      {canManage && <th className="p-4 text-right">Actions</th>}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#e8ecf2]">
@@ -372,26 +420,31 @@ function ProjectsTab() {
                         <td className="p-4 align-top text-sm text-[#0f1d33] font-medium whitespace-nowrap">{formatPrice(project.base_price)}</td>
                         <td className="p-4 align-top text-sm text-[#0f1d33] font-medium whitespace-nowrap">{formatPrice(project.mrp_default)}</td>
                         <td className="p-4 align-top">
-                          <div className="flex flex-wrap gap-1.5">
-                            {(project.s_director_projects || []).length === 0 ? (
-                              <span className="text-xs text-[#5a6a82] italic">Unassigned</span>
-                            ) : (
-                              project.s_director_projects.map((dp: any) => (
-                                <span key={dp.director_id} className="text-xs bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded">
-                                  {dp.s_realestate_users?.full_name || 'Unknown'}
-                                </span>
-                              ))
-                            )}
-                          </div>
-                        </td>
-                        <td className="p-4 align-top text-right whitespace-nowrap">
-                          <button onClick={() => openEditProject(project)} className="text-[#1e3a5f] font-semibold text-xs hover:underline mr-3">
-                            Edit
-                          </button>
-                          <button onClick={() => handleDeleteProject(project.id, project.name)} className="text-red-500 font-semibold text-xs hover:underline">
-                            Delete
+                          <button
+                            onClick={() => openDirectorsModal(project)}
+                            className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-[#e8ecf2] bg-white text-[#1e3a5f] hover:bg-[#f3f5f8] transition-colors whitespace-nowrap"
+                          >
+                            <Users className="w-3.5 h-3.5" />
+                            View Directors
+                            <span
+                              className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                                (project.s_director_projects || []).length === 0 ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'
+                              }`}
+                            >
+                              {(project.s_director_projects || []).length}
+                            </span>
                           </button>
                         </td>
+                        {canManage && (
+                          <td className="p-4 align-top text-right whitespace-nowrap">
+                            <button onClick={() => openEditProject(project)} className="text-[#1e3a5f] font-semibold text-xs hover:underline mr-3">
+                              Edit
+                            </button>
+                            <button onClick={() => handleDeleteProject(project.id, project.name)} className="text-red-500 font-semibold text-xs hover:underline">
+                              Delete
+                            </button>
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>
@@ -426,6 +479,90 @@ function ProjectsTab() {
               </button>
             </div>
           </form>
+        </Modal>
+      )}
+
+      {directorsProject && (
+        <Modal title={`Directors — ${directorsProject.name}`} icon={Users} onClose={() => setDirectorsProject(null)}>
+          <div className="flex flex-col max-h-[70vh]">
+            <div className="p-4 border-b border-[#e8ecf2] shrink-0">
+              <p className="text-sm text-[#0f1d33] mb-3">
+                <span className="font-bold">{directorsDraft.length}</span> {directorsDraft.length === 1 ? 'Director' : 'Directors'} assigned
+                {canManage && directors.length > 0 && <span className="text-[#5a6a82] font-normal"> of {directors.length} available</span>}
+              </p>
+              {canManage && directors.length > 0 && (
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5a6a82]" />
+                  <input
+                    type="text"
+                    autoFocus
+                    value={directorSearch}
+                    onChange={(e) => setDirectorSearch(e.target.value)}
+                    placeholder="Search Directors..."
+                    className="w-full bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg pl-9 pr-3 py-2 text-sm text-[#0f1d33] focus:outline-none focus:border-[#1e3a5f] focus:ring-1 focus:ring-[#1e3a5f]"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="overflow-y-auto flex-1">
+              {(() => {
+                // View-only roles see just who's assigned; managers see
+                // every Director so they can add as well as remove.
+                const source = canManage ? directors : directors.filter((d) => directorsDraft.includes(d.id));
+                const q = directorSearch.trim().toLowerCase();
+                const visible = q ? source.filter((d) => (d.full_name || '').toLowerCase().includes(q)) : source;
+
+                if (directors.length === 0) return <p className="px-4 py-8 text-center text-sm text-[#5a6a82]">No Director accounts exist yet.</p>;
+                if (visible.length === 0)
+                  return <p className="px-4 py-8 text-center text-sm text-[#5a6a82]">{q ? 'No Director matches that search.' : 'No Directors assigned to this project yet.'}</p>;
+
+                return (
+                  <ul className="divide-y divide-[#e8ecf2]">
+                    {visible.map((director) => {
+                      const assigned = directorsDraft.includes(director.id);
+                      return (
+                        <li key={director.id}>
+                          <button
+                            type="button"
+                            disabled={!canManage}
+                            onClick={() => toggleDirectorDraft(director.id)}
+                            className={`w-full flex items-center justify-between gap-3 px-4 py-3 text-left transition-colors ${canManage ? 'hover:bg-[#f3f5f8] cursor-pointer' : 'cursor-default'}`}
+                          >
+                            <span className="text-sm font-medium text-[#0f1d33] truncate">{director.full_name}</span>
+                            {assigned ? (
+                              <span className="shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
+                                <CheckCircle2 className="w-3 h-3" />
+                                Assigned
+                              </span>
+                            ) : (
+                              canManage && <span className="shrink-0 text-[11px] font-semibold text-[#1e3a5f]">+ Add</span>
+                            )}
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                );
+              })()}
+            </div>
+
+            {canManage && (
+              <div className="p-4 border-t border-[#e8ecf2] bg-[#f7f8fa] flex justify-end gap-3 shrink-0">
+                <button type="button" onClick={() => setDirectorsProject(null)} className="px-4 py-2 text-[#5a6a82] font-semibold hover:bg-[#e8ecf2] rounded-lg transition-colors text-sm">
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveDirectors}
+                  disabled={savingDirectors}
+                  className="bg-[#1e3a5f] text-white font-semibold rounded-lg px-6 py-2 flex items-center gap-2 hover:bg-[#0f1d33] transition-colors disabled:opacity-50 text-sm"
+                >
+                  {savingDirectors ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Changes'}
+                </button>
+              </div>
+            )}
+          </div>
         </Modal>
       )}
 
@@ -578,7 +715,7 @@ function ProjectsTab() {
   );
 }
 
-function DocumentsTab() {
+function DocumentsTab({ canManage }: { canManage: boolean }) {
   const [documents, setDocuments] = useState<any[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
   const [loadingData, setLoadingData] = useState(true);
@@ -656,20 +793,22 @@ function DocumentsTab() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
-        <button
-          onClick={() => {
-            setMessage(null);
-            setFile(null);
-            setSelectedProjectId('');
-            setIsModalOpen(true);
-          }}
-          className="flex items-center gap-2 gradient-gold text-white px-4 py-2 rounded-lg font-semibold shadow-lg shadow-[#c4a55a]/20 transition-all w-fit"
-        >
-          <Plus className="w-4 h-4" />
-          Upload Document
-        </button>
-      </div>
+      {canManage && (
+        <div className="flex justify-end">
+          <button
+            onClick={() => {
+              setMessage(null);
+              setFile(null);
+              setSelectedProjectId('');
+              setIsModalOpen(true);
+            }}
+            className="flex items-center gap-2 gradient-gold text-white px-4 py-2 rounded-lg font-semibold shadow-lg shadow-[#c4a55a]/20 transition-all w-fit"
+          >
+            <Plus className="w-4 h-4" />
+            Upload Document
+          </button>
+        </div>
+      )}
 
       {message && !isModalOpen && <MessageBanner message={message} />}
 
@@ -750,9 +889,11 @@ function DocumentsTab() {
                         <a href={doc.file_url} target="_blank" rel="noopener noreferrer" className="p-1.5 text-[#1e3a5f] hover:bg-[#1e3a5f]/10 rounded transition-colors" title="Download/View">
                           <Download className="w-4 h-4" />
                         </a>
-                        <button onClick={() => handleDelete(doc.id, doc.file_url, doc.document_type)} className="p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors" title="Delete">
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        {canManage && (
+                          <button onClick={() => handleDelete(doc.id, doc.file_url, doc.document_type)} className="p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors" title="Delete">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

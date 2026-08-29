@@ -4,6 +4,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { verifyCaller } from '../auth'
 import { sendSetupPasswordEmail } from '@/lib/emails/resend'
 import { canCreateRoleDynamic, canManageRoleDynamic, canViewRole, isAdminPeer, isOperationManager, getSalesRoleOrder, type RealEstateRole } from '../permissions'
+import { normalizePhone, validatePhone } from '../phone-policy'
 import { getDownlineIds } from '../downline'
 import { validatePassword } from '../password-policy'
 
@@ -67,6 +68,14 @@ export async function createExecutiveAction(
       return { success: false, error: `A ${callerRole.replace('_', ' ')} cannot create a ${data.role.replace('_', ' ')} profile.` };
     }
 
+    // Normalize before validating AND before writing, so the stored
+    // value is always bare digits — the phone is the login ID and the
+    // key a returning customer is matched on, so "+91 98765 43210" and
+    // "9876543210" must never end up as two different accounts.
+    const phone = normalizePhone(data.phone)
+    const phoneError = validatePhone(phone)
+    if (phoneError) return { success: false, error: phoneError };
+
     // No admin-set password, ever — matches how a New Registration
     // auto-creates a Customer account (registrations/actions.ts): only
     // an email is provided here, Supabase creates the account with no
@@ -78,7 +87,7 @@ export async function createExecutiveAction(
       email_confirm: true,
       user_metadata: {
         full_name: data.fullName,
-        raw_phone: data.phone
+        raw_phone: phone
       },
     })
 
@@ -100,7 +109,7 @@ export async function createExecutiveAction(
       .from('s_realestate_users')
       .insert({
         id: userId,
-        phone: data.phone,
+        phone,
         full_name: data.fullName,
         role: data.role,
         parent_id: parentId,
@@ -273,6 +282,13 @@ export async function updateExecutiveAction(
       }
     }
 
+    // Same normalize-then-validate as createExecutiveAction — an edit
+    // must not be able to reintroduce a malformed login ID that create
+    // would have rejected.
+    const phone = normalizePhone(data.phone)
+    const phoneError = validatePhone(phone)
+    if (phoneError) return { success: false, error: phoneError };
+
     const updateData: any = {}
     if (data.password) {
       const passwordError = validatePassword(data.password);
@@ -287,7 +303,7 @@ export async function updateExecutiveAction(
       // sent through this flow.
       updateData.email_confirm = true
     }
-    updateData.user_metadata = { full_name: data.fullName, raw_phone: data.phone }
+    updateData.user_metadata = { full_name: data.fullName, raw_phone: phone }
 
     const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(id, updateData)
     if (authError) {
@@ -453,4 +469,24 @@ export async function getCreatableRolesAction(callerRole: RealEstateRole): Promi
     return ['it', 'operation_manager', 'ceo', 'governing_council', ...salesRoleCodes] as RealEstateRole[];
   }
   return salesRoleCodes.filter((r) => canCreateRoleDynamic(callerRole, r, rankOrder));
+}
+
+/** Roles the caller can FILTER the list by — deliberately not the same
+ * set as getCreatableRolesAction, which also drives the "Add User" role
+ * dropdown.
+ *
+ * Admin peers get a Customer tab on top of the creatable roles: customer
+ * rows already come back under "All" (the query applies no role
+ * exclusion for peers, and canViewRole only ever hides CEO), so this
+ * just makes them reachable directly instead of buried among staff.
+ * Customer stays out of the creatable list on purpose — a customer
+ * account is only ever created by createRegistrationAction alongside a
+ * real registration, phone and Auth login, so offering it in the Add
+ * User modal would produce an orphaned account with no sale attached. */
+export async function getFilterableRolesAction(callerRole: RealEstateRole): Promise<RealEstateRole[]> {
+  const creatable = await getCreatableRolesAction(callerRole)
+  if (isAdminPeer(callerRole)) {
+    return [...creatable, 'customer'] as RealEstateRole[]
+  }
+  return creatable
 }

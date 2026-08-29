@@ -5,7 +5,7 @@
 // reimplemented per caller.
 
 import { createServiceClient } from '@/lib/supabase/server'
-import { isSalesRole, type RealEstateRole } from './permissions'
+import { isSalesRole, getSalesRoleOrder, type RealEstateRole } from './permissions'
 
 type ServiceClient = ReturnType<typeof createServiceClient>
 
@@ -25,41 +25,59 @@ export async function getDownlineIds(supabaseAdmin: ServiceClient, rootId: strin
   return ids
 }
 
-/** Walks parent_id upward from `sellerId`, collecting each ancestor's
- * {id, role} for as long as the ancestor is still a sales-tier role
- * (§1's Director→LIA chain). Stops at the first non-sales ancestor (an
- * admin peer who created the topmost sales person, or no parent at all)
- * — admin peers aren't part of this tree (§2). Always appends the single
- * active Governing Council member then the single active CEO at the top,
- * regardless of where the parent_id walk stopped: HIERARCHY.md §3b is
- * explicit that "CEO's cut is computed on every sale," and §1 that GC/
- * CEO sit structurally above every Director — that's an organizational
- * fact, not something parent_id alone can be relied on to encode, since
- * a Director may have literally been created by IT rather than GC.
+/** Every role's payout scope, from S_payout_rules (migration 010). A
+ * role with no row is treated as 'chain' — the restrictive default, so a
+ * newly created role can never accidentally start being paid on every
+ * sale company-wide before IT has said so. */
+export type PayoutScope = 'chain' | 'company_wide'
+
+async function getPayoutScopes(supabaseAdmin: ServiceClient): Promise<Map<string, PayoutScope>> {
+  const { data } = await supabaseAdmin.from('s_payout_rules').select('role_code, scope')
+  return new Map((data || []).map((r: any) => [r.role_code as string, r.scope as PayoutScope]))
+}
+
+/** Builds the list of people (besides the seller) who earn on a sale.
+ * WHO is paid is policy read from S_payout_rules; HOW MUCH each of them
+ * gets is computeCommissionBreakdown's job, off S_commission_rates.
  *
- * `sellerRole` matters here beyond just being the starting point of the
- * walk: if the SELLER themselves is already Governing Council or CEO
- * (both can now submit a New Registration directly), the "always
- * append GC/CEO" step below must not re-add someone already at or above
- * the seller's own rank — the `chain.some(...)` check alone only looks
- * at walked ANCESTORS, not the seller's own role.
+ * Two independent controls, both set from the IT-only Payout Rules page:
  *
- * A CEO seller needs BOTH skipped, not just CEO itself: CEO is the apex
- * of the whole hierarchy, so nothing — not even Governing Council — sits
- * above them on their own sale. Skipping only the CEO append and still
- * appending GC would fix the literal duplicate-CEO-payout bug but leave
- * a spurious, structurally meaningless Governing Council line on every
- * CEO sale (harmless in raw rupees, since clampNonNegative floors its
- * marginal percentage to 0 when GC's 26% comes after CEO's 28% in the
- * chain — but it's still a payout row that shouldn't exist, since GC
- * had nothing to do with the sale). A Governing Council seller only
- * needs GC itself skipped — CEO is still genuinely above GC, and still
- * earns a real marginal cut on a GC seller's own sale. */
+ *  - Per role, `scope`. 'chain' means the role only earns when it
+ *    actually sits in this seller's own parent_id upline — the wing rule
+ *    (a Director is paid on their own wing's sales, not another
+ *    Director's). 'company_wide' means every active holder earns on
+ *    every sale regardless of wing, which is how Governing Council and
+ *    CEO are seeded, since HIERARCHY.md §3b is explicit that "CEO's cut
+ *    is computed on every sale" and parent_id can't encode that (a
+ *    Director may literally have been created by IT rather than by GC).
+ *
+ *  - Per person, `earns_commission`. Lets one holder stop earning while
+ *    keeping their role and access. Worth knowing for a 'chain' role:
+ *    excluding the only holder of a tier doesn't delete that tier's
+ *    share — the gap flows up to the next tier above them.
+ *
+ * The seller is always excluded by id: runCommissionPayout already puts
+ * them at the head of the chain, and a second row for the same person
+ * would violate migration 007's UNIQUE(registration_id, payee_id) and
+ * abort the entire payout insert for that sale. */
 export async function getUplineChain(
   supabaseAdmin: ServiceClient,
   sellerId: string,
   sellerRole: RealEstateRole
 ): Promise<{ id: string; role: RealEstateRole }[]> {
+  const scopes = await getPayoutScopes(supabaseAdmin)
+  const scopeOf = (role: string): PayoutScope => scopes.get(role) || 'chain'
+
+  // The live sales-tier set, NOT the static SALES_RANK_ORDER array. That
+  // array only knows the 8 built-in roles, so a role created via the
+  // Roles/Commissions page (migration 008) failed isSalesRole(), broke
+  // the walk at that ancestor, and silently truncated everyone above
+  // them out of the payout. Also gives us each role's rank for ordering
+  // the company-wide appends below.
+  const roleOrder = await getSalesRoleOrder(supabaseAdmin)
+  const salesRankOf = new Map(roleOrder.map((r, i) => [r.role_code, i]))
+  const isChainWalkable = (role: string) => salesRankOf.has(role)
+
   const chain: { id: string; role: RealEstateRole }[] = []
   let currentId = sellerId
 
@@ -67,24 +85,63 @@ export async function getUplineChain(
     const { data: current } = await supabaseAdmin.from('s_realestate_users').select('parent_id').eq('id', currentId).single()
     if (!current?.parent_id) break
 
-    const { data: parent } = await supabaseAdmin.from('s_realestate_users').select('id, role').eq('id', current.parent_id).single()
-    if (!parent || !isSalesRole(parent.role as RealEstateRole)) break
+    const { data: parent } = await supabaseAdmin
+      .from('s_realestate_users')
+      .select('id, role, earns_commission')
+      .eq('id', current.parent_id)
+      .single()
+    if (!parent || !isChainWalkable(parent.role as string)) break
 
-    chain.push({ id: parent.id, role: parent.role as RealEstateRole })
+    // Keep walking past someone who is skipped, rather than stopping —
+    // their own upline is still in this seller's wing and still earns.
+    // A 'company_wide' role is skipped here and picked up by the append
+    // step instead, so it can never land in the chain twice.
+    const skip = parent.earns_commission === false || scopeOf(parent.role as string) !== 'chain'
+    if (!skip) {
+      chain.push({ id: parent.id, role: parent.role as RealEstateRole })
+    }
     currentId = parent.id
   }
 
-  const alreadyHasGC = sellerRole === 'governing_council' || sellerRole === 'ceo' || chain.some((c) => c.role === 'governing_council')
-  const alreadyHasCEO = sellerRole === 'ceo' || chain.some((c) => c.role === 'ceo')
+  const seen = new Set<string>([sellerId, ...chain.map((c) => c.id)])
 
-  if (!alreadyHasGC) {
-    const { data: gc } = await supabaseAdmin.from('s_realestate_users').select('id').eq('role', 'governing_council').eq('is_active', true).limit(1).maybeSingle()
-    if (gc) chain.push({ id: gc.id, role: 'governing_council' })
+  const companyWideRoles = [...scopes.entries()].filter(([, scope]) => scope === 'company_wide').map(([role]) => role)
+
+  for (const role of companyWideRoles) {
+    const { data: holders } = await supabaseAdmin
+      .from('s_realestate_users')
+      .select('id')
+      .eq('role', role)
+      .eq('is_active', true)
+      .eq('earns_commission', true)
+      .order('created_at', { ascending: true })
+
+    for (const holder of holders || []) {
+      if (seen.has(holder.id)) continue
+      seen.add(holder.id)
+      chain.push({ id: holder.id, role: role as RealEstateRole })
+    }
   }
-  if (!alreadyHasCEO) {
-    const { data: ceo } = await supabaseAdmin.from('s_realestate_users').select('id').eq('role', 'ceo').eq('is_active', true).limit(1).maybeSingle()
-    if (ceo) chain.push({ id: ceo.id, role: 'ceo' })
+
+  // Order the WHOLE chain lowest tier first — not just the appended
+  // part. computeCommissionBreakdown walks it expecting each tier to sit
+  // above the one before, taking the gap between them; a role landing
+  // out of order both floors its own line to 0% via clampNonNegative and
+  // hands the next tier up an inflated gap. That is not hypothetical:
+  // appending a mid-table role (a company-wide GM) after Director paid
+  // GM nothing and paid Governing Council 8% instead of 2%.
+  //
+  // S_role_definitions.rank counts DOWN the hierarchy (Director is index
+  // 0, LIA last), while the chain has to run UP it, so the sales index is
+  // inverted here. Governing Council and CEO aren't in that table and sit
+  // above every sales tier, in that order.
+  const chainPosition = (role: string): number => {
+    if (salesRankOf.has(role)) return roleOrder.length - salesRankOf.get(role)!
+    if (role === 'governing_council') return roleOrder.length + 1
+    if (role === 'ceo') return roleOrder.length + 2
+    return roleOrder.length + 3
   }
+  chain.sort((a, b) => chainPosition(a.role) - chainPosition(b.role))
 
   return chain
 }

@@ -3,11 +3,10 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, IndianRupee, FileText, ClipboardList, Phone, Settings, LogOut, ChevronLeft, ChevronRight, Menu } from 'lucide-react';
+import { IndianRupee, FileText, ClipboardList, Phone, Settings, LogOut, ChevronLeft, ChevronRight, Menu } from 'lucide-react';
 
 const NAV_ITEMS = [
-  { path: '', label: 'Dashboard', icon: LayoutDashboard, exact: true },
-  { path: '/payment', label: 'Payment', icon: IndianRupee },
+  { path: '/payment', label: 'Payment', icon: IndianRupee, exact: true },
   { path: '/documents', label: 'Documents', icon: FileText },
   { path: '/registration-status', label: 'Registration Status', icon: ClipboardList },
   { path: '/contact', label: 'Contact', icon: Phone },

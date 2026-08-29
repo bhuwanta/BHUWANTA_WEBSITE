@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ClipboardList, Loader2, CheckCircle2, Clock, Ban, AlertCircle, Search, ArrowUp, ArrowDown, ArrowUpDown, BellOff, XCircle, Trash2 } from 'lucide-react';
-import { getRegistrationsAction, markRegistrationDoneAction, cancelRegistrationAction, markRegistrationsReadAction, markOneRegistrationReadAction, deleteRegistrationAction } from './actions';
+import { ClipboardList, Loader2, CheckCircle2, Clock, Ban, AlertCircle, Search, ArrowUp, ArrowDown, ArrowUpDown, BellOff, XCircle, Trash2, Undo2 } from 'lucide-react';
+import { getRegistrationsAction, markRegistrationDoneAction, cancelRegistrationAction, markRegistrationsReadAction, markOneRegistrationReadAction, deleteRegistrationAction, undoRegistrationDoneAction, undoPaymentAction } from './actions';
 import { notifyRegistrationsChanged } from '../registrations-notify';
 import { getSalesRoleOrderAction } from '../admin/commission-rates/actions';
-import { ROLE_LABELS, type RealEstateRole } from '../permissions';
+import { ROLE_LABELS, isSalesRole, type RealEstateRole } from '../permissions';
 
 interface RegistrationsPageProps {
   currentUserRole: RealEstateRole;
@@ -130,6 +130,50 @@ export default function RegistrationsPage({ currentUserRole, currentUserId }: Re
     setDeletingId(null);
   };
 
+  // Operation-Manager-only reversals. Both are deliberately confirmed
+  // rather than one-click: undoing a registration deletes its commission
+  // payout lines, and the server refuses outright if any were already
+  // paid out.
+  const handleUndoDone = async (id: string) => {
+    const confirmed = window.confirm(
+      'Undo this registration? It goes back to Pending and its unpaid commission payouts are removed. This is blocked if any payout has already been paid out.'
+    );
+    if (!confirmed) return;
+
+    setMarkingId(id);
+    const res = await undoRegistrationDoneAction(id);
+    if (res.success) {
+      load();
+      notifyRegistrationsChanged();
+    } else {
+      alert(res.error);
+    }
+    setMarkingId(null);
+  };
+
+  const handleUndoPayment = async (id: string) => {
+    // The reason is shown to the customer on their own Payment page, so
+    // a reversed payment is never an unexplained regression for them.
+    const note = window.prompt(
+      "Undo this payment? The customer will be told it could not be verified and asked to pay again.\n\nGive a short reason they'll see (e.g. \"cheque bounced\", \"no UTR found\"):"
+    );
+    if (note === null) return;
+    if (!note.trim()) {
+      alert('A reason is required — the customer sees it, so they know why their payment was reversed.');
+      return;
+    }
+
+    setMarkingId(id);
+    const res = await undoPaymentAction(id, note);
+    if (res.success) {
+      load();
+      notifyRegistrationsChanged();
+    } else {
+      alert(res.error);
+    }
+    setMarkingId(null);
+  };
+
   const handleMarkAllRead = async () => {
     setMarkingRead(true);
     const res = await markRegistrationsReadAction();
@@ -232,6 +276,15 @@ export default function RegistrationsPage({ currentUserRole, currentUserId }: Re
 
   const unreadCount = registrations.filter((r) => !r.isRead).length;
 
+  // Sales tiers (Director→LIA) get a purely read-only status table — the
+  // only actions they'd ever see are "Mark as read" (already covered by
+  // the "Mark all as read" button above the table) and Cancel on their
+  // own submissions, which leaves the column empty on most rows. Every
+  // action in it is independently enforced server-side anyway
+  // (verifyCaller + ownership/role checks in actions.ts), so hiding it
+  // is presentation-only, not a security boundary.
+  const showActions = !isSalesRole(currentUserRole);
+
   return (
     <div className="p-4 md:p-6 bg-[#f7f8fa] h-full flex flex-col">
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6 shrink-0">
@@ -248,29 +301,17 @@ export default function RegistrationsPage({ currentUserRole, currentUserId }: Re
                 : 'Status of every New Registration submitted by you or your team — read-only.'}
           </p>
         </div>
-        <div className="flex items-center gap-3 shrink-0">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5a6a82]" />
-            <input
-              type="text"
-              placeholder="Search project, customer, seller..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full md:w-72 bg-white border border-[#e8ecf2] rounded-lg pl-9 pr-3 py-2 text-sm text-[#0f1d33] focus:outline-none focus:ring-1 focus:ring-[#c4a55a]"
-            />
-          </div>
-          {unreadCount > 0 && (
-            <button
-              onClick={handleMarkAllRead}
-              disabled={markingRead}
-              title="Clears your sidebar notification badge — does not change any registration's status"
-              className="shrink-0 flex items-center gap-2 bg-white border border-[#e8ecf2] text-[#0f1d33] px-4 py-2 rounded-lg font-semibold shadow-sm hover:bg-[#f3f5f8] transition-colors text-sm disabled:opacity-50"
-            >
-              {markingRead ? <Loader2 className="w-4 h-4 animate-spin" /> : <BellOff className="w-4 h-4" />}
-              Mark all as read ({unreadCount})
-            </button>
-          )}
-        </div>
+        {unreadCount > 0 && (
+          <button
+            onClick={handleMarkAllRead}
+            disabled={markingRead}
+            title="Clears your sidebar notification badge — does not change any registration's status"
+            className="shrink-0 flex items-center gap-2 bg-white border border-[#e8ecf2] text-[#0f1d33] px-4 py-2 rounded-lg font-semibold shadow-sm hover:bg-[#f3f5f8] transition-colors text-sm disabled:opacity-50 h-fit"
+          >
+            {markingRead ? <Loader2 className="w-4 h-4 animate-spin" /> : <BellOff className="w-4 h-4" />}
+            Mark all as read ({unreadCount})
+          </button>
+        )}
       </div>
 
       {error && (
@@ -280,66 +321,78 @@ export default function RegistrationsPage({ currentUserRole, currentUserId }: Re
         </div>
       )}
 
-      <div className="flex items-center gap-2 mb-4 bg-white p-1.5 rounded-xl border border-[#e8ecf2] w-fit shadow-sm shrink-0">
-        {(['all', 'pending_registration', 'registration_done', 'cancelled'] as const).map((s) => (
-          <button
-            key={s}
-            onClick={() => setStatusFilter(s)}
-            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${statusFilter === s ? 'bg-[#1e3a5f] text-white shadow' : 'text-[#5a6a82] hover:bg-[#f3f5f8]'}`}
-          >
-            {s === 'all' ? 'All' : STATUS_LABEL[s]}
-          </button>
-        ))}
+      <div className="flex flex-col md:flex-row md:items-center gap-3 mb-4 shrink-0">
+        <div className="relative shrink-0">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5a6a82]" />
+          <input
+            type="text"
+            placeholder="Search project, customer, seller..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full md:w-72 bg-white border border-[#e8ecf2] rounded-lg pl-9 pr-3 py-2.5 text-sm text-[#0f1d33] focus:outline-none focus:ring-1 focus:ring-[#c4a55a]"
+          />
+        </div>
+        <div className="flex items-center gap-2 bg-white p-1.5 rounded-xl border border-[#e8ecf2] w-fit shadow-sm">
+          {(['all', 'pending_registration', 'registration_done', 'cancelled'] as const).map((s) => (
+            <button
+              key={s}
+              onClick={() => setStatusFilter(s)}
+              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${statusFilter === s ? 'bg-[#1e3a5f] text-white shadow' : 'text-[#5a6a82] hover:bg-[#f3f5f8]'}`}
+            >
+              {s === 'all' ? 'All' : STATUS_LABEL[s]}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="bg-white border border-[#e8ecf2] shadow-sm rounded-xl flex-1 overflow-auto min-h-0">
-        <table className="w-full text-left border-collapse table-fixed">
+        <table className="w-full text-left border-collapse">
           <thead className="bg-[#f7f8fa] sticky top-0 z-10 shadow-[0_1px_0_#e8ecf2]">
-            <tr className="text-[12px] uppercase tracking-wider text-[#5a6a82]">
-              <th className="py-3 px-2 font-semibold w-10 cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('srno')}>
+            <tr className="text-[10px] uppercase tracking-wide text-[#5a6a82]">
+              <th className="py-2 px-1.5 font-semibold cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('srno')}>
                 <span className="inline-flex items-center gap-1 whitespace-nowrap">
-                  # <SortIcon col="srno" />
+                  Sr. No. <SortIcon col="srno" />
                 </span>
               </th>
-              <th className="py-3 px-2 font-semibold w-[13%] cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('project')}>
+              <th className="py-2 px-1.5 font-semibold cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('project')}>
                 <span className="inline-flex items-center gap-1 whitespace-nowrap">
-                  Project <SortIcon col="project" />
+                  Area / Project <SortIcon col="project" />
                 </span>
               </th>
-              <th className="py-3 px-2 font-semibold w-[12%] cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('customer')}>
+              <th className="py-2 px-1.5 font-semibold cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('customer')}>
                 <span className="inline-flex items-center gap-1 whitespace-nowrap">
                   Customer <SortIcon col="customer" />
                 </span>
               </th>
-              <th className="py-3 px-2 font-semibold w-[7%] cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('plotSize')}>
+              <th className="py-2 px-1.5 font-semibold cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('plotSize')}>
                 <span className="inline-flex items-center gap-1 whitespace-nowrap">
-                  Plot <SortIcon col="plotSize" />
+                  Plot Size <SortIcon col="plotSize" />
                 </span>
               </th>
-              <th className="py-3 px-2 font-semibold w-[9%] cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('basePrice')}>
+              <th className="py-2 px-1.5 font-semibold cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('basePrice')}>
                 <span className="inline-flex items-center gap-1 whitespace-nowrap">
                   Base Price <SortIcon col="basePrice" />
                 </span>
               </th>
-              <th className="py-3 px-2 font-semibold w-[13%] cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('soldBy')}>
+              <th className="py-2 px-1.5 font-semibold cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('soldBy')}>
                 <span className="inline-flex items-center gap-1 whitespace-nowrap">
                   Sold By <SortIcon col="soldBy" />
                 </span>
               </th>
-              <th className="py-3 px-2 font-semibold w-[7%] cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('payment')}>
+              <th className="py-2 px-1.5 font-semibold cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('payment')}>
                 <span className="inline-flex items-center gap-1 whitespace-nowrap">
-                  Pay <SortIcon col="payment" />
+                  Payment Status <SortIcon col="payment" />
                 </span>
               </th>
-              <th className="py-3 px-2 font-semibold w-[9%] cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('status')}>
+              <th className="py-2 px-1.5 font-semibold cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('status')}>
                 <span className="inline-flex items-center gap-1 whitespace-nowrap">
-                  Status <SortIcon col="status" />
+                  Registration Status <SortIcon col="status" />
                 </span>
               </th>
-              <th className="py-3 px-2 font-semibold text-right w-[24%]">Action</th>
+              <th className="py-2 px-1.5 font-semibold text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="text-[13px] text-[#0f1d33] divide-y divide-[#e8ecf2]">
+          <tbody className="text-[11.5px] text-[#0f1d33] divide-y divide-[#e8ecf2]">
             {loading ? (
               <tr>
                 <td colSpan={9} className="py-12 text-center">
@@ -359,38 +412,69 @@ export default function RegistrationsPage({ currentUserRole, currentUserId }: Re
             ) : (
               sorted.map((reg, index) => (
                 <tr key={reg.id} className={`hover:bg-[#f3f5f8] transition-colors ${!reg.isRead ? 'bg-[#c4a55a]/[0.04]' : ''}`}>
-                  <td className="py-2.5 px-2 text-[#5a6a82]">
+                  <td className="py-1.5 px-1.5 text-[#5a6a82] whitespace-nowrap align-top">
                     <div className="flex items-center gap-1.5">
                       {!reg.isRead && <span title="Unread" className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />}
                       {index + 1}
                     </div>
                   </td>
-                  <td className="py-2.5 px-2 font-semibold truncate" title={reg.s_projects?.name}>
-                    {reg.s_projects?.name || '—'}
-                    {reg.s_areas?.name && <div className="text-[11px] font-normal text-[#5a6a82] truncate">{reg.s_areas.name}</div>}
+                  <td className="py-1.5 px-1.5 align-top">
+                    <div className="text-[#5a6a82] text-[10px] whitespace-nowrap">{reg.s_areas?.name || '—'}</div>
+                    <div className="font-semibold whitespace-nowrap">{reg.s_projects?.name || '—'}</div>
                   </td>
-                  <td className="py-2.5 px-2">
-                    <div className="flex flex-col min-w-0">
-                      <span className="font-medium truncate" title={reg.customer_name}>{reg.customer_name}</span>
-                      <span className="text-[11px] text-[#5a6a82] truncate">{reg.customer_phone}</span>
+                  <td className="py-1.5 px-1.5 align-top">
+                    <div className="flex flex-col">
+                      <span className="font-medium whitespace-nowrap">{reg.customer_name}</span>
+                      <span className="text-[10px] text-[#5a6a82] whitespace-nowrap">{reg.customer_phone}</span>
+                      {reg.customer_email && <span className="text-[10px] text-[#5a6a82] whitespace-nowrap">{reg.customer_email}</span>}
                     </div>
                   </td>
-                  <td className="py-2.5 px-2 whitespace-nowrap">{reg.plot_size_sqyd}</td>
-                  <td className="py-2.5 px-2 whitespace-nowrap">{formatCurrency(reg.base_price_at_submission)}</td>
-                  <td className="py-2.5 px-2">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <span className="font-medium truncate" title={reg.seller?.full_name}>{reg.seller?.full_name || '—'}</span>
+                  <td className="py-1.5 px-1.5 whitespace-nowrap align-top">{reg.plot_size_sqyd}</td>
+                  <td className="py-1.5 px-1.5 whitespace-nowrap align-top">{formatCurrency(reg.base_price_at_submission)}</td>
+                  <td className="py-1.5 px-1.5 align-top">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-medium whitespace-nowrap">{reg.seller?.full_name || '—'}</span>
                       {reg.seller?.role && (
-                        <span className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#1e3a5f]/10 text-[#1e3a5f]">{roleLabel(reg.seller.role)}</span>
+                        <span className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#1e3a5f]/10 text-[#1e3a5f] whitespace-nowrap">{roleLabel(reg.seller.role)}</span>
                       )}
                     </div>
                   </td>
-                  <td className="py-2.5 px-2 whitespace-nowrap">
-                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${reg.payment_status === 'paid' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
-                      {reg.payment_status === 'paid' ? 'Paid' : 'Pending'}
-                    </span>
+                  <td className="py-1.5 px-1.5 whitespace-nowrap align-top">
+                    {reg.status === 'cancelled' ? (
+                      // Nothing is owed on a cancelled sale — showing
+                      // "due" here would be wrong. If they'd already
+                      // paid, what matters now is the refund.
+                      <>
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-red-50 text-red-600">
+                          {reg.payment_status === 'paid' ? 'Refund Pending' : 'Cancelled'}
+                        </span>
+                        {reg.payment_status === 'paid' && <div className="text-[10px] text-[#5a6a82] mt-0.5">{formatCurrency(reg.totalAmount)} to refund</div>}
+                      </>
+                    ) : (
+                      <>
+                        <span
+                          className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                            reg.payment_status === 'paid'
+                              ? 'bg-emerald-50 text-emerald-600'
+                              : reg.payment_status === 'rejected'
+                                ? 'bg-red-50 text-red-600'
+                                : 'bg-amber-50 text-amber-600'
+                          }`}
+                        >
+                          {reg.payment_status === 'paid' ? 'Paid' : reg.payment_status === 'rejected' ? 'Not Verified' : 'Pending'}
+                        </span>
+                        <div className="text-[10px] text-[#5a6a82] mt-0.5">
+                          {reg.payment_status === 'paid' ? formatCurrency(reg.totalAmount) : `${formatCurrency(reg.totalAmount)} due`}
+                        </div>
+                        {reg.payment_status === 'rejected' && reg.payment_rejection_note && (
+                          <div className="text-[10px] text-red-600 mt-0.5 max-w-[160px]" title={reg.payment_rejection_note}>
+                            {reg.payment_rejection_note}
+                          </div>
+                        )}
+                      </>
+                    )}
                   </td>
-                  <td className="py-2.5 px-2 whitespace-nowrap">
+                  <td className="py-1.5 px-1.5 whitespace-nowrap align-top">
                     <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold inline-flex items-center gap-1 ${STATUS_BADGE[reg.status]}`}>
                       {reg.status === 'registration_done' && <CheckCircle2 className="w-3 h-3" />}
                       {reg.status === 'pending_registration' && <Clock className="w-3 h-3" />}
@@ -398,21 +482,20 @@ export default function RegistrationsPage({ currentUserRole, currentUserId }: Re
                       {STATUS_LABEL[reg.status]}
                     </span>
                   </td>
-                  <td className="py-2.5 px-2 text-right">
+                  <td className="py-1.5 px-1.5 text-right align-top">
                     <div className="flex items-center justify-end gap-1">
+                      {!reg.isRead && (
+                        <button
+                          onClick={() => handleMarkOneRead(reg.id)}
+                          title="Mark as read — clears this from your notification count, doesn't change its status"
+                          className="text-[#5a6a82] hover:text-emerald-600 hover:bg-emerald-50 p-1.5 rounded-lg transition-colors shrink-0"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                       {reg.status === 'pending_registration' && (
                         <>
-                          {!reg.isRead && (
-                            <button
-                              onClick={() => handleMarkOneRead(reg.id)}
-                              title="Clears this from your notification count — doesn't change its status"
-                              className="text-[#1e3a5f] text-xs font-semibold px-2 py-1.5 rounded-lg border border-[#1e3a5f]/20 hover:bg-[#1e3a5f]/10 transition-colors inline-flex items-center gap-1 shrink-0 whitespace-nowrap"
-                            >
-                              <BellOff className="w-3.5 h-3.5" />
-                              Mark as read
-                            </button>
-                          )}
-                          {reg.submitted_by === currentUserId && (
+                          {showActions && reg.submitted_by === currentUserId && (
                             <button
                               onClick={() => handleCancel(reg.id)}
                               disabled={markingId === reg.id}
@@ -422,18 +505,37 @@ export default function RegistrationsPage({ currentUserRole, currentUserId }: Re
                               <XCircle className="w-3.5 h-3.5" />
                             </button>
                           )}
+                          {canMarkDone && reg.payment_status === 'paid' && (
+                            <button
+                              onClick={() => handleUndoPayment(reg.id)}
+                              disabled={markingId === reg.id}
+                              title="Undo payment — use when the customer's payment could not be verified"
+                              className="text-[#5a6a82] p-1.5 rounded-lg border border-[#e8ecf2] hover:bg-[#f3f5f8] transition-colors disabled:opacity-50 shrink-0"
+                            >
+                              <Undo2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                           {canMarkDone && (
                             <button
                               onClick={() => handleMarkDone(reg.id)}
                               disabled={markingId === reg.id || reg.payment_status !== 'paid'}
                               title={reg.payment_status !== 'paid' ? 'Waiting on customer payment' : 'Mark Done'}
-                              className="gradient-gold text-white text-xs font-semibold px-2.5 py-1.5 rounded-lg shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1 shrink-0"
+                              className="gradient-gold text-white p-1.5 rounded-lg shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
                             >
                               {markingId === reg.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-                              Done
                             </button>
                           )}
                         </>
+                      )}
+                      {canMarkDone && reg.status === 'registration_done' && (
+                        <button
+                          onClick={() => handleUndoDone(reg.id)}
+                          disabled={markingId === reg.id}
+                          title="Undo registration — reverts to Pending and removes its unpaid commission payouts"
+                          className="text-[#5a6a82] p-1.5 rounded-lg border border-[#e8ecf2] hover:bg-[#f3f5f8] transition-colors disabled:opacity-50 shrink-0"
+                        >
+                          {markingId === reg.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Undo2 className="w-3.5 h-3.5" />}
+                        </button>
                       )}
                       {/* IT-only, works regardless of status — the server
                           blocks it if the sale already has payout rows,

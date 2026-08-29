@@ -60,7 +60,7 @@ export async function loginAction(email: string, password: string) {
         case 'ceo': redirectPath = '/REALESTATE_SOFTWARE/role/ceo'; break;
         case 'governing_council': redirectPath = '/REALESTATE_SOFTWARE/role/GoverningCouncil'; break;
         case 'operation_manager': redirectPath = '/REALESTATE_SOFTWARE/role/OperationManager'; break;
-        case 'customer': redirectPath = '/REALESTATE_SOFTWARE/role/Customer'; break;
+        case 'customer': redirectPath = '/REALESTATE_SOFTWARE/role/Customer/payment'; break;
         default:
           // Every sales-tier role — director/sr_core/.../lia, or a
           // role created via the Commission Rates page (migration 008 /

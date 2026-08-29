@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, ClipboardPlus, ClipboardList, Users, Building2, Wallet, Settings, LogOut, ChevronLeft, ChevronRight, Menu } from 'lucide-react';
+import { LayoutDashboard, ClipboardPlus, ClipboardList, Users, Building2, Map, Wallet, Settings, LogOut, ChevronLeft, ChevronRight, Menu } from 'lucide-react';
 import { getPendingRegistrationCountAction } from '../registrations/actions';
 import { onRegistrationsChanged } from '../registrations-notify';
 
@@ -40,8 +40,9 @@ export default function SalesLayout({ children, basePath, roleLabel, showUserMan
   const navItems = [
     { path: '', label: 'Dashboard', icon: LayoutDashboard, exact: true },
     { path: '/new-registration', label: 'New Registration', icon: ClipboardPlus },
-    { path: '/registrations', label: 'Registrations', icon: ClipboardList },
+    { path: '/registrations', label: 'Registration Status', icon: ClipboardList },
     ...(showUserManagement ? [{ path: '/users', label: 'User Management', icon: Users }] : []),
+    { path: '/areas-projects', label: 'Areas & Projects', icon: Map },
     { path: '/projects', label: 'My Projects', icon: Building2 },
     { path: '/wallet', label: 'My Wallet', icon: Wallet },
     { path: '/settings', label: 'Settings', icon: Settings },

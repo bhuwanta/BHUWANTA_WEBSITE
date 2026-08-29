@@ -6,6 +6,7 @@ import { sendSetupPasswordEmail } from '@/lib/emails/resend'
 import { isAdminPeer, isSalesRole, isOperationManager } from '../permissions'
 import { getDownlineIds, findUplineDirectorId } from '../downline'
 import { runCommissionPayout } from '../payout-engine'
+import { computeRatePerSqyd, computePool } from '../commission'
 
 /** A "table doesn't exist" error, however it's reported: PostgREST
  * surfaces it as a PGRST205 schema-cache miss, raw Postgres as 42P01.
@@ -158,7 +159,8 @@ export async function getRegistrationsAction() {
       .from('s_new_registrations')
       .select(`
         id, plot_size_sqyd, base_price_at_submission, mrp_at_submission,
-        customer_name, customer_phone, status, payment_status,
+        customer_name, customer_phone, customer_email, status, payment_status,
+        payment_rejected_at, payment_rejection_note,
         submitted_by, submitted_at,
         registration_done_by, registration_done_at,
         cancelled_at, refund_status,
@@ -206,6 +208,10 @@ export async function getRegistrationsAction() {
     const withReadState = rows.map((r: any) => ({
       ...r,
       isRead: r.status !== 'pending_registration' || readIds.has(r.id),
+      // What the customer owes/paid for this plot (plot size × MRP),
+      // computed here rather than in the client — same rule the Customer
+      // portal's own getMyRegistrationsAction already follows.
+      totalAmount: computePool(Number(r.plot_size_sqyd), Number(r.mrp_at_submission)),
     }))
 
     return { success: true, data: withReadState, canMarkDone, companyWide }
@@ -295,22 +301,268 @@ export async function markRegistrationDoneAction(registrationId: string) {
 }
 
 /**
+ * Operation-Manager-only undo of "Registration Done" — reverts the sale
+ * to pending_registration and removes the commission payouts that
+ * marking it done generated.
+ *
+ * The hard rule: this is only safe while every payout line is still
+ * unpaid. Once even one line is `completed`, real money has left the
+ * company and is already showing in that person's Wallet as earned —
+ * silently deleting it would make their wallet balance drop with no
+ * trace, and there's no reversal mechanism for money already
+ * disbursed. So a completed line blocks the undo outright rather than
+ * being cleaned up; unwinding that is a deliberate finance decision for
+ * IT/CEO/Governing Council, not a one-click action here.
+ *
+ * Payouts are deleted (not marked cancelled) because runCommissionPayout
+ * recomputes them from scratch on the next "Mark Done", and the
+ * UNIQUE(registration_id, payee_id) constraint from migration 007 would
+ * otherwise reject those fresh rows.
+ */
+export async function undoRegistrationDoneAction(registrationId: string) {
+  try {
+    const caller = await verifyCaller()
+    if (!caller) return { success: false, error: 'Not authenticated.' }
+    if (!isOperationManager(caller.role)) {
+      return { success: false, error: 'Only the Operation Manager can undo a registration.' }
+    }
+
+    const supabaseAdmin = createServiceClient()
+
+    const { data: registration } = await supabaseAdmin
+      .from('s_new_registrations')
+      .select('status, customer_name')
+      .eq('id', registrationId)
+      .maybeSingle()
+
+    if (!registration) return { success: false, error: 'Registration not found.' }
+    if (registration.status !== 'registration_done') {
+      return { success: false, error: 'Only a registration that is already marked done can be undone.' }
+    }
+
+    const { data: payoutRows, error: payoutFetchError } = await supabaseAdmin
+      .from('s_sales_payouts')
+      .select('id, payout_status')
+      .eq('registration_id', registrationId)
+    if (payoutFetchError) throw payoutFetchError
+
+    const completedCount = (payoutRows || []).filter((p: any) => p.payout_status === 'completed').length
+    if (completedCount > 0) {
+      return {
+        success: false,
+        error: `${completedCount} commission payout${completedCount === 1 ? ' has' : 's have'} already been paid out for this sale, so it can no longer be undone here — contact IT, CEO, or Governing Council.`,
+      }
+    }
+
+    // Conditional UPDATE is the real guard against two concurrent undos
+    // (or an undo racing a Mark Done), exactly as in
+    // markRegistrationDoneAction above — an empty result means this call
+    // lost the race and must not go on to delete payout rows.
+    const { data: updated, error: updateError } = await supabaseAdmin
+      .from('s_new_registrations')
+      .update({ status: 'pending_registration', registration_done_by: null, registration_done_at: null })
+      .eq('id', registrationId)
+      .eq('status', 'registration_done')
+      .select('id')
+      .maybeSingle()
+
+    if (updateError) throw updateError
+    if (!updated) {
+      return { success: false, error: 'This registration changed while you were undoing it — reload and try again.' }
+    }
+
+    const { error: deleteError } = await supabaseAdmin.from('s_sales_payouts').delete().eq('registration_id', registrationId)
+    if (deleteError) {
+      console.error('Reverted registration status but failed to delete its payouts:', deleteError)
+      return { success: false, error: 'Registration was reverted, but its commission payouts could not be removed — contact IT before marking it done again.' }
+    }
+
+    const removed = payoutRows?.length || 0
+    return {
+      success: true,
+      message: `Registration for ${registration.customer_name || 'this customer'} reverted to pending${removed > 0 ? `, and ${removed} unpaid commission payout${removed === 1 ? '' : 's'} removed` : ''}.`,
+    }
+  } catch (error: any) {
+    console.error('Error undoing registration done:', error)
+    return { success: false, error: error.message || 'Failed to undo registration.' }
+  }
+}
+
+/**
+ * Operation-Manager-only undo of a payment confirmation — for when the
+ * customer marked themselves paid but verification shows the money never
+ * actually arrived.
+ *
+ * Blocked once the registration is done, because that state already
+ * generated commission payouts off the back of this payment: undo the
+ * registration first (above), which removes those payouts, then undo the
+ * payment. Enforcing the order here keeps it impossible to end up with
+ * live payouts attached to a sale that is no longer marked paid.
+ */
+export async function undoPaymentAction(registrationId: string, note: string) {
+  try {
+    const caller = await verifyCaller()
+    if (!caller) return { success: false, error: 'Not authenticated.' }
+    if (!isOperationManager(caller.role)) {
+      return { success: false, error: 'Only the Operation Manager can undo a payment.' }
+    }
+
+    const trimmedNote = note?.trim()
+    if (!trimmedNote) {
+      return { success: false, error: 'Give a short reason — the customer sees this, so they know why their payment was reversed.' }
+    }
+
+    const supabaseAdmin = createServiceClient()
+
+    const { data: registration } = await supabaseAdmin
+      .from('s_new_registrations')
+      .select('status, payment_status, customer_name')
+      .eq('id', registrationId)
+      .maybeSingle()
+
+    if (!registration) return { success: false, error: 'Registration not found.' }
+    if (registration.payment_status !== 'paid') {
+      return { success: false, error: 'This registration is not marked paid, so there is nothing to undo.' }
+    }
+    if (registration.status === 'registration_done') {
+      return { success: false, error: 'Undo the registration first — it was marked done based on this payment, and undoing that removes the commission payouts.' }
+    }
+    // A cancelled-but-paid sale already carries refund_status='pending'.
+    // Reversing the payment there would leave a refund owed for a
+    // payment that no longer exists — the refund is the correct
+    // mechanism at that point, not this.
+    if (registration.status === 'cancelled') {
+      return { success: false, error: 'This registration is cancelled — its payment is handled through the pending refund, not by undoing it here.' }
+    }
+
+    // Conditional UPDATE, not the read above, is the real guard: it
+    // pins both payment_status AND status, so a concurrent Mark Done or
+    // cancel can't slip in between the read and this write.
+    const { data: updated, error } = await supabaseAdmin
+      .from('s_new_registrations')
+      .update({
+        payment_status: 'rejected',
+        payment_rejected_by: caller.id,
+        payment_rejected_at: new Date().toISOString(),
+        payment_rejection_note: trimmedNote,
+      })
+      .eq('id', registrationId)
+      .eq('payment_status', 'paid')
+      .eq('status', 'pending_registration')
+      .select('id')
+      .maybeSingle()
+
+    if (error) throw error
+    if (!updated) {
+      return { success: false, error: 'This registration changed while you were undoing it — reload and try again.' }
+    }
+
+    return { success: true, message: `Payment for ${registration.customer_name || 'this customer'} marked as not verified. They can re-confirm once it clears.` }
+  } catch (error: any) {
+    console.error('Error undoing payment:', error)
+    return { success: false, error: error.message || 'Failed to undo payment.' }
+  }
+}
+
+/** Same submission gate as createRegistrationAction below — only a
+ * sales-tier caller (or CEO) can search customers. Company-wide (not
+ * scoped to the caller): an old customer may have originally been
+ * registered by a different seller. Partial match on phone OR email —
+ * a minimum query length (3) keeps a stray 1-2 character search from
+ * turning into a fishing expedition, and results are capped at 10.
+ * `email` isn't a column on s_realestate_users (customers, like every
+ * other account, only have it in Supabase Auth), so it's merged in from
+ * listUsers() — the same pattern createRegistrationAction already uses
+ * for its emailTaken check — rather than filtered in SQL. */
+export async function searchCustomersAction(query: string) {
+  try {
+    const caller = await verifyCaller()
+    if (!caller) return { success: false, error: 'Not authenticated.' }
+    if (!isSalesRole(caller.role) && caller.role !== 'ceo') {
+      return { success: false, error: 'Only sales-tier roles (and CEO) can search customers.' }
+    }
+
+    const trimmedQuery = query.trim().toLowerCase()
+    if (trimmedQuery.length < 3) return { success: true, customers: [] as { id: string; full_name: string; phone: string; email: string; last_address: string }[] }
+
+    const supabaseAdmin = createServiceClient()
+    const { data: profiles } = await supabaseAdmin.from('s_realestate_users').select('id, full_name, phone').eq('role', 'customer')
+    if (!profiles || profiles.length === 0) return { success: true, customers: [] }
+
+    const { data: authUsersData } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 })
+    const emailById = new Map((authUsersData?.users || []).map((u: any) => [u.id, (u.email || '') as string]))
+
+    const matches = profiles
+      .map((p: any) => ({ id: p.id as string, full_name: p.full_name as string, phone: p.phone as string, email: emailById.get(p.id) || '' }))
+      .filter((c: { phone: string; email: string }) => c.phone?.toLowerCase().includes(trimmedQuery) || c.email?.toLowerCase().includes(trimmedQuery))
+      .slice(0, 10)
+
+    if (matches.length === 0) return { success: true, customers: [] }
+
+    // Last known address per matched customer — there's no address column
+    // on s_realestate_users; customer_address is a per-registration
+    // snapshot, so "their address" is whatever their most recent
+    // registration recorded. Newest-first, and the Map keeps only the
+    // first (newest) row seen per customer.
+    const { data: addressRows } = await supabaseAdmin
+      .from('s_new_registrations')
+      .select('customer_user_id, customer_address, submitted_at')
+      .in('customer_user_id', matches.map((c: { id: string }) => c.id))
+      .order('submitted_at', { ascending: false })
+
+    const lastAddressById = new Map<string, string>()
+    for (const row of (addressRows || []) as any[]) {
+      if (row.customer_address && !lastAddressById.has(row.customer_user_id)) {
+        lastAddressById.set(row.customer_user_id, row.customer_address as string)
+      }
+    }
+
+    const customers = matches.map((c: { id: string; full_name: string; phone: string; email: string }) => ({
+      ...c,
+      last_address: lastAddressById.get(c.id) || '',
+    }))
+
+    return { success: true, customers }
+  } catch (error: any) {
+    console.error('Error searching customers:', error)
+    return { success: false, error: error.message || 'Failed to search customers.' }
+  }
+}
+
+/**
  * §3c steps 1-5: the New Registration form submission. Only a
  * sales-tier caller (Director→LIA) can submit one. The Project must be
  * one actually assigned (directly or via Director-inheritance, §5) to
  * this seller's Director. Base Price/MRP are snapshotted at submission
- * time (§3d/§6), not read live later. A returning customer (matched by
- * phone) reuses their existing account instead of a duplicate.
+ * time (§3d/§6), not read live later.
+ *
+ * An old customer is handled explicitly via `existingCustomerId`
+ * (set by the New Registration form's "Old Customer" toggle,
+ * populated from searchCustomersAction above) rather than silently
+ * matching on a typed phone number — that silent-reuse behavior used to
+ * live here and caused real confusion (an LIA had no visible way to
+ * tell whether a submission created a new account or quietly reused an
+ * existing one). When `existingCustomerId` is set, the profile is
+ * re-fetched server-side rather than trusting client-supplied
+ * name/phone/email for what is possibly a DIFFERENT seller's customer.
  */
 export async function createRegistrationAction(input: {
   areaId: string
   projectId: string
   plotSizeSqyd: number
-  customerName: string
-  customerPhone: string
-  customerEmail: string
+  customerName?: string
+  customerPhone?: string
+  customerEmail?: string
   customerAddress?: string
-  mrpOverride?: number
+  /** The final TOTAL amount the customer will pay for this plot — not a
+   * ₹/sq.yd rate (that ambiguity is exactly what caused a 143.01 sq.yd
+   * plot to get stored with a 22,88,160/sq.yd "rate" and a ₹32.7 crore
+   * total). mrp_at_submission is stored as a rate for parity with
+   * base_price_at_submission and because computePool() everywhere else
+   * expects one, so this is converted to the equivalent rate below
+   * rather than asking the caller to do that division themselves. */
+  finalTotalAmount?: number
+  existingCustomerId?: string
 }) {
   try {
     const caller = await verifyCaller()
@@ -326,7 +578,7 @@ export async function createRegistrationAction(input: {
     if (!input.plotSizeSqyd || input.plotSizeSqyd <= 0) {
       return { success: false, error: 'Enter a valid plot size.' }
     }
-    if (!input.customerName?.trim() || !input.customerPhone?.trim() || !input.customerEmail?.trim()) {
+    if (!input.existingCustomerId && (!input.customerName?.trim() || !input.customerPhone?.trim() || !input.customerEmail?.trim())) {
       return { success: false, error: 'Customer name, phone, and email are required.' }
     }
 
@@ -363,34 +615,55 @@ export async function createRegistrationAction(input: {
       return { success: false, error: 'This project has no valid Base Price set yet — ask IT, CEO, or Governing Council to set one before submitting a sale.' }
     }
 
-    const mrp = input.mrpOverride ?? project.mrp_default
+    const mrp = input.finalTotalAmount != null ? computeRatePerSqyd(input.finalTotalAmount, input.plotSizeSqyd) : project.mrp_default
     if (mrp == null || Number(mrp) <= 0) {
       return { success: false, error: 'No valid MRP set for this project — enter one, or ask IT/CEO/GC to set a default.' }
     }
 
-    // Reuse an existing customer profile by phone rather than creating a
-    // duplicate (S_realestate_users.phone is UNIQUE) — a returning
-    // customer buying a second plot gets one login for both.
     let customerUserId: string
-    const { data: existingCustomer } = await supabaseAdmin.from('s_realestate_users').select('id').eq('phone', input.customerPhone).eq('role', 'customer').maybeSingle()
+    let finalCustomerName: string
+    let finalCustomerPhone: string
+    let finalCustomerEmail: string
 
-    if (existingCustomer) {
-      customerUserId = existingCustomer.id
+    if (input.existingCustomerId) {
+      // Returning customer, selected via the New Registration form's
+      // "Old Customer" search (searchCustomersAction above).
+      // Re-fetch server-side rather than trusting client-supplied
+      // name/phone/email for what could be a different seller's
+      // customer — the client only ever sent the id.
+      const { data: existingProfile } = await supabaseAdmin.from('s_realestate_users').select('id, full_name, phone').eq('id', input.existingCustomerId).eq('role', 'customer').maybeSingle()
+      if (!existingProfile) return { success: false, error: 'That customer could not be found — search again.' }
+
+      const { data: authData } = await supabaseAdmin.auth.admin.getUserById(existingProfile.id)
+
+      customerUserId = existingProfile.id
+      finalCustomerName = existingProfile.full_name
+      finalCustomerPhone = existingProfile.phone
+      finalCustomerEmail = authData?.user?.email || ''
     } else {
+      // New customer. A typed phone number that already belongs to an
+      // existing customer is now a hard error rather than a silent
+      // reuse — the seller should use "Old Customer" and search
+      // for them instead, so it's always visible which one happened.
+      const { data: existingCustomer } = await supabaseAdmin.from('s_realestate_users').select('id').eq('phone', input.customerPhone!).eq('role', 'customer').maybeSingle()
+      if (existingCustomer) {
+        return { success: false, error: 'This phone number already belongs to an existing customer — switch to Old Customer and search for them.' }
+      }
+
       // Every Supabase Auth account (staff and customers alike) needs a
       // globally unique email — check upfront rather than letting the
       // create call fail, so the seller gets a clear, specific message
       // instead of a raw Auth API error string.
       const { data: authUsersData } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 })
-      const emailTaken = (authUsersData?.users || []).some((u: any) => u.email?.toLowerCase() === input.customerEmail.trim().toLowerCase())
+      const emailTaken = (authUsersData?.users || []).some((u: any) => u.email?.toLowerCase() === input.customerEmail!.toLowerCase())
       if (emailTaken) {
         return { success: false, error: 'This email already exists — please use a different email for this customer.' }
       }
 
       const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-        email: input.customerEmail,
+        email: input.customerEmail!,
         email_confirm: true,
-        user_metadata: { full_name: input.customerName, raw_phone: input.customerPhone },
+        user_metadata: { full_name: input.customerName!, raw_phone: input.customerPhone! },
       })
       if (authError || !authData.user) {
         const isDuplicateEmail = /already|exist|registered/i.test(authError?.message || '')
@@ -404,26 +677,32 @@ export async function createRegistrationAction(input: {
 
       const { error: profileError } = await supabaseAdmin.from('s_realestate_users').insert({
         id: authData.user.id,
-        phone: input.customerPhone,
-        full_name: input.customerName,
+        phone: input.customerPhone!,
+        full_name: input.customerName!,
         role: 'customer',
         parent_id: null,
         is_active: true,
       })
       if (profileError) {
         await supabaseAdmin.auth.admin.deleteUser(authData.user.id)
+        if (profileError.code === '23505') {
+          return { success: false, error: 'A customer with that phone number already exists.' }
+        }
         return { success: false, error: `Could not create the customer's profile: ${profileError.message}` }
       }
 
       customerUserId = authData.user.id
+      finalCustomerName = input.customerName!
+      finalCustomerPhone = input.customerPhone!
+      finalCustomerEmail = input.customerEmail!
 
       const { data: linkData } = await supabaseAdmin.auth.admin.generateLink({
         type: 'recovery',
-        email: input.customerEmail,
+        email: input.customerEmail!,
         options: { redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/REALESTATE_SOFTWARE/password/set-password` },
       })
       if (linkData?.properties?.action_link) {
-        await sendSetupPasswordEmail(input.customerEmail, input.customerName, linkData.properties.action_link)
+        await sendSetupPasswordEmail(input.customerEmail!, input.customerName!, linkData.properties.action_link)
       }
     }
 
@@ -433,9 +712,9 @@ export async function createRegistrationAction(input: {
       plot_size_sqyd: input.plotSizeSqyd,
       base_price_at_submission: project.base_price,
       mrp_at_submission: mrp,
-      customer_name: input.customerName,
-      customer_phone: input.customerPhone,
-      customer_email: input.customerEmail,
+      customer_name: finalCustomerName,
+      customer_phone: finalCustomerPhone,
+      customer_email: finalCustomerEmail,
       customer_address: input.customerAddress || null,
       submitted_by: caller.id,
       customer_user_id: customerUserId,
@@ -475,8 +754,19 @@ export async function cancelRegistrationAction(registrationId: string) {
 
     const isSeller = registration.submitted_by === caller.id
     const isCustomer = registration.customer_user_id === caller.id
-    if (!isSeller && !isCustomer) {
+    if (!isSeller && !isCustomer && !isAdminPeer(caller.role)) {
       return { success: false, error: 'Not authorized to cancel this registration.' }
+    }
+
+    // Cancelling IS the customer's "I'm not paying" action — clicking ✕
+    // instead of "Pay Now" declines the payment and ends the
+    // registration. But once payment is actually marked paid, that door
+    // closes for the customer and the seller: unwinding real money is an
+    // admin decision, not a self-service one. IT/CEO/Governing Council
+    // keep an override (which still records refund_status='pending' so
+    // the money owed back stays visible).
+    if (registration.payment_status === 'paid' && !isAdminPeer(caller.role)) {
+      return { success: false, error: 'This registration has already been paid for and can no longer be cancelled here — contact IT, CEO, or Governing Council.' }
     }
 
     const refundStatus = registration.payment_status === 'paid' ? 'pending' : 'not_applicable'
@@ -519,8 +809,31 @@ export async function markPaymentPaidAction(registrationId: string) {
     if (registration.status !== 'pending_registration') return { success: false, error: 'This registration is no longer pending.' }
     if (registration.payment_status === 'paid') return { success: false, error: 'Already marked as paid.' }
 
-    const { error } = await supabaseAdmin.from('s_new_registrations').update({ payment_status: 'paid' }).eq('id', registrationId)
+    // Conditional UPDATE rather than a bare .eq('id') — the read above
+    // is only for friendly errors. Without pinning the current
+    // payment_status here, a customer clicking "Pay Now" at the same
+    // moment the Operation Manager undoes their payment could land
+    // AFTER the undo and silently resurrect 'paid', with OM never
+    // knowing. Re-confirming also clears the previous rejection so a
+    // stale "not verified" note can't linger over a fresh payment.
+    const { data: updated, error } = await supabaseAdmin
+      .from('s_new_registrations')
+      .update({
+        payment_status: 'paid',
+        payment_rejected_by: null,
+        payment_rejected_at: null,
+        payment_rejection_note: null,
+      })
+      .eq('id', registrationId)
+      .eq('payment_status', registration.payment_status)
+      .eq('status', 'pending_registration')
+      .select('id')
+      .maybeSingle()
+
     if (error) throw error
+    if (!updated) {
+      return { success: false, error: 'This registration changed while you were confirming — reload and try again.' }
+    }
 
     return { success: true, message: 'Payment recorded. Your registration now moves to your Director for completion.' }
   } catch (error: any) {

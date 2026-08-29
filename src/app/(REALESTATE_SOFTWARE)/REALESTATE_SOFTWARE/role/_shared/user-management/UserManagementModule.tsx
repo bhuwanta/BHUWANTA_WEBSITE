@@ -9,6 +9,7 @@ import {
   toggleExecutiveStatusAction,
   deleteExecutiveAction,
   getCreatableRolesAction,
+  getFilterableRolesAction,
 } from './actions';
 import { getSalesRoleOrderAction } from '../admin/commission-rates/actions';
 import { ROLE_LABELS, type RealEstateRole } from '../permissions';
@@ -38,6 +39,9 @@ export default function UserManagementModule({ currentUserRole, currentUserId }:
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [creatableRoles, setCreatableRoles] = useState<RealEstateRole[]>([]);
+  // Separate from creatableRoles: peers can FILTER by Customer but must
+  // never be offered it when CREATING a user (see getFilterableRolesAction).
+  const [filterableRoles, setFilterableRoles] = useState<RealEstateRole[]>([]);
   const [roleSelection, setRoleSelection] = useState<RealEstateRole | ''>('');
   const [formData, setFormData] = useState({ fullName: '', phone: '', email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
@@ -71,6 +75,7 @@ export default function UserManagementModule({ currentUserRole, currentUserId }:
 
   useEffect(() => {
     getCreatableRolesAction(currentUserRole).then(setCreatableRoles);
+    getFilterableRolesAction(currentUserRole).then(setFilterableRoles);
     getSalesRoleOrderAction().then((res) => {
       setDynamicLabels(Object.fromEntries(res.data.map((r) => [r.role_code, r.label])));
     });
@@ -238,7 +243,7 @@ export default function UserManagementModule({ currentUserRole, currentUserId }:
             >
               All
             </button>
-            {creatableRoles.map((role) => (
+            {filterableRoles.map((role) => (
               <button
                 key={role}
                 onClick={() => {

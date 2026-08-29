@@ -1,7 +1,7 @@
 import { requireRole } from '../../_shared/auth';
 import AreasProjectsPage from '../../_shared/admin/areas-projects/AreasProjectsPage';
 
-export default async function ITAreasProjectsPage() {
-  await requireRole('it');
-  return <AreasProjectsPage canManage />;
+export default async function LIOAreasProjectsPage() {
+  await requireRole('lio');
+  return <AreasProjectsPage />;
 }
