@@ -12,10 +12,10 @@ import logoFallback from '@/images/logo.png'
 const navLinks = [
   { href: '/', label: 'Home' },
   { href: '/about', label: 'About' },
-  { href: '/projects', label: 'Projects' },
   { href: '/why-bhuwanta', label: 'Why Bhuwanta' },
-  { href: '/reviews', label: 'Reviews' },
+  { href: '/projects', label: 'Projects' },
   { href: '/gallery', label: 'Gallery' },
+  { href: '/reviews', label: 'Reviews' },
   { href: '/blog', label: 'Blog' },
 ]
 
