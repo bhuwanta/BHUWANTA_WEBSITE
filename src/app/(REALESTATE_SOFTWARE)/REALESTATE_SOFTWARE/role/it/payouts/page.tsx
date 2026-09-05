@@ -3,5 +3,5 @@ import PayoutsPage from '../../_shared/admin/payouts/PayoutsPage';
 
 export default async function ITPayoutsPage() {
   await requireRole('it');
-  return <PayoutsPage />;
+  return <PayoutsPage currentUserRole="it" />;
 }

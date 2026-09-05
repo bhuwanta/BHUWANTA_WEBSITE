@@ -72,6 +72,11 @@ export async function getAdminDashboardStatsAction() {
     const salesRoleOrder = await getSalesRoleOrder(supabaseAdmin)
     const roleOrder = ['it', 'ceo', 'governing_council', ...salesRoleOrder.map((r) => r.role_code), 'customer'];
     const dynamicLabels = new Map(salesRoleOrder.map((r) => [r.role_code, r.label]));
+    // CEO/Governing Council's renamed labels (migration 011) — a direct
+    // query rather than going through getFixedRoleLabelsAction, since
+    // this is already server-side in the same request.
+    const { data: fixedLabelRows } = await supabaseAdmin.from('s_role_labels').select('role_code, label')
+    ;(fixedLabelRows || []).forEach((r: any) => dynamicLabels.set(r.role_code, r.label))
     const usersByRoleOrdered = roleOrder
       .filter((r) => usersByRole[r])
       // dynamicLabels checked first — see the identical comment in

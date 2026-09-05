@@ -112,9 +112,13 @@ export async function updateSession(request: NextRequest) {
     // (migration 008 / S_role_definitions) is routed too. Only the
     // PascalCase admin-peer/standalone exceptions (GoverningCouncil,
     // OperationManager, Customer) need the static map at all.
-    const expectedRole = REALESTATE_ROLE_BY_PATH_SEGMENT[segment] || segment
+    const expectedRoleEntry = REALESTATE_ROLE_BY_PATH_SEGMENT[segment] || segment
+    const expectedRoles = Array.isArray(expectedRoleEntry) ? expectedRoleEntry : [expectedRoleEntry]
 
-    if (expectedRole) {
+    // Preserves the original behavior for an empty/trailing segment
+    // (e.g. a bare '/REALESTATE_SOFTWARE/role/'): skip the check rather
+    // than comparing profile.role against ''.
+    if (expectedRoles.some((r) => r)) {
       const loginUrl = request.nextUrl.clone()
       loginUrl.pathname = '/REALESTATE_SOFTWARE/login'
 
@@ -128,7 +132,7 @@ export async function updateSession(request: NextRequest) {
         .eq('id', user.id)
         .maybeSingle()
 
-      if (!profile || profile.role !== expectedRole || !profile.is_active) {
+      if (!profile || !expectedRoles.includes(profile.role) || !profile.is_active) {
         return NextResponse.redirect(loginUrl)
       }
     }
@@ -137,9 +141,22 @@ export async function updateSession(request: NextRequest) {
   return supabaseResponse
 }
 
-const REALESTATE_ROLE_BY_PATH_SEGMENT: Record<string, string> = {
+const REALESTATE_ROLE_BY_PATH_SEGMENT: Record<string, string | string[]> = {
   it: 'it',
   ceo: 'ceo',
+  // IT-only visualizer page that lives outside role/it/ (it opts out of
+  // the sidebar shell via role/it/layout.tsx — see HierarchyGraph.tsx),
+  // so its URL segment isn't a role code by the usual convention. Mapped
+  // here to match its own requireRole('it') check, otherwise the
+  // fallback-to-raw-segment behavior below would compare profile.role
+  // against the literal string 'hierarchy', which can never match any
+  // real role and always bounces to login.
+  hierarchy: 'it',
+  // Same reasoning, but both IT and Operation Manager can open this one
+  // (the per-transaction "Visualize" button on the Payouts page is
+  // shown to both — role/_shared/admin/payouts/PayoutsPage.tsx) — must
+  // match its own requireAnyRole(['it', 'operation_manager']) check.
+  'payouts-visualize': ['it', 'operation_manager'],
   GoverningCouncil: 'governing_council',
   OperationManager: 'operation_manager',
   Customer: 'customer',

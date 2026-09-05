@@ -241,13 +241,18 @@ INSERT INTO public.S_role_definitions (role_code, label, rank, is_system) VALUES
 -- reproduce the behaviour that used to be hardcoded in downline.ts.
 CREATE TABLE public.S_payout_rules (
     role_code VARCHAR(50) PRIMARY KEY,
-    -- 'chain'        = paid only when this role appears in the seller's
-    --                  own parent_id upline (wing-scoped).
-    -- 'company_wide' = every active holder is paid on every sale.
+    -- 'chain'             = paid only when this role appears in the
+    --                       seller's own parent_id upline (wing-scoped).
+    -- 'company_wide'      = every active holder is paid on every sale.
+    -- 'director_assigned' = (migration 011) resolved through
+    --                       S_director_gc off the seller's own upline
+    --                       Director — exactly one holder earns, not
+    --                       every holder of the role. Only
+    --                       governing_council uses this.
     scope VARCHAR(20) NOT NULL DEFAULT 'chain',
     updated_by UUID REFERENCES public.S_realestate_users(id),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-    CONSTRAINT s_payout_rules_scope_check CHECK (scope IN ('chain', 'company_wide'))
+    CONSTRAINT s_payout_rules_scope_check CHECK (scope IN ('chain', 'company_wide', 'director_assigned'))
 );
 
 INSERT INTO public.S_payout_rules (role_code, scope) VALUES
@@ -259,8 +264,33 @@ INSERT INTO public.S_payout_rules (role_code, scope) VALUES
     ('rm', 'chain'),
     ('lio', 'chain'),
     ('lia', 'chain'),
-    ('governing_council', 'company_wide'),
+    ('governing_council', 'director_assigned'),
     ('ceo', 'company_wide');
+
+-- (migration 011) Custom display label for one of the 5 fixed roles —
+-- it/ceo/governing_council/operation_manager/customer — which have no
+-- row in S_role_definitions above (mixing them in would corrupt every
+-- rank-sensitive consumer of that table). No row = use the ROLE_LABELS
+-- static default in permissions.ts. role_code itself is never renamed
+-- here, only what's shown on screen.
+CREATE TABLE public.S_role_labels (
+    role_code VARCHAR(50) PRIMARY KEY CHECK (role_code IN ('it', 'ceo', 'governing_council', 'operation_manager', 'customer')),
+    label VARCHAR(100) NOT NULL,
+    updated_by UUID REFERENCES public.S_realestate_users(id),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- (migration 011) Exactly one Governing Council member per Director —
+-- director_id is the PK (not composite like S_director_projects below),
+-- so a second insert for the same Director replaces rather than adds.
+-- Read by getUplineChain when governing_council's scope above is
+-- 'director_assigned'.
+CREATE TABLE public.S_director_gc (
+    director_id UUID PRIMARY KEY REFERENCES public.S_realestate_users(id) ON DELETE CASCADE,
+    gc_id UUID NOT NULL REFERENCES public.S_realestate_users(id),
+    updated_by UUID REFERENCES public.S_realestate_users(id),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
 
 -- ==========================================
 -- COMMISSION RATES (HIERARCHY.md §3a)

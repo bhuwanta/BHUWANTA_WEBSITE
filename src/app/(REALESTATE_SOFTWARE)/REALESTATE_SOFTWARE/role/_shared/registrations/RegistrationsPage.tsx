@@ -5,6 +5,7 @@ import { ClipboardList, Loader2, CheckCircle2, Clock, Ban, AlertCircle, Search, 
 import { getRegistrationsAction, markRegistrationDoneAction, cancelRegistrationAction, markRegistrationsReadAction, markOneRegistrationReadAction, deleteRegistrationAction, undoRegistrationDoneAction, undoPaymentAction } from './actions';
 import { notifyRegistrationsChanged } from '../registrations-notify';
 import { getSalesRoleOrderAction } from '../admin/commission-rates/actions';
+import { getFixedRoleLabelsAction } from '../admin/commission-rates/fixed-role-actions';
 import { ROLE_LABELS, isSalesRole, type RealEstateRole } from '../permissions';
 
 interface RegistrationsPageProps {
@@ -48,7 +49,7 @@ export default function RegistrationsPage({ currentUserRole, currentUserId }: Re
 
   const load = async () => {
     setLoading(true);
-    const [res, roleOrderRes] = await Promise.all([getRegistrationsAction(), getSalesRoleOrderAction()]);
+    const [res, roleOrderRes, fixedLabelsRes] = await Promise.all([getRegistrationsAction(), getSalesRoleOrderAction(), getFixedRoleLabelsAction()]);
     if (res.success) {
       setRegistrations(res.data);
       setCanMarkDone(res.canMarkDone);
@@ -56,7 +57,14 @@ export default function RegistrationsPage({ currentUserRole, currentUserId }: Re
     } else if (res.error) {
       setError(res.error);
     }
-    setDynamicLabels(Object.fromEntries(roleOrderRes.data.map((r) => [r.role_code, r.label])));
+    const mergedLabels: Record<string, string> = {};
+    roleOrderRes.data.forEach((r) => {
+      mergedLabels[r.role_code] = r.label;
+    });
+    fixedLabelsRes.data.forEach((r) => {
+      mergedLabels[r.role_code] = r.label;
+    });
+    setDynamicLabels(mergedLabels);
     setLoading(false);
   };
 

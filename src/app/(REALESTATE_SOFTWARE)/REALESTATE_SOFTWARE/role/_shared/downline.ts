@@ -25,11 +25,14 @@ export async function getDownlineIds(supabaseAdmin: ServiceClient, rootId: strin
   return ids
 }
 
-/** Every role's payout scope, from S_payout_rules (migration 010). A
+/** Every role's payout scope, from S_payout_rules (migration 010/011). A
  * role with no row is treated as 'chain' — the restrictive default, so a
  * newly created role can never accidentally start being paid on every
- * sale company-wide before IT has said so. */
-export type PayoutScope = 'chain' | 'company_wide'
+ * sale company-wide before IT has said so. 'director_assigned'
+ * (migration 011) is resolved through S_director_gc — only
+ * governing_council uses it today; see the company-wide-append block in
+ * getUplineChain below. */
+export type PayoutScope = 'chain' | 'company_wide' | 'director_assigned'
 
 async function getPayoutScopes(supabaseAdmin: ServiceClient): Promise<Map<string, PayoutScope>> {
   const { data } = await supabaseAdmin.from('s_payout_rules').select('role_code, scope')
@@ -120,6 +123,35 @@ export async function getUplineChain(
       if (seen.has(holder.id)) continue
       seen.add(holder.id)
       chain.push({ id: holder.id, role: role as RealEstateRole })
+    }
+  }
+
+  // 'director_assigned' (migration 011) — only governing_council has an
+  // assignment table (S_director_gc) to resolve through today, unlike
+  // the blanket company-wide loop above: find the SELLER'S OWN upline
+  // Director (their own id if the seller already is one), then that one
+  // Director's one assigned GC. A GC or CEO seller has no parent_id
+  // (admin peers aren't in the downline tree), so findUplineDirectorId
+  // correctly returns null for them and GC is skipped on their own
+  // sale — same as it was already excluded from the seen set if they
+  // happened to hold this role themselves. A Director created before
+  // being assigned yields no row here — skipped rather than guessed,
+  // and visible as a gap on the hierarchy visualizer.
+  if (scopeOf('governing_council') === 'director_assigned') {
+    const directorId = await findUplineDirectorId(supabaseAdmin, sellerId, sellerRole)
+    if (directorId) {
+      const { data: assignment } = await supabaseAdmin.from('s_director_gc').select('gc_id').eq('director_id', directorId).maybeSingle()
+      if (assignment?.gc_id && !seen.has(assignment.gc_id)) {
+        const { data: gcUser } = await supabaseAdmin
+          .from('s_realestate_users')
+          .select('id, is_active, earns_commission')
+          .eq('id', assignment.gc_id)
+          .maybeSingle()
+        if (gcUser?.is_active && gcUser.earns_commission) {
+          seen.add(gcUser.id)
+          chain.push({ id: gcUser.id, role: 'governing_council' })
+        }
+      }
     }
   }
 

@@ -123,6 +123,19 @@ export async function getSalesRoleOrder(supabaseAdmin: ServiceClient): Promise<S
   return data || []
 }
 
+/** A single sales-tier role's current label — for the ~8 thin
+ * role/<tier>/layout.tsx files, each of which needs just one role's
+ * name for its sidebar header rather than the whole cascade. Reads the
+ * same live S_role_definitions source as getSalesRoleOrder, so a rename
+ * made on Roles/Commissions shows up in the sidebar immediately instead
+ * of needing a code change (these layouts used to hardcode roleLabel as
+ * a literal string, e.g. "LIA", which is exactly why a rename to "LA"
+ * never appeared there). */
+export async function getSalesRoleLabel(supabaseAdmin: ServiceClient, roleCode: RealEstateRole): Promise<string> {
+  const roleOrder = await getSalesRoleOrder(supabaseAdmin)
+  return roleOrder.find((r) => r.role_code === roleCode)?.label || ROLE_LABELS[roleCode] || roleCode
+}
+
 /** Dynamic counterpart to canCreateRole/canManageRole for the sales-tier
  * branch — takes the real, current rank order (from getSalesRoleOrder)
  * instead of assuming the static SALES_RANK_ORDER. Admin-peer callers

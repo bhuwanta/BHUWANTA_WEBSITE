@@ -2,11 +2,26 @@
 
 import React, { useEffect, useState } from 'react';
 import { Loader2, AlertCircle, CheckCircle2, Scale, Info, ChevronDown, Users, Globe2 } from 'lucide-react';
-import { getPayoutRulesAction, setRoleScopeAction, setUserEarnsCommissionAction, previewPayoutAction, getPreviewRolesAction } from './actions';
+import {
+  getPayoutRulesAction,
+  setRoleScopeAction,
+  setUserEarnsCommissionAction,
+  previewPayoutAction,
+  getPreviewRolesAction,
+  getDirectorGcAssignmentsAction,
+  setDirectorGcAction,
+} from './actions';
 import SearchableSelect from '../../components/SearchableSelect';
 
-type Scope = 'chain' | 'company_wide';
+type Scope = 'chain' | 'company_wide' | 'director_assigned';
 type Message = { type: 'success' | 'error'; text: string } | null;
+
+interface DirectorGcRow {
+  directorId: string;
+  directorName: string;
+  gcId: string | null;
+  gcName: string | null;
+}
 
 interface RoleRule {
   role_code: string;
@@ -35,11 +50,13 @@ export default function PayoutRulesPage() {
   const [loading, setLoading] = useState(true);
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [message, setMessage] = useState<Message>(null);
+  const [directorRows, setDirectorRows] = useState<DirectorGcRow[]>([]);
+  const [gcMembers, setGcMembers] = useState<{ id: string; full_name: string }[]>([]);
 
   const formatPrice = (v: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v);
 
   const load = async () => {
-    const [rulesRes, rolesRes] = await Promise.all([getPayoutRulesAction(), getPreviewRolesAction()]);
+    const [rulesRes, rolesRes, directorGcRes] = await Promise.all([getPayoutRulesAction(), getPreviewRolesAction(), getDirectorGcAssignmentsAction()]);
     if (rulesRes.success) setRules(rulesRes.data as RoleRule[]);
     else if (rulesRes.error) setMessage({ type: 'error', text: rulesRes.error });
     if (rolesRes.success) {
@@ -47,6 +64,10 @@ export default function PayoutRulesPage() {
       // Default to the lowest tier that anyone actually holds — the most
       // common seller, and the case with the longest payout chain.
       setPreviewRoleCode((prev) => prev || rolesRes.data[rolesRes.data.length - 1]?.role_code || '');
+    }
+    if (directorGcRes.success) {
+      setDirectorRows(directorGcRes.directors as DirectorGcRow[]);
+      setGcMembers(directorGcRes.gcMembers);
     }
     setLoading(false);
   };
@@ -81,6 +102,8 @@ export default function PayoutRulesPage() {
     const confirmed = window.confirm(
       scope === 'company_wide'
         ? `Pay all ${earning} ${role.label} on EVERY sale in the company?\n\nThis means more money goes out on each sale. It only affects sales completed from now on.`
+        : scope === 'director_assigned'
+        ? `Pay only the one ${role.label} assigned to the selling Director's wing?\n\nEveryone else in this role stops earning on that sale. It only affects sales completed from now on.`
         : `Pay ${role.label} only when their own team makes a sale?\n\nThey will stop earning on sales made by anyone else. It only affects sales completed from now on.`
     );
     if (!confirmed) return;
@@ -88,6 +111,16 @@ export default function PayoutRulesPage() {
     setBusyKey(role.role_code);
     setMessage(null);
     const res = await setRoleScopeAction(role.role_code, scope);
+    setMessage(res.success ? { type: 'success', text: res.message! } : { type: 'error', text: res.error! });
+    if (res.success) await load();
+    setBusyKey(null);
+  };
+
+  const handleDirectorGcChange = async (directorId: string, gcId: string) => {
+    if (!gcId) return;
+    setBusyKey(directorId);
+    setMessage(null);
+    const res = await setDirectorGcAction(directorId, gcId);
     setMessage(res.success ? { type: 'success', text: res.message! } : { type: 'error', text: res.error! });
     if (res.success) await load();
     setBusyKey(null);
@@ -219,7 +252,9 @@ export default function PayoutRulesPage() {
               const earning = role.holders.filter((h) => h.earns_commission);
               const cost = roleCost(role.role_code);
               const isCompanyWide = role.scope === 'company_wide';
+              const isDirectorAssigned = role.scope === 'director_assigned';
               const busy = busyKey === role.role_code;
+              const isGc = role.role_code === 'governing_council';
 
               return (
                 <div key={role.role_code} className="bg-white border border-[#e8ecf2] rounded-xl shadow-sm overflow-hidden">
@@ -240,6 +275,8 @@ export default function PayoutRulesPage() {
                       <p className="text-xs text-[#5a6a82] mt-1">
                         {isCompanyWide
                           ? `All ${earning.length} ${earning.length === 1 ? 'person' : 'people'} in this role earn on every sale in the company.`
+                          : isDirectorAssigned
+                          ? 'Only the one Governing Council member assigned to the selling Director earns — see the section below to assign or reassign.'
                           : 'Earns only when someone in their own team makes the sale.'}
                         {cost && (
                           <span className="text-[#0f1d33] font-semibold">
@@ -252,10 +289,16 @@ export default function PayoutRulesPage() {
 
                     <div className="inline-flex items-center gap-1 bg-[#f3f5f8] p-1 rounded-lg border border-[#e8ecf2] shrink-0 self-start md:self-auto">
                       {(
-                        [
-                          { value: 'chain' as const, label: 'Own team only' },
-                          { value: 'company_wide' as const, label: 'Every sale' },
-                        ]
+                        isGc
+                          ? [
+                              { value: 'director_assigned' as const, label: 'By Director' },
+                              { value: 'chain' as const, label: 'Own team only' },
+                              { value: 'company_wide' as const, label: 'Every sale' },
+                            ]
+                          : [
+                              { value: 'chain' as const, label: 'Own team only' },
+                              { value: 'company_wide' as const, label: 'Every sale' },
+                            ]
                       ).map((opt) => (
                         <button
                           key={opt.value}
@@ -313,6 +356,54 @@ export default function PayoutRulesPage() {
                 </div>
               );
             })}
+          </div>
+        </div>
+
+        {/* ---------- Director → Governing Council assignment ---------- */}
+        <div>
+          <p className="text-[11px] uppercase tracking-widest font-bold text-[#5a6a82] mb-3">Director → Governing Council</p>
+          <div className="bg-white border border-[#e8ecf2] rounded-xl shadow-sm overflow-hidden">
+            <div className="p-4 border-b border-[#e8ecf2]">
+              <p className="text-sm text-[#5a6a82]">
+                Each Director is assigned to exactly one Governing Council member. When a sale happens inside a Director&apos;s wing, only their assigned Governing Council member earns
+                — not everyone who holds the role.
+              </p>
+            </div>
+
+            {directorRows.length === 0 ? (
+              <div className="p-4">
+                <p className="text-xs text-[#a0abbb]">No active Directors yet.</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-[#e8ecf2]">
+                {directorRows.map((row) => (
+                  <div key={row.directorId} className="p-4 flex flex-col md:flex-row md:items-center gap-3 md:justify-between">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-[#0f1d33] text-sm truncate">{row.directorName || 'Unnamed'}</p>
+                      <p className="text-xs text-[#5a6a82] mt-0.5">{row.gcName ? `Assigned to ${row.gcName}` : 'Not assigned yet'}</p>
+                    </div>
+                    <div className="w-full md:w-64 shrink-0">
+                      <SearchableSelect
+                        value={row.gcId || ''}
+                        onChange={(gcId) => handleDirectorGcChange(row.directorId, gcId)}
+                        options={gcMembers.map((g) => ({ id: g.id, name: g.full_name || 'Unnamed' }))}
+                        placeholder="Assign a Governing Council member"
+                        title={`Assign ${row.directorName || 'this Director'} to`}
+                        searchPlaceholder="Search Governing Council..."
+                        noResultsText="No Governing Council members found."
+                        disabled={busyKey === row.directorId || gcMembers.length === 0}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {gcMembers.length === 0 && (
+              <div className="px-4 pb-4">
+                <p className="text-xs text-[#a0abbb]">No active Governing Council members yet — add one before assigning Directors.</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

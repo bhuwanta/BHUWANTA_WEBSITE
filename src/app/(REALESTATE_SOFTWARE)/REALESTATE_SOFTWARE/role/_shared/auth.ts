@@ -34,6 +34,36 @@ export async function requireRole(expectedRole: RealEstateRole) {
 }
 
 /**
+ * Same page guard as requireRole, but for a page shared by more than one
+ * role (e.g. the payout visualizer, which both IT and Operation Manager
+ * can open) — matches if the caller's active profile role is anywhere
+ * in `expectedRoles`, rather than exactly one fixed role.
+ */
+export async function requireAnyRole(expectedRoles: RealEstateRole[]) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    redirect('/REALESTATE_SOFTWARE/login')
+  }
+
+  const supabaseAdmin = createServiceClient()
+  const { data: profile } = await supabaseAdmin
+    .from('s_realestate_users')
+    .select('role, full_name, is_active')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile || !expectedRoles.includes(profile.role as RealEstateRole) || !profile.is_active) {
+    redirect('/REALESTATE_SOFTWARE/login')
+  }
+
+  return { userId: user.id, role: profile.role as RealEstateRole, fullName: profile.full_name as string }
+}
+
+/**
  * Action-level session verification. `requireRole` protects a *page* —
  * it does nothing for a Server Action invoked directly (Next.js Server
  * Actions are POST-able independent of which page rendered the button

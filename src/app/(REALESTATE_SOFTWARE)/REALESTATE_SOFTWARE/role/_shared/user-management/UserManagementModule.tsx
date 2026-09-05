@@ -12,6 +12,7 @@ import {
   getFilterableRolesAction,
 } from './actions';
 import { getSalesRoleOrderAction } from '../admin/commission-rates/actions';
+import { getFixedRoleLabelsAction } from '../admin/commission-rates/fixed-role-actions';
 import { ROLE_LABELS, type RealEstateRole } from '../permissions';
 
 const ROLE_BADGE_CLASS: Record<RealEstateRole, string> = {
@@ -76,8 +77,15 @@ export default function UserManagementModule({ currentUserRole, currentUserId }:
   useEffect(() => {
     getCreatableRolesAction(currentUserRole).then(setCreatableRoles);
     getFilterableRolesAction(currentUserRole).then(setFilterableRoles);
-    getSalesRoleOrderAction().then((res) => {
-      setDynamicLabels(Object.fromEntries(res.data.map((r) => [r.role_code, r.label])));
+    Promise.all([getSalesRoleOrderAction(), getFixedRoleLabelsAction()]).then(([roleOrderRes, fixedLabelsRes]) => {
+      const mergedLabels: Record<string, string> = {};
+      roleOrderRes.data.forEach((r) => {
+        mergedLabels[r.role_code] = r.label;
+      });
+      fixedLabelsRes.data.forEach((r) => {
+        mergedLabels[r.role_code] = r.label;
+      });
+      setDynamicLabels(mergedLabels);
     });
   }, [currentUserRole]);
 
@@ -466,10 +474,14 @@ export default function UserManagementModule({ currentUserRole, currentUserId }:
                       type="tel"
                       required
                       value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
                       placeholder="e.g. 9876543210"
+                      maxLength={10}
                       className="w-full bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-3 py-2 text-[#0f1d33] text-sm focus:outline-none focus:border-[#c4a55a] focus:ring-1 focus:ring-[#c4a55a]"
                     />
+                    {formData.phone.length > 0 && formData.phone.length < 10 && (
+                      <p className="text-xs text-amber-600 mt-1">{10 - formData.phone.length} more digit{10 - formData.phone.length === 1 ? '' : 's'} needed.</p>
+                    )}
                   </div>
 
                   <div className="md:col-span-2">
