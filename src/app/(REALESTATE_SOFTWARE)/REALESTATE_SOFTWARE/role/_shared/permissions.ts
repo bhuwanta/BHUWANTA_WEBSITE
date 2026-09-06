@@ -17,6 +17,7 @@ import type { createServiceClient } from '@/lib/supabase/server'
 type ServiceClient = ReturnType<typeof createServiceClient>
 
 export type RealEstateRole =
+  | 'company'
   | 'it'
   | 'ceo'
   | 'governing_council'
@@ -43,6 +44,16 @@ export function isAdminPeer(role: RealEstateRole): boolean {
   return (ADMIN_PEER_ROLES as RealEstateRole[]).includes(role);
 }
 
+/** Company sits above CEO (commission-eligible, same page access as
+ * CEO) but is deliberately NOT an admin peer — it can view company-wide
+ * data but must never create/manage other accounts (canCreateRoleDynamic/
+ * canManageRoleDynamic below correctly deny it for free, simply by never
+ * appearing in ADMIN_PEER_ROLES or the sales rank order). Use this
+ * helper ONLY for read/visibility checks — never for create/manage. */
+export function canViewCompanyWide(role: RealEstateRole): boolean {
+  return isAdminPeer(role) || role === 'company';
+}
+
 /** Only Operation Manager can click "Registration Done" (registrations)
  * or "Mark Paid" (payouts) — not Director, not IT/CEO/GC. A standing
  * rule referenced from both action files rather than repeating the
@@ -54,6 +65,7 @@ export function isOperationManager(role: RealEstateRole): boolean {
 // Human-readable labels — single source so every page/component shows
 // the same names (§1's rank-order table).
 export const ROLE_LABELS: Record<RealEstateRole, string> = {
+  company: 'Company',
   it: 'IT Admin',
   ceo: 'CEO',
   governing_council: 'Governing Council',
@@ -143,6 +155,11 @@ export async function getSalesRoleLabel(supabaseAdmin: ServiceClient, roleCode: 
  * same as before) — only the sales-tier cascade comparison uses the
  * passed-in order. */
 export function canCreateRoleDynamic(callerRole: RealEstateRole, targetRole: RealEstateRole, rankOrder: SalesRoleOrderEntry[]): boolean {
+  // Company is a singleton, created only by IT via a bespoke,
+  // existence-checked branch in createExecutiveAction — never through
+  // this general-purpose check, which would otherwise let CEO/Governing
+  // Council (also admin peers) create a second one.
+  if (targetRole === 'company') return false
   if (isAdminPeer(callerRole)) {
     return true
   }
@@ -163,13 +180,13 @@ export function isSalesRoleDynamic(role: string, rankOrder: SalesRoleOrderEntry[
 
 /** Dynamic counterpart to isCommissionEligible. */
 export function isCommissionEligibleDynamic(role: RealEstateRole, rankOrder: SalesRoleOrderEntry[]): boolean {
-  return isSalesRoleDynamic(role, rankOrder) || role === 'ceo' || role === 'governing_council'
+  return isSalesRoleDynamic(role, rankOrder) || role === 'ceo' || role === 'governing_council' || role === 'company'
 }
 
-// Commission-eligible roles (§3a) — the sales chain plus CEO and
-// Governing Council. IT and Customer are never paid.
+// Commission-eligible roles (§3a) — the sales chain plus CEO,
+// Governing Council, and Company. IT and Customer are never paid.
 export function isCommissionEligible(role: RealEstateRole): boolean {
-  return isSalesRole(role) || role === 'ceo' || role === 'governing_council';
+  return isSalesRole(role) || role === 'ceo' || role === 'governing_council' || role === 'company';
 }
 
 /**
@@ -206,8 +223,8 @@ export const canManageRole = canCreateRole;
  * check for sales roles, not covered here — see file header).
  */
 export function canViewRole(viewerRole: RealEstateRole, subjectRole: RealEstateRole): boolean {
-  if (subjectRole === 'ceo') {
-    return isAdminPeer(viewerRole);
+  if (subjectRole === 'ceo' || subjectRole === 'company') {
+    return isAdminPeer(viewerRole) || viewerRole === 'company';
   }
   return true;
 }

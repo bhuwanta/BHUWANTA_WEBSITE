@@ -13,7 +13,7 @@ import {
 } from './actions';
 import SearchableSelect from '../../components/SearchableSelect';
 
-type Scope = 'chain' | 'company_wide' | 'director_assigned';
+type Scope = 'chain' | 'company_wide' | 'director_assigned' | 'company_wide_split';
 type Message = { type: 'success' | 'error'; text: string } | null;
 
 interface DirectorGcRow {
@@ -102,6 +102,8 @@ export default function PayoutRulesPage() {
     const confirmed = window.confirm(
       scope === 'company_wide'
         ? `Pay all ${earning} ${role.label} on EVERY sale in the company?\n\nThis means more money goes out on each sale. It only affects sales completed from now on.`
+        : scope === 'company_wide_split'
+        ? `Pay all ${earning} ${role.label} on EVERY sale, splitting their marginal cut equally among them?\n\nThe group earns the same total as one full share — each person gets 1/${earning || 1}. It only affects sales completed from now on.`
         : scope === 'director_assigned'
         ? `Pay only the one ${role.label} assigned to the selling Director's wing?\n\nEveryone else in this role stops earning on that sale. It only affects sales completed from now on.`
         : `Pay ${role.label} only when their own team makes a sale?\n\nThey will stop earning on sales made by anyone else. It only affects sales completed from now on.`
@@ -252,6 +254,7 @@ export default function PayoutRulesPage() {
               const earning = role.holders.filter((h) => h.earns_commission);
               const cost = roleCost(role.role_code);
               const isCompanyWide = role.scope === 'company_wide';
+              const isCompanyWideSplit = role.scope === 'company_wide_split';
               const isDirectorAssigned = role.scope === 'director_assigned';
               const busy = busyKey === role.role_code;
               const isGc = role.role_code === 'governing_council';
@@ -265,16 +268,18 @@ export default function PayoutRulesPage() {
                         <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-[#1e3a5f]/10 text-[#1e3a5f]">
                           {role.percentage != null ? `${role.percentage}%` : 'no rate set'}
                         </span>
-                        {isCompanyWide && (
+                        {(isCompanyWide || isCompanyWideSplit) && (
                           <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-[#c4a55a]/15 text-[#8a7333] inline-flex items-center gap-1">
                             <Globe2 className="w-3 h-3" />
-                            every sale
+                            {isCompanyWideSplit ? 'every sale, split equally' : 'every sale'}
                           </span>
                         )}
                       </div>
                       <p className="text-xs text-[#5a6a82] mt-1">
                         {isCompanyWide
                           ? `All ${earning.length} ${earning.length === 1 ? 'person' : 'people'} in this role earn on every sale in the company.`
+                          : isCompanyWideSplit
+                          ? `All ${earning.length} ${earning.length === 1 ? 'person' : 'people'} in this role earn on every sale in the company, splitting the marginal cut equally${earning.length > 1 ? ` (1/${earning.length} each)` : ''}.`
                           : isDirectorAssigned
                           ? 'Only the one Governing Council member assigned to the selling Director earns — see the section below to assign or reassign.'
                           : 'Earns only when someone in their own team makes the sale.'}
@@ -294,10 +299,12 @@ export default function PayoutRulesPage() {
                               { value: 'director_assigned' as const, label: 'By Director' },
                               { value: 'chain' as const, label: 'Own team only' },
                               { value: 'company_wide' as const, label: 'Every sale' },
+                              { value: 'company_wide_split' as const, label: 'Every sale, split' },
                             ]
                           : [
                               { value: 'chain' as const, label: 'Own team only' },
                               { value: 'company_wide' as const, label: 'Every sale' },
+                              { value: 'company_wide_split' as const, label: 'Every sale, split' },
                             ]
                       ).map((opt) => (
                         <button

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { UserPlus, UserCheck, Loader2, AlertCircle, Search, ChevronLeft, ChevronRight, X, Eye, EyeOff, Edit2, Trash2, CheckCircle2, Users } from 'lucide-react';
+import { UserPlus, UserCheck, Loader2, AlertCircle, Search, ChevronLeft, ChevronRight, X, Eye, EyeOff, Edit2, Trash2, CheckCircle2, Users, GitBranch, Clock } from 'lucide-react';
 import {
   createExecutiveAction,
   getExecutivesAction,
@@ -10,13 +10,28 @@ import {
   deleteExecutiveAction,
   getCreatableRolesAction,
   getFilterableRolesAction,
+  getReportsToCandidatesAction,
+  reassignReportsToAction,
 } from './actions';
+import { getDirectorGcAssignmentsAction, setDirectorGcAction } from '../admin/payout-rules/actions';
 import { getSalesRoleOrderAction } from '../admin/commission-rates/actions';
 import { getFixedRoleLabelsAction } from '../admin/commission-rates/fixed-role-actions';
 import { ROLE_LABELS, type RealEstateRole } from '../permissions';
+import SearchableSelect from '../components/SearchableSelect';
+
+interface PendingSaleInfo {
+  registrationId: string;
+  projectName: string;
+  areaName: string;
+  customerName: string;
+  sellerName: string;
+  submittedAt: string;
+  plotSizeSqyd: number;
+}
 
 const ROLE_BADGE_CLASS: Record<RealEstateRole, string> = {
   it: 'bg-purple-50 text-purple-600',
+  company: 'bg-[#c4a55a]/20 text-[#8a7333]',
   ceo: 'bg-[#c4a55a]/10 text-[#c4a55a]',
   governing_council: 'bg-[#c4a55a]/10 text-[#c4a55a]',
   operation_manager: 'bg-blue-50 text-blue-600',
@@ -50,6 +65,21 @@ export default function UserManagementModule({ currentUserRole, currentUserId }:
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // "Reports To" — IT-only, per-role: a Director's real upline is
+  // S_director_gc (Governing Council), never parent_id (which is just
+  // creation lineage for them); every other sales tier's parent_id IS
+  // their real upline. reportsToMode picks which of those two this
+  // edited user actually needs, based on their ORIGINAL role at the
+  // moment the modal opened — not roleSelection, which the same form
+  // lets IT change live, so this section doesn't shift under them mid-edit.
+  const [reportsToMode, setReportsToMode] = useState<'director' | 'sales' | null>(null);
+  const [reportsToOptions, setReportsToOptions] = useState<{ id: string; full_name: string; role: string }[]>([]);
+  const [reportsToValue, setReportsToValue] = useState('');
+  const [reportsToLoading, setReportsToLoading] = useState(false);
+  const [savingReportsTo, setSavingReportsTo] = useState(false);
+  const [reportsToMessage, setReportsToMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [blockedPendingSales, setBlockedPendingSales] = useState<PendingSaleInfo[] | null>(null);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -203,6 +233,56 @@ export default function UserManagementModule({ currentUserRole, currentUserId }:
     setFormData({ fullName: user.full_name, phone: user.phone, email: user.email || '', password: '' });
     setIsModalOpen(true);
     setMessage(null);
+
+    setReportsToMode(null);
+    setReportsToOptions([]);
+    setReportsToValue('');
+    setReportsToMessage(null);
+    setBlockedPendingSales(null);
+
+    if (currentUserRole !== 'it') return;
+
+    if (user.role === 'director') {
+      setReportsToLoading(true);
+      getDirectorGcAssignmentsAction().then((res) => {
+        if (res.success) {
+          setReportsToMode('director');
+          setReportsToOptions(res.gcMembers.map((g) => ({ id: g.id, full_name: g.full_name, role: 'governing_council' })));
+          const mine = res.directors.find((d) => d.directorId === user.id);
+          setReportsToValue(mine?.gcId || '');
+        }
+        setReportsToLoading(false);
+      });
+    } else {
+      setReportsToLoading(true);
+      getReportsToCandidatesAction(user.id).then((res) => {
+        if (res.success) {
+          setReportsToMode('sales');
+          setReportsToOptions(res.data);
+          setReportsToValue(user.parent_id || '');
+        }
+        setReportsToLoading(false);
+      });
+    }
+  };
+
+  const handleSaveReportsTo = async () => {
+    if (!editingUserId || !reportsToValue) return;
+    setSavingReportsTo(true);
+    setReportsToMessage(null);
+    setBlockedPendingSales(null);
+
+    const res = reportsToMode === 'director' ? await setDirectorGcAction(editingUserId, reportsToValue) : await reassignReportsToAction(editingUserId, reportsToValue);
+
+    if (res.success) {
+      setReportsToMessage({ type: 'success', text: res.message! });
+      fetchUsers(false);
+    } else if ('pendingSales' in res && res.pendingSales && res.pendingSales.length > 0) {
+      setBlockedPendingSales(res.pendingSales);
+    } else {
+      setReportsToMessage({ type: 'error', text: res.error || 'Failed to reassign.' });
+    }
+    setSavingReportsTo(false);
   };
 
   const totalPages = Math.ceil(totalUsers / itemsPerPage);
@@ -419,16 +499,16 @@ export default function UserManagementModule({ currentUserRole, currentUserId }:
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0f1d33]/50 backdrop-blur-sm overflow-y-auto pt-20 pb-20">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-            <div className="flex justify-between items-center p-5 border-b border-[#e8ecf2]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0f1d33]/50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[85vh] overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col">
+            <div className="flex justify-between items-center p-5 border-b border-[#e8ecf2] shrink-0">
               <h2 className="text-xl font-bold text-[#0f1d33]">{isEditMode ? 'Edit User' : 'Add New User'}</h2>
               <button onClick={() => setIsModalOpen(false)} className="text-[#5a6a82] hover:bg-[#f3f5f8] p-1.5 rounded-lg transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-5">
+            <div className="p-5 overflow-y-auto flex-1 min-h-0">
               {message && (
                 <div className={`p-3 rounded-lg mb-4 flex items-start gap-2 ${message.type === 'error' ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'}`}>
                   {message.type === 'error' ? <AlertCircle className="w-5 h-5 shrink-0" /> : <UserCheck className="w-5 h-5 shrink-0" />}
@@ -454,6 +534,51 @@ export default function UserManagementModule({ currentUserRole, currentUserId }:
                     ))}
                   </div>
                 </div>
+
+                {isEditMode && currentUserRole === 'it' && (reportsToLoading || reportsToMode) && (
+                  <div className="bg-[#f7f8fa] border border-[#e8ecf2] rounded-lg p-3">
+                    <label className="flex items-center gap-1.5 text-sm font-medium text-[#0f1d33] mb-2">
+                      <GitBranch className="w-3.5 h-3.5 text-[#5a6a82]" />
+                      {reportsToMode === 'director' ? 'Reports To (Governing Council)' : 'Reports To (Upline)'}
+                    </label>
+                    {reportsToLoading ? (
+                      <div className="flex items-center gap-2 text-xs text-[#5a6a82] py-1">
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading...
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <div className="flex-1">
+                            <SearchableSelect
+                              value={reportsToValue}
+                              onChange={setReportsToValue}
+                              options={reportsToOptions.map((o) => ({ id: o.id, name: o.full_name || 'Unnamed' }))}
+                              placeholder={reportsToMode === 'director' ? 'Pick a Governing Council member' : 'Pick who they report to'}
+                              title={reportsToMode === 'director' ? 'Assign to a Governing Council member' : 'Who does this person report to?'}
+                              searchPlaceholder="Search..."
+                              noResultsText="No one available."
+                              disabled={savingReportsTo}
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleSaveReportsTo}
+                            disabled={savingReportsTo || !reportsToValue}
+                            className="shrink-0 bg-[#1e3a5f] text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-[#0f1d33] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                          >
+                            {savingReportsTo ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save'}
+                          </button>
+                        </div>
+                        {reportsToMessage && (
+                          <p className={`text-xs mt-2 ${reportsToMessage.type === 'success' ? 'text-emerald-700' : 'text-red-700'}`}>{reportsToMessage.text}</p>
+                        )}
+                        <p className="text-[11px] text-[#a0abbb] mt-2">
+                          Only affects sales made from now on — nothing already recorded changes. Their whole existing team moves with them.
+                        </p>
+                      </>
+                    )}
+                  </div>
+                )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -534,6 +659,67 @@ export default function UserManagementModule({ currentUserRole, currentUserId }:
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ---------- Blocked-by-pending-sales popup ---------- */}
+      {blockedPendingSales && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#0f1d33]/50 backdrop-blur-sm" onClick={() => setBlockedPendingSales(null)}>
+          <div
+            className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[85vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-3 p-5 border-b border-[#e8ecf2] bg-amber-50 shrink-0">
+              <div className="flex items-start gap-2.5">
+                <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
+                <div>
+                  <h3 className="text-base font-bold text-[#0f1d33]">Can&apos;t reassign yet</h3>
+                  <p className="text-xs text-[#5a6a82] mt-1">
+                    {blockedPendingSales.length} sale{blockedPendingSales.length === 1 ? ' is' : 's are'} still pending in this person&apos;s team. Commission for a sale only gets
+                    locked in once it&apos;s marked <span className="font-semibold text-[#0f1d33]">Registration Done</span> — reassigning now would risk it paying out on a
+                    different chain than the one that existed when the customer actually bought. Resolve the sale(s) below first (customer payment, then Registration Done),
+                    then come back and reassign.
+                  </p>
+                </div>
+              </div>
+              <button type="button" onClick={() => setBlockedPendingSales(null)} className="text-[#5a6a82] hover:text-[#0f1d33] transition-colors rounded-full p-1 hover:bg-white/60 shrink-0">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="overflow-y-auto p-3 space-y-2">
+              {blockedPendingSales.map((s) => (
+                <div key={s.registrationId} className="border border-[#e8ecf2] rounded-lg p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-semibold text-[#0f1d33] truncate">
+                      {s.projectName}
+                      {s.areaName && <span className="text-[#5a6a82] font-normal"> — {s.areaName}</span>}
+                    </p>
+                    <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-amber-700 bg-amber-50 px-2 py-0.5 rounded">
+                      <Clock className="w-3 h-3" /> Pending
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-1 mt-2 text-xs text-[#5a6a82]">
+                    <p>
+                      Customer: <span className="text-[#0f1d33] font-medium">{s.customerName}</span>
+                    </p>
+                    <p>
+                      Sold by: <span className="text-[#0f1d33] font-medium">{s.sellerName}</span>
+                    </p>
+                    <p>
+                      Plot size: <span className="text-[#0f1d33] font-medium">{s.plotSizeSqyd} sq.yd</span>
+                    </p>
+                    <p>
+                      Submitted: <span className="text-[#0f1d33] font-medium">{new Date(s.submittedAt).toLocaleDateString()}</span>
+                    </p>
+                  </div>
+                  <p className="text-[10px] text-[#a0abbb] mt-2 font-mono truncate" title={s.registrationId}>
+                    Registration ID: {s.registrationId}
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
         </div>

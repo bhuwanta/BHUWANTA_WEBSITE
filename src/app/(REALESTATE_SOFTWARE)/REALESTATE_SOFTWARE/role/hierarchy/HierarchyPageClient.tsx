@@ -13,7 +13,7 @@ export default function HierarchyPageClient() {
         <p className="text-xs text-[#5a6a82] ml-2 truncate hidden md:block">Click a card to expand its team.</p>
       </div>
       <div className="flex-1 min-h-0">
-        <HierarchyGraph />
+        <HierarchyGraph autoExpandAll />
       </div>
     </div>
   );

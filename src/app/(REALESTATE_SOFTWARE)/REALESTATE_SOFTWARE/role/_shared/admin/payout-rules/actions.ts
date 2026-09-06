@@ -14,10 +14,10 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { verifyCaller } from '../../auth'
 import { isAdminPeer, isCommissionEligible, getSalesRoleOrder, ROLE_LABELS, type RealEstateRole } from '../../permissions'
-import { getUplineChain } from '../../downline'
+import { getUplineChain, getSubtreePendingSales } from '../../downline'
 import { computeCommissionBreakdown, computePool, type CommissionRatesMap } from '../../commission'
 
-type PayoutScope = 'chain' | 'company_wide' | 'director_assigned'
+type PayoutScope = 'chain' | 'company_wide' | 'director_assigned' | 'company_wide_split'
 
 /** Only IT/CEO/Governing Council may read or change payout policy. The
  * page itself is IT-only (role/it/payout-rules), but keeping the check
@@ -33,7 +33,7 @@ async function requireAdminPeer() {
 
 /** Non-sales roles that can still earn commission, in rank order above
  * the sales tiers. Sales-tier roles come from S_role_definitions. */
-const NON_SALES_COMMISSION_ROLES: RealEstateRole[] = ['governing_council', 'ceo']
+const NON_SALES_COMMISSION_ROLES: RealEstateRole[] = ['governing_council', 'ceo', 'company']
 
 /** CEO/Governing Council's renamed labels (S_role_labels, migration
  * 011) — an absent row means "use the ROLE_LABELS static default",
@@ -100,7 +100,7 @@ export async function setRoleScopeAction(roleCode: string, scope: PayoutScope) {
     const verified = await requireAdminPeer()
     if (!verified.ok) return { success: false, error: verified.error }
 
-    if (scope !== 'chain' && scope !== 'company_wide' && scope !== 'director_assigned') {
+    if (scope !== 'chain' && scope !== 'company_wide' && scope !== 'director_assigned' && scope !== 'company_wide_split') {
       return { success: false, error: 'Invalid payout scope.' }
     }
 
@@ -116,6 +116,8 @@ export async function setRoleScopeAction(roleCode: string, scope: PayoutScope) {
       message:
         scope === 'company_wide'
           ? 'Every active holder of this role now earns on every sale company-wide.'
+          : scope === 'company_wide_split'
+          ? "Every active holder earns on every sale company-wide, but this role's marginal cut is now split equally among all of them."
           : scope === 'director_assigned'
           ? 'Only the Governing Council member assigned to the selling Director now earns on that sale.'
           : "This role now only earns on sales made inside its own wing (the seller's parent chain).",
@@ -202,11 +204,28 @@ export async function previewPayoutAction(sellerId: string) {
       rates
     )
 
+    // Same 'company_wide_split' division runCommissionPayout applies
+    // (payout-engine.ts) — otherwise this preview would show each CEO
+    // earning the full marginal cut, which the real payout no longer
+    // does once that role is split-scoped (migration 013).
+    const { data: splitScopeRows } = await supabaseAdmin.from('s_payout_rules').select('role_code').eq('scope', 'company_wide_split')
+    const splitRoles = new Set((splitScopeRows || []).map((r: any) => r.role_code as string))
+    // Seller (index 0) excluded from the count and the division, same as
+    // payout-engine.ts — see the comment there.
+    const roleCounts = new Map<string, number>()
+    eligibleChain.slice(1).forEach((c) => roleCounts.set(c.role, (roleCounts.get(c.role) || 0) + 1))
+    const splitLines = lines.map((line, i) => {
+      const n = roleCounts.get(line.role) || 1
+      if (i === 0 || !splitRoles.has(line.role) || n <= 1) return line
+      const rawAmountPaise = Math.round(line.rawAmount * 100) / n
+      return { ...line, percentage: line.percentage / n, rawAmount: rawAmountPaise / 100, amount: Math.ceil(rawAmountPaise / 100) }
+    })
+
     const ids = eligibleChain.map((c) => c.id)
     const { data: peopleData } = await supabaseAdmin.from('s_realestate_users').select('id, full_name').in('id', ids)
     const nameById = new Map((peopleData || []).map((p: any) => [p.id as string, p.full_name as string]))
 
-    const payees = lines
+    const payees = splitLines
       .map((line, i) => ({
         id: eligibleChain[i].id,
         full_name: nameById.get(eligibleChain[i].id) || 'Unknown',
@@ -293,7 +312,12 @@ export async function getPreviewRolesAction() {
  * Only matters while governing_council's scope is 'director_assigned',
  * but returned unconditionally so the page can show the section as
  * informational even when scope is set back to chain/company_wide. */
-export async function getDirectorGcAssignmentsAction() {
+export async function getDirectorGcAssignmentsAction(): Promise<{
+  success: boolean
+  error?: string
+  directors: { directorId: string; directorName: string; gcId: string | null; gcName: string | null }[]
+  gcMembers: { id: string; full_name: string }[]
+}> {
   try {
     const verified = await requireAdminPeer()
     if (!verified.ok) return { success: false, error: verified.error, directors: [], gcMembers: [] }
@@ -345,6 +369,22 @@ export async function setDirectorGcAction(directorId: string, gcId: string) {
     ])
     if (!director || director.role !== 'director') return { success: false, error: 'Director not found.' }
     if (!gc || gc.role !== 'governing_council') return { success: false, error: 'Governing Council member not found.' }
+
+    // Blocked, not just warned: reassigning this Director changes which
+    // Governing Council member gets paid on every sale from their WHOLE
+    // wing (findUplineDirectorId + S_director_gc resolve GC per-sale off
+    // the seller's own Director) — including sales already submitted but
+    // not yet "Registration Done", since that's when the chain actually
+    // gets walked and locked in, not at submission time. See
+    // getSubtreePendingSales for the full reasoning.
+    const pendingSales = await getSubtreePendingSales(supabaseAdmin, directorId)
+    if (pendingSales.length > 0) {
+      return {
+        success: false,
+        error: `Cannot reassign ${director.full_name || 'this Director'} right now — ${pendingSales.length} sale${pendingSales.length === 1 ? ' is' : 's are'} still pending in this wing. Resolve them first (customer payment + Registration Done), then reassign.`,
+        pendingSales,
+      }
+    }
 
     const { error } = await supabaseAdmin
       .from('s_director_gc')

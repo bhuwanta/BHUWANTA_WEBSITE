@@ -40,11 +40,12 @@ export async function getAdminDashboardStatsAction() {
     const caller = await verifyCaller()
     const supabaseAdmin = createServiceClient()
 
-    const [usersRes, areasRes, projectsRes, registrationsRes, rateRes] = await Promise.all([
-      supabaseAdmin.from('s_realestate_users').select('role', { count: 'exact', head: false }),
+    const [areasRes, projectsRes, doneRes, pendingRes, cancelledRes, rateRes] = await Promise.all([
       supabaseAdmin.from('s_areas').select('id', { count: 'exact', head: true }),
       supabaseAdmin.from('s_projects').select('id', { count: 'exact', head: true }),
-      supabaseAdmin.from('s_new_registrations').select('status'),
+      supabaseAdmin.from('s_new_registrations').select('id', { count: 'exact', head: true }).eq('status', 'registration_done'),
+      supabaseAdmin.from('s_new_registrations').select('id', { count: 'exact', head: true }).eq('status', 'pending_registration'),
+      supabaseAdmin.from('s_new_registrations').select('id', { count: 'exact', head: true }).eq('status', 'cancelled'),
       // CEO/Governing Council's own tier % (§3a) — IT has no row in
       // S_commission_rates at all (not commission-eligible), so this
       // naturally resolves to null for IT without any special-casing.
@@ -53,41 +54,55 @@ export async function getAdminDashboardStatsAction() {
 
     const commissionPercentage = rateRes.data ? Number((rateRes.data as any).percentage) : null
 
-    const usersByRole: Record<string, number> = {};
-    (usersRes.data || []).forEach((u: any) => {
-      usersByRole[u.role] = (usersByRole[u.role] || 0) + 1;
-    });
-
-    const registrationCounts = { pending_registration: 0, registration_done: 0, cancelled: 0 };
-    (registrationsRes.data || []).forEach((r: any) => {
-      if (r.status in registrationCounts) {
-        registrationCounts[r.status as keyof typeof registrationCounts]++;
-      }
-    });
+    const registrationCounts = {
+      pending_registration: pendingRes.count || 0,
+      registration_done: doneRes.count || 0,
+      cancelled: cancelledRes.count || 0,
+    };
 
     // Present in a stable, meaningful order (admin peers first, then the
     // real sales-tier cascade top-to-bottom — built-in + any
     // admin-created roles, from S_role_definitions) rather than
     // whatever order the DB returns.
     const salesRoleOrder = await getSalesRoleOrder(supabaseAdmin)
-    const roleOrder = ['it', 'ceo', 'governing_council', ...salesRoleOrder.map((r) => r.role_code), 'customer'];
+    const roleOrder = ['it', 'company', 'ceo', 'governing_council', ...salesRoleOrder.map((r) => r.role_code), 'customer'];
     const dynamicLabels = new Map(salesRoleOrder.map((r) => [r.role_code, r.label]));
     // CEO/Governing Council's renamed labels (migration 011) — a direct
     // query rather than going through getFixedRoleLabelsAction, since
     // this is already server-side in the same request.
     const { data: fixedLabelRows } = await supabaseAdmin.from('s_role_labels').select('role_code, label')
     ;(fixedLabelRows || []).forEach((r: any) => dynamicLabels.set(r.role_code, r.label))
+
+    // One exact-count query per role, head:true — NOT a bulk fetch of
+    // every user's role column grouped client-side. Supabase's hosted
+    // platform caps the ROWS a query body can return (1000 by default,
+    // regardless of count:'exact' being requested), so past 1,000 total
+    // users a bulk fetch silently truncates and undercounts whichever
+    // roles' rows happen to sort past that cutoff — confirmed live: this
+    // dashboard read "Total Users: 1000" against a real 1,093, and the
+    // per-role breakdown was similarly short for the deepest sales
+    // tiers. head:true requests return no body rows at all, so the cap
+    // never applies; the count itself is still exact regardless of size.
+    const roleCounts = await Promise.all(
+      roleOrder.map((role) => supabaseAdmin.from('s_realestate_users').select('id', { count: 'exact', head: true }).eq('role', role))
+    )
     const usersByRoleOrdered = roleOrder
-      .filter((r) => usersByRole[r])
-      // dynamicLabels checked first — see the identical comment in
-      // CommissionRatesPage.tsx's roleLabel(): the 8 built-in sales-tier
-      // roles already have a static ROLE_LABELS entry, which would
-      // otherwise always shadow a rename.
-      .map((r) => ({ role: r, label: dynamicLabels.get(r) || ROLE_LABELS[r as keyof typeof ROLE_LABELS] || r, count: usersByRole[r] }));
+      .map((role, i) => ({
+        role,
+        // dynamicLabels checked first — see the identical comment in
+        // CommissionRatesPage.tsx's roleLabel(): the 8 built-in sales-tier
+        // roles already have a static ROLE_LABELS entry, which would
+        // otherwise always shadow a rename.
+        label: dynamicLabels.get(role) || ROLE_LABELS[role as keyof typeof ROLE_LABELS] || role,
+        count: roleCounts[i].count || 0,
+      }))
+      .filter((r) => r.count > 0);
+
+    const totalUsers = usersByRoleOrdered.reduce((sum, r) => sum + r.count, 0);
 
     return {
       success: true,
-      totalUsers: (usersRes.data || []).length,
+      totalUsers,
       usersByRole: usersByRoleOrdered,
       totalAreas: areasRes.count || 0,
       totalProjects: projectsRes.count || 0,

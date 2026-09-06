@@ -3,9 +3,9 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { verifyCaller } from '../auth'
 import { sendSetupPasswordEmail } from '@/lib/emails/resend'
-import { canCreateRoleDynamic, canManageRoleDynamic, canViewRole, isAdminPeer, isOperationManager, getSalesRoleOrder, type RealEstateRole } from '../permissions'
+import { canCreateRoleDynamic, canManageRoleDynamic, canViewRole, canViewCompanyWide, isAdminPeer, isOperationManager, isSalesRole, getSalesRoleOrder, type RealEstateRole } from '../permissions'
 import { normalizePhone, validatePhone } from '../phone-policy'
-import { getDownlineIds } from '../downline'
+import { getDownlineIds, getSubtreePendingSales } from '../downline'
 import { validatePassword } from '../password-policy'
 
 export async function checkUserManagementModuleStatusAction(role: RealEstateRole) {
@@ -63,9 +63,23 @@ export async function createExecutiveAction(
 
     const supabaseAdmin = createServiceClient()
 
-    const rankOrder = await getSalesRoleOrder(supabaseAdmin)
-    if (!canCreateRoleDynamic(callerRole, data.role, rankOrder)) {
-      return { success: false, error: `A ${callerRole.replace('_', ' ')} cannot create a ${data.role.replace('_', ' ')} profile.` };
+    // Company is a singleton, IT-only creation — a bespoke branch rather
+    // than canCreateRoleDynamic (which always denies 'company' as a
+    // target, precisely so this can't be reached through the generic
+    // admin-peer path by CEO/Governing Council too).
+    if (data.role === 'company') {
+      if (callerRole !== 'it') {
+        return { success: false, error: 'Only IT can create the Company account.' }
+      }
+      const { count: companyCount } = await supabaseAdmin.from('s_realestate_users').select('id', { count: 'exact', head: true }).eq('role', 'company')
+      if ((companyCount || 0) > 0) {
+        return { success: false, error: 'A Company account already exists — only one is allowed.' }
+      }
+    } else {
+      const rankOrder = await getSalesRoleOrder(supabaseAdmin)
+      if (!canCreateRoleDynamic(callerRole, data.role, rankOrder)) {
+        return { success: false, error: `A ${callerRole.replace('_', ' ')} cannot create a ${data.role.replace('_', ' ')} profile.` };
+      }
     }
 
     // Normalize before validating AND before writing, so the stored
@@ -103,7 +117,7 @@ export async function createExecutiveAction(
     // Manager aren't part of the downline tree, so NULL. Every
     // sales-tier profile's parent_id is whoever created it (§6's
     // resolved upline-chain question).
-    const parentId = (isAdminPeer(data.role) || isOperationManager(data.role)) ? null : callerId;
+    const parentId = (isAdminPeer(data.role) || isOperationManager(data.role) || data.role === 'company') ? null : callerId;
 
     const { data: insertedUser, error: profileError } = await supabaseAdmin
       .from('s_realestate_users')
@@ -113,6 +127,12 @@ export async function createExecutiveAction(
         full_name: data.fullName,
         role: data.role,
         parent_id: parentId,
+        // Migration 012: audit-only, records the real creator even for
+        // admin peers (whose parent_id is always NULL above, since
+        // they're deliberately outside the downline/org-chart tree —
+        // e.g. a Governing Council member is a child of every active
+        // CEO in the hierarchy graph, not just whoever created them).
+        created_by: callerId,
         is_active: true,
       })
       .select('bhuwanta_id')
@@ -142,6 +162,27 @@ export async function createExecutiveAction(
           .insert(allProjects.map((p: { id: string }) => ({ project_id: p.id, director_id: userId })))
         if (assignError) {
           console.error('Error auto-assigning projects to new Director:', assignError)
+        }
+      }
+
+      // 2c. Migration 012 / 011: a Director created directly BY a
+      // Governing Council member starts already assigned to that GC's
+      // wing — matches HIERARCHY.md's model (GC creates Directors under
+      // them; that Director's whole downline belongs to that wing, not
+      // any other GC's). Only fires when the caller IS a GC; a Director
+      // created by IT/CEO directly still has no GC to infer, so still
+      // starts in "Unassigned Directors" on the hierarchy graph, same
+      // as before — that gap stays visible on purpose rather than
+      // guessed at. Non-fatal, same as the project-assignment default
+      // above: this is a convenience default, reassignable any time
+      // afterward on the Payout Rules page, not a requirement for the
+      // account to exist.
+      if (callerRole === 'governing_council') {
+        const { error: gcAssignError } = await supabaseAdmin
+          .from('s_director_gc')
+          .upsert({ director_id: userId, gc_id: callerId, updated_by: callerId, updated_at: new Date().toISOString() }, { onConflict: 'director_id' })
+        if (gcAssignError) {
+          console.error('Error auto-assigning new Director to creating Governing Council member:', gcAssignError)
         }
       }
     }
@@ -192,8 +233,10 @@ export async function getExecutivesAction(
       .from('s_realestate_users')
       .select('id, bhuwanta_id, full_name, role, phone, parent_id, is_active, created_at', { count: 'exact' })
 
-    if (isAdminPeer(callerRole)) {
-      // IT/CEO/Governing Council: see everyone, no downline scoping.
+    if (canViewCompanyWide(callerRole)) {
+      // IT/CEO/Governing Council/Company: see everyone, no downline
+      // scoping (Company is read-only here — this function only lists,
+      // it never mutates).
       if (roleFilter !== 'all') {
         query = query.eq('role', roleFilter)
       }
@@ -466,7 +509,18 @@ export async function getCreatableRolesAction(callerRole: RealEstateRole): Promi
     // CEO→LIA run — everyone from CEO down to LIA reads as one
     // unbroken, strictly descending-by-percentage ladder (salesRoleCodes
     // is already highest-rank-first from getSalesRoleOrder).
-    return ['it', 'operation_manager', 'ceo', 'governing_council', ...salesRoleCodes] as RealEstateRole[];
+    const creatable: RealEstateRole[] = ['it', 'operation_manager', 'ceo', 'governing_council', ...salesRoleCodes];
+
+    // Company is a singleton, IT-only creation (createExecutiveAction
+    // enforces this server-side regardless of what this list shows) — so
+    // it's only ever offered to IT, and only while none exists yet. CEO
+    // and Governing Council never see it as an option.
+    if (callerRole === 'it') {
+      const { count: companyCount } = await supabaseAdmin.from('s_realestate_users').select('id', { count: 'exact', head: true }).eq('role', 'company')
+      if (!companyCount) creatable.unshift('company')
+    }
+
+    return creatable;
   }
   return salesRoleCodes.filter((r) => canCreateRoleDynamic(callerRole, r, rankOrder));
 }
@@ -489,4 +543,125 @@ export async function getFilterableRolesAction(callerRole: RealEstateRole): Prom
     return [...creatable, 'customer'] as RealEstateRole[]
   }
   return creatable
+}
+
+/** IT-only. A Director's real "reports to" is resolved through
+ * S_director_gc (migration 011), never parent_id — their parent_id is
+ * creation lineage (whichever admin peer's account created them), not a
+ * payout relationship. Every other sales tier's parent_id IS the real
+ * upline, so this function is only ever called for non-Director roles;
+ * the Edit User modal routes a Director to the GC-picker instead. */
+async function requireIt() {
+  const caller = await verifyCaller()
+  if (!caller || caller.role !== 'it') {
+    return { ok: false as const, error: 'Only IT can change who someone reports to.' }
+  }
+  return { ok: true as const, id: caller.id }
+}
+
+/** Every active, non-Director sales-tier person who could validly
+ * become `userId`'s new upline: outranks them (by the LIVE rank order,
+ * S_role_definitions — never a hardcoded tier list, so a custom
+ * admin-created role in an unusual rank position is still handled
+ * correctly), isn't `userId` themselves, and isn't already inside
+ * `userId`'s own downline (which would create a cycle — reassigning
+ * someone to report to their own descendant). */
+export async function getReportsToCandidatesAction(userId: string) {
+  try {
+    const verified = await requireIt()
+    if (!verified.ok) return { success: false, error: verified.error, data: [] as { id: string; full_name: string; role: string }[] }
+
+    const supabaseAdmin = createServiceClient()
+
+    const { data: target } = await supabaseAdmin.from('s_realestate_users').select('id, role').eq('id', userId).maybeSingle()
+    if (!target || target.role === 'director' || !isSalesRole(target.role as RealEstateRole)) {
+      return { success: false, error: 'Not a reassignable sales-tier role.', data: [] as { id: string; full_name: string; role: string }[] }
+    }
+
+    const rankOrder = await getSalesRoleOrder(supabaseAdmin)
+    const rankIndex = new Map(rankOrder.map((r, i) => [r.role_code, i]))
+    const targetRank = rankIndex.get(target.role)
+    if (targetRank === undefined) return { success: false, error: 'Unknown role rank.', data: [] as { id: string; full_name: string; role: string }[] }
+
+    const ownDownline = new Set(await getDownlineIds(supabaseAdmin, userId))
+
+    const { data: candidates } = await supabaseAdmin
+      .from('s_realestate_users')
+      .select('id, full_name, role')
+      .eq('is_active', true)
+      .order('full_name', { ascending: true })
+
+    const data = (candidates || [])
+      .filter((c: any) => {
+        if (c.id === userId || ownDownline.has(c.id)) return false
+        const cRank = rankIndex.get(c.role)
+        return cRank !== undefined && cRank < targetRank
+      })
+      .map((c: any) => ({ id: c.id as string, full_name: c.full_name as string, role: c.role as string }))
+
+    return { success: true, data }
+  } catch (error: any) {
+    console.error('Error loading reports-to candidates:', error)
+    return { success: false, error: error.message || 'Failed to load candidates.', data: [] as { id: string; full_name: string; role: string }[] }
+  }
+}
+
+/** IT-only. Reassigns a non-Director sales-tier person's parent_id —
+ * their whole existing downline comes with them automatically, since
+ * those descendants' own parent_id values are untouched and still point
+ * at this person. Blocked outright (not just warned) if this person or
+ * anyone in their downline has a sale sitting in pending_registration
+ * right now — see getSubtreePendingSales for why that's a real, not
+ * theoretical, danger. Never retroactive: only sales that reach
+ * "Registration Done" after this change use the new chain. */
+export async function reassignReportsToAction(userId: string, newParentId: string) {
+  try {
+    const verified = await requireIt()
+    if (!verified.ok) return { success: false, error: verified.error }
+
+    const supabaseAdmin = createServiceClient()
+
+    const [{ data: target }, { data: newParent }] = await Promise.all([
+      supabaseAdmin.from('s_realestate_users').select('id, full_name, role').eq('id', userId).maybeSingle(),
+      supabaseAdmin.from('s_realestate_users').select('id, full_name, role, is_active').eq('id', newParentId).maybeSingle(),
+    ])
+
+    if (!target) return { success: false, error: 'User not found.' }
+    if (target.role === 'director' || !isSalesRole(target.role as RealEstateRole)) {
+      return { success: false, error: 'This role’s "Reports To" is not reassignable here.' }
+    }
+    if (!newParent || !newParent.is_active) return { success: false, error: 'The selected upline was not found or is inactive.' }
+    if (newParentId === userId) return { success: false, error: 'A person cannot report to themselves.' }
+
+    const rankOrder = await getSalesRoleOrder(supabaseAdmin)
+    const rankIndex = new Map(rankOrder.map((r, i) => [r.role_code, i]))
+    const targetRank = rankIndex.get(target.role)
+    const parentRank = rankIndex.get(newParent.role)
+    if (targetRank === undefined || parentRank === undefined || parentRank >= targetRank) {
+      return { success: false, error: `${newParent.full_name || 'That person'} does not outrank ${target.full_name || 'this person'} — pick someone higher in the sales cascade.` }
+    }
+
+    const ownDownline = new Set(await getDownlineIds(supabaseAdmin, userId))
+    if (ownDownline.has(newParentId)) {
+      return { success: false, error: `${newParent.full_name || 'That person'} is currently inside ${target.full_name || 'this person'}'s own team — reassigning to them would create a loop.` }
+    }
+
+    // Blocked, not just warned — see getSubtreePendingSales.
+    const pendingSales = await getSubtreePendingSales(supabaseAdmin, userId)
+    if (pendingSales.length > 0) {
+      return {
+        success: false,
+        error: `Cannot reassign ${target.full_name || 'this person'} right now — ${pendingSales.length} sale${pendingSales.length === 1 ? ' is' : 's are'} still pending in their team. Resolve them first (customer payment + Registration Done), then reassign.`,
+        pendingSales,
+      }
+    }
+
+    const { error } = await supabaseAdmin.from('s_realestate_users').update({ parent_id: newParentId }).eq('id', userId)
+    if (error) throw error
+
+    return { success: true, message: `${target.full_name || 'This person'} now reports to ${newParent.full_name || 'the selected person'}.` }
+  } catch (error: any) {
+    console.error('Error reassigning reports-to:', error)
+    return { success: false, error: error.message || 'Failed to reassign.' }
+  }
 }

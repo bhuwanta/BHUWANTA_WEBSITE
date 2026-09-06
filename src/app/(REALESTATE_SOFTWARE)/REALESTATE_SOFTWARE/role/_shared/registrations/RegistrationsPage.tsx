@@ -340,12 +340,12 @@ export default function RegistrationsPage({ currentUserRole, currentUserId }: Re
             className="w-full md:w-72 bg-white border border-[#e8ecf2] rounded-lg pl-9 pr-3 py-2.5 text-sm text-[#0f1d33] focus:outline-none focus:ring-1 focus:ring-[#c4a55a]"
           />
         </div>
-        <div className="flex items-center gap-2 bg-white p-1.5 rounded-xl border border-[#e8ecf2] w-fit shadow-sm">
+        <div className="flex items-center gap-2 bg-white p-1.5 rounded-xl border border-[#e8ecf2] shadow-sm max-w-full overflow-x-auto">
           {(['all', 'pending_registration', 'registration_done', 'cancelled'] as const).map((s) => (
             <button
               key={s}
               onClick={() => setStatusFilter(s)}
-              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${statusFilter === s ? 'bg-[#1e3a5f] text-white shadow' : 'text-[#5a6a82] hover:bg-[#f3f5f8]'}`}
+              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap shrink-0 ${statusFilter === s ? 'bg-[#1e3a5f] text-white shadow' : 'text-[#5a6a82] hover:bg-[#f3f5f8]'}`}
             >
               {s === 'all' ? 'All' : STATUS_LABEL[s]}
             </button>
@@ -354,7 +354,7 @@ export default function RegistrationsPage({ currentUserRole, currentUserId }: Re
       </div>
 
       <div className="bg-white border border-[#e8ecf2] shadow-sm rounded-xl flex-1 overflow-auto min-h-0">
-        <table className="w-full text-left border-collapse">
+        <table className="w-full min-w-[1100px] text-left border-collapse">
           <thead className="bg-[#f7f8fa] sticky top-0 z-10 shadow-[0_1px_0_#e8ecf2]">
             <tr className="text-[10px] uppercase tracking-wide text-[#5a6a82]">
               <th className="py-2 px-1.5 font-semibold cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('srno')}>

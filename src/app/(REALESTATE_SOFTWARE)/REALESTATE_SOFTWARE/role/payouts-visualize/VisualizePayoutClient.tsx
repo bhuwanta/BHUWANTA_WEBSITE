@@ -8,7 +8,7 @@
 import React, { useEffect, useState } from 'react';
 import { Loader2, Coins, AlertCircle } from 'lucide-react';
 import HierarchyGraph from '../_shared/admin/hierarchy/HierarchyGraph';
-import { getPayoutLineageForRegistrationAction } from '../_shared/admin/payouts/actions';
+import { getPayoutLineageForRegistrationAction, type SaleFinancials } from '../_shared/admin/payouts/actions';
 
 interface VisualizePayoutClientProps {
   registrationId: string | null;
@@ -17,6 +17,8 @@ interface VisualizePayoutClientProps {
 export default function VisualizePayoutClient({ registrationId }: VisualizePayoutClientProps) {
   const [highlightIds, setHighlightIds] = useState<Set<string>>(new Set());
   const [expandPath, setExpandPath] = useState<string[]>([]);
+  const [sellerId, setSellerId] = useState<string | null>(null);
+  const [financials, setFinancials] = useState<SaleFinancials | null>(null);
   const [saleInfo, setSaleInfo] = useState<{ sellerName: string; projectName: string; plotSize: number | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +34,8 @@ export default function VisualizePayoutClient({ registrationId }: VisualizePayou
       if (res.success && res.sellerId) {
         setHighlightIds(new Set([res.sellerId, ...res.payeeIds]));
         setExpandPath(res.expandPath);
+        setSellerId(res.sellerId);
+        setFinancials(res.financials);
         setSaleInfo({ sellerName: res.sellerName, projectName: res.projectName, plotSize: res.plotSize });
       } else {
         setError(res.error || 'Could not load this sale.');
@@ -69,7 +73,7 @@ export default function VisualizePayoutClient({ registrationId }: VisualizePayou
             </p>
           </div>
         ) : (
-          <HierarchyGraph highlightIds={highlightIds} expandPath={expandPath} />
+          <HierarchyGraph highlightIds={highlightIds} expandPath={expandPath} sellerId={sellerId || undefined} financials={financials} />
         )}
       </div>
     </div>

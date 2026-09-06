@@ -25,6 +25,54 @@ export async function getDownlineIds(supabaseAdmin: ServiceClient, rootId: strin
   return ids
 }
 
+export interface PendingSaleInfo {
+  registrationId: string
+  projectName: string
+  areaName: string
+  customerName: string
+  sellerName: string
+  submittedAt: string
+  plotSizeSqyd: number
+}
+
+/** Every 'pending_registration' sale submitted by `rootId` or anyone in
+ * their downline — the exact set whose eventual payout would change if
+ * `rootId` (or someone above them) gets moved to a different upline
+ * right now. runCommissionPayout only runs at "Registration Done" time
+ * (registrations/actions.ts), walking whatever parent_id chain exists
+ * AT THAT MOMENT — not a snapshot from when the customer originally
+ * bought. So a reassignment made while a sale is still sitting
+ * pending_registration would silently change who gets paid on a sale
+ * that already happened, with no visible warning to anyone. Used to
+ * BLOCK a "Reports To" / Director→GC reassignment outright rather than
+ * let that happen — see reassignReportsToAction and setDirectorGcAction. */
+export async function getSubtreePendingSales(supabaseAdmin: ServiceClient, rootId: string): Promise<PendingSaleInfo[]> {
+  const downlineIds = await getDownlineIds(supabaseAdmin, rootId)
+  const scopeIds = [rootId, ...downlineIds]
+
+  const { data } = await supabaseAdmin
+    .from('s_new_registrations')
+    .select(
+      `id, plot_size_sqyd, submitted_at, customer_name,
+       s_projects ( name ),
+       s_areas ( name ),
+       seller:s_realestate_users!submitted_by ( full_name )`
+    )
+    .in('submitted_by', scopeIds)
+    .eq('status', 'pending_registration')
+    .order('submitted_at', { ascending: true })
+
+  return (data || []).map((r: any) => ({
+    registrationId: r.id as string,
+    projectName: r.s_projects?.name || 'Unknown project',
+    areaName: r.s_areas?.name || '',
+    customerName: r.customer_name as string,
+    sellerName: r.seller?.full_name || 'Unknown',
+    submittedAt: r.submitted_at as string,
+    plotSizeSqyd: Number(r.plot_size_sqyd),
+  }))
+}
+
 /** Every role's payout scope, from S_payout_rules (migration 010/011). A
  * role with no row is treated as 'chain' — the restrictive default, so a
  * newly created role can never accidentally start being paid on every
@@ -32,7 +80,7 @@ export async function getDownlineIds(supabaseAdmin: ServiceClient, rootId: strin
  * (migration 011) is resolved through S_director_gc — only
  * governing_council uses it today; see the company-wide-append block in
  * getUplineChain below. */
-export type PayoutScope = 'chain' | 'company_wide' | 'director_assigned'
+export type PayoutScope = 'chain' | 'company_wide' | 'director_assigned' | 'company_wide_split'
 
 async function getPayoutScopes(supabaseAdmin: ServiceClient): Promise<Map<string, PayoutScope>> {
   const { data } = await supabaseAdmin.from('s_payout_rules').select('role_code, scope')
@@ -108,7 +156,12 @@ export async function getUplineChain(
 
   const seen = new Set<string>([sellerId, ...chain.map((c) => c.id)])
 
-  const companyWideRoles = [...scopes.entries()].filter(([, scope]) => scope === 'company_wide').map(([role]) => role)
+  // 'company_wide_split' (migration 013, e.g. CEO) is appended exactly
+  // like 'company_wide' — every active holder still earns on every
+  // sale. Only WHO earns is decided here; HOW MUCH each of several
+  // holders keeps (divided equally for a split role) is payout-engine.ts's
+  // job, applied after this chain is built.
+  const companyWideRoles = [...scopes.entries()].filter(([, scope]) => scope === 'company_wide' || scope === 'company_wide_split').map(([role]) => role)
 
   for (const role of companyWideRoles) {
     const { data: holders } = await supabaseAdmin
@@ -171,7 +224,8 @@ export async function getUplineChain(
     if (salesRankOf.has(role)) return roleOrder.length - salesRankOf.get(role)!
     if (role === 'governing_council') return roleOrder.length + 1
     if (role === 'ceo') return roleOrder.length + 2
-    return roleOrder.length + 3
+    if (role === 'company') return roleOrder.length + 3
+    return roleOrder.length + 4
   }
   chain.sort((a, b) => chainPosition(a.role) - chainPosition(b.role))
 

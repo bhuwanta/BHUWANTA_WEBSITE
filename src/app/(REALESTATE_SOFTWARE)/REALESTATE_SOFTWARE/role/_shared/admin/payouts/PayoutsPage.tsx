@@ -64,7 +64,7 @@ export default function PayoutsPage({ currentUserRole }: PayoutsPageProps = {}) 
     } else if (payoutsRes.error) {
       setError(payoutsRes.error);
     }
-    setChainRank([...roleOrderRes.data.map((r) => r.role_code)].reverse().concat(['governing_council', 'ceo']));
+    setChainRank([...roleOrderRes.data.map((r) => r.role_code)].reverse().concat(['governing_council', 'ceo', 'company']));
     const mergedLabels: Record<string, string> = {};
     roleOrderRes.data.forEach((r) => {
       mergedLabels[r.role_code] = r.label;
@@ -138,7 +138,23 @@ export default function PayoutsPage({ currentUserRole }: PayoutsPageProps = {}) 
       const lines = group.lines
         .slice()
         .sort((a, b) => chainRank.indexOf(a.role) - chainRank.indexOf(b.role))
-        .map((p, i, arr) => ({ ...p, previousRoleLabel: i === 0 ? null : roleLabel(arr[i - 1].role) }));
+        .map((p, i, arr) => ({
+          ...p,
+          previousRoleLabel: i === 0 ? null : roleLabel(arr[i - 1].role),
+          // How many lines on THIS sale share the same role — a
+          // 'company_wide_split' role (e.g. several active CEOs)
+          // produces one row per holder, each already carrying the
+          // divided-down commission_percentage/amount (payout-engine.ts,
+          // migration 013). >1 here means the tier's marginal cut was
+          // split, not that this person got the full cut. The seller's
+          // own line is excluded on both sides, matching how the engine
+          // itself excludes it from the split — theirs is a personal
+          // full-rate commission, not a share of the role's band.
+          splitCount:
+            Number(p.previous_tier_percentage) === 0
+              ? 1
+              : arr.filter((x) => x.role === p.role && Number(x.previous_tier_percentage) !== 0).length,
+        }));
 
       return {
         ...group,
@@ -192,20 +208,20 @@ export default function PayoutsPage({ currentUserRole }: PayoutsPageProps = {}) 
       {error && <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800 max-w-xl shrink-0">{error}</div>}
 
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4 shrink-0">
-        <div className="flex items-center gap-2 bg-white p-1.5 rounded-xl border border-[#e8ecf2] w-fit shadow-sm shrink-0">
+        <div className="flex items-center gap-2 bg-white p-1.5 rounded-xl border border-[#e8ecf2] shadow-sm shrink-0 max-w-full overflow-x-auto">
           {(['pending', 'completed', 'all'] as const).map((s) => (
             <button
               key={s}
               onClick={() => setStatusFilter(s)}
-              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all capitalize ${statusFilter === s ? 'bg-[#1e3a5f] text-white shadow' : 'text-[#5a6a82] hover:bg-[#f3f5f8]'}`}
+              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all capitalize whitespace-nowrap shrink-0 ${statusFilter === s ? 'bg-[#1e3a5f] text-white shadow' : 'text-[#5a6a82] hover:bg-[#f3f5f8]'}`}
             >
               {s === 'pending' ? 'Pending / Processing' : s}
             </button>
           ))}
         </div>
 
-        <div className="flex items-center gap-3 shrink-0">
-          <div className="relative">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative flex-1 min-w-[220px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5a6a82]" />
             <input
               type="text"
@@ -238,7 +254,7 @@ export default function PayoutsPage({ currentUserRole }: PayoutsPageProps = {}) 
           </div>
         ) : (
           <div className="flex-1 overflow-auto min-h-0">
-            <table className="w-full text-sm border-collapse">
+            <table className="w-full min-w-[860px] text-sm border-collapse">
               <thead className="sticky top-0 bg-[#f7f8fa] z-10">
                 <tr className="border-b border-[#e8ecf2]">
                   <th className="text-left font-semibold text-[#5a6a82] text-xs uppercase tracking-wide px-4 py-3 w-12">Sr.No</th>
@@ -372,7 +388,15 @@ export default function PayoutsPage({ currentUserRole }: PayoutsPageProps = {}) 
                         ) : (
                           <>
                             {roleLabel(p.role)} rate {Number(p.tier_percentage)}% − {p.previousRoleLabel} rate {Number(p.previous_tier_percentage)}% ={' '}
-                            <span className="font-semibold not-italic text-[#5a6a82]">{Number(p.commission_percentage)}%</span>
+                            <span className="font-semibold not-italic text-[#5a6a82]">
+                              {Math.round((Number(p.tier_percentage) - Number(p.previous_tier_percentage)) * 100) / 100}%
+                            </span>
+                            {p.splitCount > 1 && (
+                              <>
+                                , split equally {p.splitCount} ways among every active {roleLabel(p.role)} ={' '}
+                                <span className="font-semibold not-italic text-[#5a6a82]">{Number(p.commission_percentage)}%</span> each
+                              </>
+                            )}
                           </>
                         )}
                       </p>

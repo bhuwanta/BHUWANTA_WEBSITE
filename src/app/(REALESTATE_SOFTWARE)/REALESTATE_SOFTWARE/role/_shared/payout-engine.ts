@@ -67,6 +67,34 @@ export async function runCommissionPayout(supabaseAdmin: ServiceClient, registra
       rates
     )
 
+    // Migration 013: a role scoped 'company_wide_split' (e.g. CEO) still
+    // gets one full-marginal line PER active holder out of
+    // computeCommissionBreakdown above — that function deliberately
+    // doesn't know several people share a tier (see its own doc
+    // comment). Here, those already-computed lines are divided back down
+    // equally among however many holders of that role are actually in
+    // this chain, so the group earns the tier's marginal cut once, split
+    // N ways, instead of each holder earning it in full. Re-ceils each
+    // person's own share to the next whole rupee, same rounding policy
+    // commission.ts already applies before any splitting.
+    const { data: splitScopeRows } = await supabaseAdmin.from('s_payout_rules').select('role_code').eq('scope', 'company_wide_split')
+    const splitRoles = new Set((splitScopeRows || []).map((r: any) => r.role_code as string))
+
+    // The seller (always index 0) is excluded from both the count and
+    // the division: their line is a personal commission for closing the
+    // sale at their own full rate, not the role-level band their
+    // colleagues share. A CEO who sells keeps their whole 30%; the OTHER
+    // active CEOs split the 3% band between them.
+    const roleCounts = new Map<string, number>()
+    eligibleChain.slice(1).forEach((c) => roleCounts.set(c.role, (roleCounts.get(c.role) || 0) + 1))
+
+    const splitLines = lines.map((line, i) => {
+      const n = roleCounts.get(line.role) || 1
+      if (i === 0 || !splitRoles.has(line.role) || n <= 1) return line
+      const rawAmountPaise = Math.round(line.rawAmount * 100) / n
+      return { ...line, percentage: line.percentage / n, rawAmount: rawAmountPaise / 100, amount: Math.ceil(rawAmountPaise / 100) }
+    })
+
     const scheduledFor = new Date(Date.now() + PAYOUT_DELAY_MS).toISOString()
 
     // Zip payee ids in by position FIRST, then drop the zero-amount
@@ -77,7 +105,7 @@ export async function runCommissionPayout(supabaseAdmin: ServiceClient, registra
     // Council entry that exists purely to anchor the baseline when a CEO
     // is the seller. Those carry no money, so writing them would just be
     // ₹0 noise in everyone's Payouts and Wallet views.
-    const rows = lines
+    const rows = splitLines
       .map((line, i) => ({
         registration_id: registrationId,
         payee_id: eligibleChain[i].id,

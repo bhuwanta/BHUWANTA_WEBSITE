@@ -54,7 +54,7 @@ export default function CommissionRatesPage() {
   // never rows in S_role_definitions), which is exactly when the
   // ROLE_LABELS fallback should apply.
   const roleLabel = (role: string): string => dynamicLabels[role] || ROLE_LABELS[role as RealEstateRole] || role;
-  const salesTierOrder = displayOrder.filter((r) => r !== 'ceo' && r !== 'governing_council');
+  const salesTierOrder = displayOrder.filter((r) => r !== 'company' && r !== 'ceo' && r !== 'governing_council');
 
   const load = async () => {
     setLoading(true);
@@ -66,7 +66,7 @@ export default function CommissionRatesPage() {
       });
       setRates(map);
     }
-    setDisplayOrder(['ceo', 'governing_council', ...roleOrderRes.data.map((r) => r.role_code)]);
+    setDisplayOrder(['company', 'ceo', 'governing_council', ...roleOrderRes.data.map((r) => r.role_code)]);
     const mergedLabels: Record<string, string> = {};
     roleOrderRes.data.forEach((r) => {
       mergedLabels[r.role_code] = r.label;
@@ -106,7 +106,12 @@ export default function CommissionRatesPage() {
     // rows in S_role_definitions (no rank concept for them). Kept as an
     // explicit gate rather than assumed-true so a future non-renameable
     // row type on this page fails safe.
-    const canRename = displayOrder.includes(role);
+    // Company is a real role_code (migration 013), not a rename-only
+    // fixed role (S_role_labels' CHECK constraint deliberately excludes
+    // it — see that migration) and must never be routed to
+    // renameSalesRoleAction either, which would incorrectly give it a
+    // row in S_role_definitions, the sales-tier cascade table.
+    const canRename = displayOrder.includes(role) && role !== 'company';
     const isFixedRole = role === 'ceo' || role === 'governing_council';
     if (canRename && !editNameValue.trim()) {
       setError('Enter a role name.');
@@ -332,7 +337,7 @@ export default function CommissionRatesPage() {
           </div>
         ) : (
           <div className="flex-1 overflow-auto min-h-0">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full min-w-[760px] text-left border-collapse">
               <thead className="sticky top-0 z-10">
                 <tr className="bg-[#f3f5f8] text-[#5a6a82] text-xs uppercase tracking-wider font-semibold border-b border-[#e8ecf2]">
                   <th className="p-4 w-16 cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('index')}>
@@ -358,7 +363,12 @@ export default function CommissionRatesPage() {
                   const rate = rates[role];
                   const isEditing = editingRole === role;
                   const isAdding = addingRole === role;
-                  const canRename = displayOrder.includes(role);
+                  // Company is a real role_code (migration 013), not a rename-only
+    // fixed role (S_role_labels' CHECK constraint deliberately excludes
+    // it — see that migration) and must never be routed to
+    // renameSalesRoleAction either, which would incorrectly give it a
+    // row in S_role_definitions, the sales-tier cascade table.
+    const canRename = displayOrder.includes(role) && role !== 'company';
                   return (
                     <tr key={role} className="hover:bg-[#f7f8fa] transition-colors">
                       <td className="p-4 text-[#5a6a82] text-sm">{index + 1}</td>
@@ -438,7 +448,7 @@ export default function CommissionRatesPage() {
                           </div>
                         ) : rate ? (
                           <div className="flex items-center justify-end gap-1">
-                            <button onClick={() => startEdit(role)} className="p-1.5 text-[#1e3a5f] hover:bg-[#1e3a5f]/10 rounded transition-colors" title={displayOrder.includes(role) ? 'Edit name and percentage' : 'Edit percentage'}>
+                            <button onClick={() => startEdit(role)} className="p-1.5 text-[#1e3a5f] hover:bg-[#1e3a5f]/10 rounded transition-colors" title={displayOrder.includes(role) && role !== 'company' ? 'Edit name and percentage' : 'Edit percentage'}>
                               <Edit2 className="w-4 h-4" />
                             </button>
                             <button onClick={() => handleDelete(role)} className="p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors" title="Delete rate">

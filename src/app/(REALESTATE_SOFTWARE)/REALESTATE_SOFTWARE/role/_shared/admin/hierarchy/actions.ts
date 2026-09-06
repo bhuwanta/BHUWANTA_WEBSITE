@@ -2,12 +2,12 @@
 
 // Lazy, level-by-level org-chart data for the hierarchy visualizer
 // (role/it/hierarchy and role/it/payouts/visualize). The tree is:
-// Company (ceo) -> Governing Council -> that GC's assigned Directors
-// (S_director_gc, migration 011) -> the normal parent_id sales downline
-// beneath each Director. A synthetic 'unassigned' node sits alongside
-// the Governing Council members under Company, surfacing any Director
-// who was created but never assigned a GC (getUplineChain skips them
-// rather than guessing — see downline.ts).
+// Company (migration 013, the real root) -> CEO -> Governing Council ->
+// that GC's assigned Directors (S_director_gc, migration 011) -> the
+// normal parent_id sales downline beneath each Director. A synthetic
+// 'unassigned' node sits alongside the Governing Council members under
+// each CEO, surfacing any Director who was created but never assigned a
+// GC (getUplineChain skips them rather than guessing — see downline.ts).
 //
 // Never fetches more than one level at a time: with 5k+ users, loading
 // the whole tree up front is both slow and unreadable. Each call here
@@ -81,7 +81,7 @@ export async function getHierarchyChildrenAction(parentId: string | null): Promi
       const { data } = await supabaseAdmin
         .from('s_realestate_users')
         .select('id, full_name, role')
-        .eq('role', 'ceo')
+        .eq('role', 'company')
         .eq('is_active', true)
         .order('created_at', { ascending: true })
       rawNodes = data || []
@@ -97,7 +97,15 @@ export async function getHierarchyChildrenAction(parentId: string | null): Promi
       if (!parent) return { success: false, error: 'Node not found.', nodes: [] }
       parentRole = parent.role as string
 
-      if (parentRole === 'ceo') {
+      if (parentRole === 'company') {
+        const { data } = await supabaseAdmin
+          .from('s_realestate_users')
+          .select('id, full_name, role')
+          .eq('role', 'ceo')
+          .eq('is_active', true)
+          .order('created_at', { ascending: true })
+        rawNodes = data || []
+      } else if (parentRole === 'ceo') {
         const { data } = await supabaseAdmin
           .from('s_realestate_users')
           .select('id, full_name, role')
@@ -130,17 +138,18 @@ export async function getHierarchyChildrenAction(parentId: string | null): Promi
 
     const hasChildrenMap = new Map<string, boolean>()
 
-    const plainIds = rawNodes.filter((n) => n.role !== 'ceo' && n.role !== 'governing_council').map((n) => n.id)
+    const plainIds = rawNodes.filter((n) => n.role !== 'company' && n.role !== 'ceo' && n.role !== 'governing_council').map((n) => n.id)
     if (plainIds.length > 0) {
       const { data: childRows } = await supabaseAdmin.from('s_realestate_users').select('parent_id').in('parent_id', plainIds).eq('is_active', true)
       const withChildren = new Set((childRows || []).map((r: any) => r.parent_id as string))
       plainIds.forEach((id) => hasChildrenMap.set(id, withChildren.has(id)))
     }
 
-    // Company always has at least the Governing Council + Unassigned
-    // slots to expand into, even when both are empty — expanding reveals
-    // that emptiness rather than hiding the level entirely.
-    rawNodes.filter((n) => n.role === 'ceo').forEach((n) => hasChildrenMap.set(n.id, true))
+    // Company always has at least the CEO slot to expand into (even
+    // empty), and every CEO always has at least the Governing Council +
+    // Unassigned slots — expanding reveals that emptiness rather than
+    // hiding the level entirely.
+    rawNodes.filter((n) => n.role === 'company' || n.role === 'ceo').forEach((n) => hasChildrenMap.set(n.id, true))
 
     const gcIds = rawNodes.filter((n) => n.role === 'governing_council').map((n) => n.id)
     if (gcIds.length > 0) {
