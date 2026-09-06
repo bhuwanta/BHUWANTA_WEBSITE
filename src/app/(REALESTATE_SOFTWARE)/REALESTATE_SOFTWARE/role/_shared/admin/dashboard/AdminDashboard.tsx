@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Users, MapPin, Building2, ClipboardList, Clock, CheckCircle2, Ban, IndianRupee, Percent, Loader2 } from 'lucide-react';
+import { Users, MapPin, Building2, ClipboardList, Clock, CheckCircle2, Ban, IndianRupee, Percent, Loader2, Network } from 'lucide-react';
 import { getAdminDashboardStatsAction, getMyEarningsAction } from './actions';
 import { isCommissionEligible, type RealEstateRole } from '../../permissions';
 
@@ -45,9 +45,22 @@ export default function AdminDashboard({ currentUserRole, currentUserId }: Admin
 
   return (
     <div className="p-4 md:p-6 bg-[#f7f8fa] h-full">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[#0f1d33]">Dashboard</h1>
-        <p className="text-[#5a6a82] text-sm mt-1">System-wide overview.</p>
+      <div className="mb-6 flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-bold text-[#0f1d33]">Dashboard</h1>
+          <p className="text-[#5a6a82] text-sm mt-1">System-wide overview.</p>
+        </div>
+        {currentUserRole === 'it' && (
+          <a
+            href="/REALESTATE_SOFTWARE/role/hierarchy"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold gradient-gold text-white shadow-lg shadow-[#c4a55a]/20 hover:opacity-90 transition-premium"
+          >
+            <Network className="w-4 h-4" />
+            Visualize Hierarchy
+          </a>
+        )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">

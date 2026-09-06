@@ -112,6 +112,14 @@ CREATE TABLE public.S_realestate_users (
     -- Governing Council creator; every tier below points at whoever
     -- created them, all the way down to lia.
     parent_id UUID REFERENCES public.S_realestate_users(id),
+    -- (migration 012) Audit-only: who actually created this account.
+    -- Distinct from parent_id above — parent_id is NULL for it/ceo/
+    -- governing_council/operation_manager by design (they're outside
+    -- the downline/org-chart tree; e.g. every Governing Council member
+    -- is a child of every active CEO in the hierarchy graph, not just
+    -- whoever created them), but this column still records their real
+    -- creator regardless of role.
+    created_by UUID REFERENCES public.S_realestate_users(id),
     is_active BOOLEAN DEFAULT true,
     -- (migration 010) When false this person is excluded from every
     -- commission chain but keeps their role, login and permissions —
@@ -241,13 +249,23 @@ INSERT INTO public.S_role_definitions (role_code, label, rank, is_system) VALUES
 -- reproduce the behaviour that used to be hardcoded in downline.ts.
 CREATE TABLE public.S_payout_rules (
     role_code VARCHAR(50) PRIMARY KEY,
-    -- 'chain'        = paid only when this role appears in the seller's
-    --                  own parent_id upline (wing-scoped).
-    -- 'company_wide' = every active holder is paid on every sale.
+    -- 'chain'             = paid only when this role appears in the
+    --                       seller's own parent_id upline (wing-scoped).
+    -- 'company_wide'      = every active holder is paid on every sale.
+    -- 'director_assigned' = (migration 011) resolved through
+    --                       S_director_gc off the seller's own upline
+    --                       Director — exactly one holder earns, not
+    --                       every holder of the role. Only
+    --                       governing_council uses this.
+    -- 'company_wide_split' = (migration 013) every active holder earns
+    --                       on every sale (same as 'company_wide'), but
+    --                       the marginal percentage is divided equally
+    --                       among however many are active — see
+    --                       payout-engine.ts. CEO uses this now.
     scope VARCHAR(20) NOT NULL DEFAULT 'chain',
     updated_by UUID REFERENCES public.S_realestate_users(id),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-    CONSTRAINT s_payout_rules_scope_check CHECK (scope IN ('chain', 'company_wide'))
+    CONSTRAINT s_payout_rules_scope_check CHECK (scope IN ('chain', 'company_wide', 'director_assigned', 'company_wide_split'))
 );
 
 INSERT INTO public.S_payout_rules (role_code, scope) VALUES
@@ -259,8 +277,34 @@ INSERT INTO public.S_payout_rules (role_code, scope) VALUES
     ('rm', 'chain'),
     ('lio', 'chain'),
     ('lia', 'chain'),
-    ('governing_council', 'company_wide'),
-    ('ceo', 'company_wide');
+    ('governing_council', 'director_assigned'),
+    ('ceo', 'company_wide_split'),
+    ('company', 'company_wide');
+
+-- (migration 011) Custom display label for one of the 5 fixed roles —
+-- it/ceo/governing_council/operation_manager/customer — which have no
+-- row in S_role_definitions above (mixing them in would corrupt every
+-- rank-sensitive consumer of that table). No row = use the ROLE_LABELS
+-- static default in permissions.ts. role_code itself is never renamed
+-- here, only what's shown on screen.
+CREATE TABLE public.S_role_labels (
+    role_code VARCHAR(50) PRIMARY KEY CHECK (role_code IN ('it', 'ceo', 'governing_council', 'operation_manager', 'customer')),
+    label VARCHAR(100) NOT NULL,
+    updated_by UUID REFERENCES public.S_realestate_users(id),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- (migration 011) Exactly one Governing Council member per Director —
+-- director_id is the PK (not composite like S_director_projects below),
+-- so a second insert for the same Director replaces rather than adds.
+-- Read by getUplineChain when governing_council's scope above is
+-- 'director_assigned'.
+CREATE TABLE public.S_director_gc (
+    director_id UUID PRIMARY KEY REFERENCES public.S_realestate_users(id) ON DELETE CASCADE,
+    gc_id UUID NOT NULL REFERENCES public.S_realestate_users(id),
+    updated_by UUID REFERENCES public.S_realestate_users(id),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
 
 -- ==========================================
 -- COMMISSION RATES (HIERARCHY.md §3a)
@@ -280,7 +324,9 @@ CREATE TABLE public.S_commission_rates (
 );
 
 -- Seed with the current rates (HIERARCHY.md §3a). it/customer are
--- intentionally absent — not commission-eligible.
+-- intentionally absent — not commission-eligible. CEO raised to 30% and
+-- Company added at 33% in migration 013 (a genuine new role_code, above
+-- CEO — see S_role_labels' comment for why it's NOT a rename target).
 INSERT INTO public.S_commission_rates (role, percentage) VALUES
     ('lia', 10.00),
     ('lio', 12.00),
@@ -291,7 +337,8 @@ INSERT INTO public.S_commission_rates (role, percentage) VALUES
     ('sr_core', 22.00),
     ('director', 24.00),
     ('governing_council', 26.00),
-    ('ceo', 28.00);
+    ('ceo', 30.00),
+    ('company', 33.00);
 
 -- ==========================================
 -- AREAS AND PROJECTS

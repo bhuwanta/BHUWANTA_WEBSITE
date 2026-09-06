@@ -3,7 +3,7 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { verifyCaller } from '../auth'
 import { sendSetupPasswordEmail } from '@/lib/emails/resend'
-import { isAdminPeer, isSalesRole, isOperationManager } from '../permissions'
+import { isAdminPeer, canViewCompanyWide, isSalesRole, isOperationManager } from '../permissions'
 import { getDownlineIds, findUplineDirectorId } from '../downline'
 import { runCommissionPayout } from '../payout-engine'
 import { computeRatePerSqyd, computePool } from '../commission'
@@ -25,7 +25,7 @@ async function getVisiblePendingRegistrationIds(
 ): Promise<string[] | null> {
   let query = supabaseAdmin.from('s_new_registrations').select('id').eq('status', 'pending_registration')
 
-  if (!isAdminPeer(caller.role) && !isOperationManager(caller.role)) {
+  if (!canViewCompanyWide(caller.role) && !isOperationManager(caller.role)) {
     if (!isSalesRole(caller.role)) return null
     const downlineIds = await getDownlineIds(supabaseAdmin, caller.id)
     query = query.in('submitted_by', [caller.id, ...downlineIds])
@@ -171,7 +171,7 @@ export async function getRegistrationsAction() {
       .order('submitted_at', { ascending: false })
 
     const canMarkDone = isOperationManager(caller.role)
-    const companyWide = isAdminPeer(caller.role) || isOperationManager(caller.role)
+    const companyWide = canViewCompanyWide(caller.role) || isOperationManager(caller.role)
 
     if (!companyWide) {
       if (!isSalesRole(caller.role)) {

@@ -32,25 +32,25 @@ export default function AreasProjectsPage({ canManage = false }: AreasProjectsPa
   const [activeTab, setActiveTab] = useState<'projects' | 'documents'>('projects');
 
   return (
-    <div className="p-6 bg-[#f7f8fa] min-h-screen">
+    <div className="p-4 md:p-6 bg-[#f7f8fa] min-h-screen">
       <div className="max-w-7xl mx-auto space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-[#0f1d33]">Areas & Projects</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-[#0f1d33]">Areas & Projects</h1>
           <p className="text-[#5a6a82] mt-1">
             {canManage ? 'Manage geographical areas, projects, pricing, Director assignments, and documents.' : 'Browse every geographical area and project company-wide, with pricing and documents.'}
           </p>
         </div>
 
-        <div className="flex items-center gap-2 bg-white p-1.5 rounded-xl border border-[#e8ecf2] w-fit shadow-sm">
+        <div className="flex items-center gap-2 bg-white p-1.5 rounded-xl border border-[#e8ecf2] shadow-sm max-w-full overflow-x-auto">
           <button
             onClick={() => setActiveTab('projects')}
-            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'projects' ? 'bg-[#1e3a5f] text-white shadow' : 'text-[#5a6a82] hover:bg-[#f3f5f8]'}`}
+            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap shrink-0 ${activeTab === 'projects' ? 'bg-[#1e3a5f] text-white shadow' : 'text-[#5a6a82] hover:bg-[#f3f5f8]'}`}
           >
             Areas & Projects
           </button>
           <button
             onClick={() => setActiveTab('documents')}
-            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'documents' ? 'bg-[#1e3a5f] text-white shadow' : 'text-[#5a6a82] hover:bg-[#f3f5f8]'}`}
+            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap shrink-0 ${activeTab === 'documents' ? 'bg-[#1e3a5f] text-white shadow' : 'text-[#5a6a82] hover:bg-[#f3f5f8]'}`}
           >
             Documents
           </button>

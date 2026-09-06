@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Percent, Loader2, Edit2, Check, X, AlertCircle, Trash2, Plus, Download, Search, ArrowUp, ArrowDown, ArrowUpDown, UserPlus } from 'lucide-react';
 import { getCommissionRatesAction, updateCommissionRateAction, createCommissionRateAction, deleteCommissionRateAction, getSalesRoleOrderAction, createSalesRoleAction, renameSalesRoleAction } from './actions';
+import { getFixedRoleLabelsAction, renameFixedRoleAction } from './fixed-role-actions';
 import { ROLE_LABELS, type RealEstateRole } from '../../permissions';
 
 interface RateRow {
@@ -53,11 +54,11 @@ export default function CommissionRatesPage() {
   // never rows in S_role_definitions), which is exactly when the
   // ROLE_LABELS fallback should apply.
   const roleLabel = (role: string): string => dynamicLabels[role] || ROLE_LABELS[role as RealEstateRole] || role;
-  const salesTierOrder = displayOrder.filter((r) => r !== 'ceo' && r !== 'governing_council');
+  const salesTierOrder = displayOrder.filter((r) => r !== 'company' && r !== 'ceo' && r !== 'governing_council');
 
   const load = async () => {
     setLoading(true);
-    const [ratesRes, roleOrderRes] = await Promise.all([getCommissionRatesAction(), getSalesRoleOrderAction()]);
+    const [ratesRes, roleOrderRes, fixedLabelsRes] = await Promise.all([getCommissionRatesAction(), getSalesRoleOrderAction(), getFixedRoleLabelsAction()]);
     if (ratesRes.success) {
       const map: typeof rates = {};
       ratesRes.data.forEach((r: any) => {
@@ -65,8 +66,15 @@ export default function CommissionRatesPage() {
       });
       setRates(map);
     }
-    setDisplayOrder(['ceo', 'governing_council', ...roleOrderRes.data.map((r) => r.role_code)]);
-    setDynamicLabels(Object.fromEntries(roleOrderRes.data.map((r) => [r.role_code, r.label])));
+    setDisplayOrder(['company', 'ceo', 'governing_council', ...roleOrderRes.data.map((r) => r.role_code)]);
+    const mergedLabels: Record<string, string> = {};
+    roleOrderRes.data.forEach((r) => {
+      mergedLabels[r.role_code] = r.label;
+    });
+    fixedLabelsRes.data.forEach((r) => {
+      mergedLabels[r.role_code] = r.label;
+    });
+    setDynamicLabels(mergedLabels);
     setLoading(false);
   };
 
@@ -74,11 +82,11 @@ export default function CommissionRatesPage() {
     load();
   }, []);
 
-  // One Edit button drives both fields at once — the name (for roles
-  // backed by S_role_definitions: built-in Director..LIA + any
-  // admin-created role) and the percentage (every role). CEO/Governing
-  // Council only expose the percentage field here since their labels
-  // are fixed, not database rows (see renameSalesRoleAction's comment).
+  // One Edit button drives both fields at once — the name and the
+  // percentage, for every row on this page. The name write is routed to
+  // one of two tables depending on the role (see saveEdit's isFixedRole
+  // branch below): S_role_definitions for the 8 sales tiers + any
+  // admin-created role, or S_role_labels for CEO/Governing Council.
   const startEdit = (role: string) => {
     setEditingRole(role);
     setEditValue(String(rates[role]?.percentage ?? ''));
@@ -92,7 +100,19 @@ export default function CommissionRatesPage() {
       setError('Enter a valid number.');
       return;
     }
-    const canRename = salesTierOrder.includes(role);
+    // Every row on this page can be renamed now — the 8 sales tiers via
+    // S_role_definitions, and CEO/Governing Council via the separate
+    // S_role_labels table (fixed-role-actions.ts) since they were never
+    // rows in S_role_definitions (no rank concept for them). Kept as an
+    // explicit gate rather than assumed-true so a future non-renameable
+    // row type on this page fails safe.
+    // Company is a real role_code (migration 013), not a rename-only
+    // fixed role (S_role_labels' CHECK constraint deliberately excludes
+    // it — see that migration) and must never be routed to
+    // renameSalesRoleAction either, which would incorrectly give it a
+    // row in S_role_definitions, the sales-tier cascade table.
+    const canRename = displayOrder.includes(role) && role !== 'company';
+    const isFixedRole = role === 'ceo' || role === 'governing_council';
     if (canRename && !editNameValue.trim()) {
       setError('Enter a role name.');
       return;
@@ -101,7 +121,7 @@ export default function CommissionRatesPage() {
     setError('');
 
     if (canRename && editNameValue.trim() !== roleLabel(role)) {
-      const renameRes = await renameSalesRoleAction(role, editNameValue.trim());
+      const renameRes = isFixedRole ? await renameFixedRoleAction(role, editNameValue.trim()) : await renameSalesRoleAction(role, editNameValue.trim());
       if (!renameRes.success) {
         setError(renameRes.error || 'Failed to save the name.');
         setSaving(false);
@@ -317,7 +337,7 @@ export default function CommissionRatesPage() {
           </div>
         ) : (
           <div className="flex-1 overflow-auto min-h-0">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full min-w-[760px] text-left border-collapse">
               <thead className="sticky top-0 z-10">
                 <tr className="bg-[#f3f5f8] text-[#5a6a82] text-xs uppercase tracking-wider font-semibold border-b border-[#e8ecf2]">
                   <th className="p-4 w-16 cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('index')}>
@@ -343,7 +363,12 @@ export default function CommissionRatesPage() {
                   const rate = rates[role];
                   const isEditing = editingRole === role;
                   const isAdding = addingRole === role;
-                  const canRename = salesTierOrder.includes(role);
+                  // Company is a real role_code (migration 013), not a rename-only
+    // fixed role (S_role_labels' CHECK constraint deliberately excludes
+    // it — see that migration) and must never be routed to
+    // renameSalesRoleAction either, which would incorrectly give it a
+    // row in S_role_definitions, the sales-tier cascade table.
+    const canRename = displayOrder.includes(role) && role !== 'company';
                   return (
                     <tr key={role} className="hover:bg-[#f7f8fa] transition-colors">
                       <td className="p-4 text-[#5a6a82] text-sm">{index + 1}</td>
@@ -423,7 +448,7 @@ export default function CommissionRatesPage() {
                           </div>
                         ) : rate ? (
                           <div className="flex items-center justify-end gap-1">
-                            <button onClick={() => startEdit(role)} className="p-1.5 text-[#1e3a5f] hover:bg-[#1e3a5f]/10 rounded transition-colors" title={salesTierOrder.includes(role) ? 'Edit name and percentage' : 'Edit percentage'}>
+                            <button onClick={() => startEdit(role)} className="p-1.5 text-[#1e3a5f] hover:bg-[#1e3a5f]/10 rounded transition-colors" title={displayOrder.includes(role) && role !== 'company' ? 'Edit name and percentage' : 'Edit percentage'}>
                               <Edit2 className="w-4 h-4" />
                             </button>
                             <button onClick={() => handleDelete(role)} className="p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors" title="Delete rate">

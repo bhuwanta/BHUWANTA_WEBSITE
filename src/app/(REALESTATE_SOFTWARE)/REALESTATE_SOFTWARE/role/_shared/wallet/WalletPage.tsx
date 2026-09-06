@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Wallet, Loader2, Clock, CheckCircle2, XCircle, RefreshCw, User, Search, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import { getMyPayoutsAction } from './actions';
 import { getSalesRoleOrderAction } from '../admin/commission-rates/actions';
+import { getFixedRoleLabelsAction } from '../admin/commission-rates/fixed-role-actions';
 import { ROLE_LABELS, type RealEstateRole } from '../permissions';
 
 const STATUS_META: Record<string, { label: string; className: string; icon: any }> = {
@@ -33,14 +34,21 @@ export default function WalletPage() {
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const [res, roleOrderRes] = await Promise.all([getMyPayoutsAction(), getSalesRoleOrderAction()]);
+      const [res, roleOrderRes, fixedLabelsRes] = await Promise.all([getMyPayoutsAction(), getSalesRoleOrderAction(), getFixedRoleLabelsAction()]);
       if (res.success) {
         setPayouts(res.data);
         setTotals(res.totals);
       } else if (res.error) {
         setError(res.error);
       }
-      setDynamicLabels(Object.fromEntries(roleOrderRes.data.map((r) => [r.role_code, r.label])));
+      const mergedLabels: Record<string, string> = {};
+      roleOrderRes.data.forEach((r) => {
+        mergedLabels[r.role_code] = r.label;
+      });
+      fixedLabelsRes.data.forEach((r) => {
+        mergedLabels[r.role_code] = r.label;
+      });
+      setDynamicLabels(mergedLabels);
       setLoading(false);
     })();
   }, []);

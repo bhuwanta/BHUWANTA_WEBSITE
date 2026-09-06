@@ -95,12 +95,12 @@ export default function PaymentPage() {
         </div>
       )}
 
-      <div className="flex items-center gap-2 mb-4 bg-white p-1.5 rounded-xl border border-[#e8ecf2] w-fit shadow-sm shrink-0">
+      <div className="flex items-center gap-2 mb-4 bg-white p-1.5 rounded-xl border border-[#e8ecf2] shadow-sm shrink-0 max-w-full overflow-x-auto">
         {(['all', 'pending_registration', 'registration_done', 'cancelled'] as const).map((s) => (
           <button
             key={s}
             onClick={() => setStatusFilter(s)}
-            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${statusFilter === s ? 'bg-[#1e3a5f] text-white shadow' : 'text-[#5a6a82] hover:bg-[#f3f5f8]'}`}
+            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap shrink-0 ${statusFilter === s ? 'bg-[#1e3a5f] text-white shadow' : 'text-[#5a6a82] hover:bg-[#f3f5f8]'}`}
           >
             {s === 'all' ? 'All' : STATUS_LABEL[s]}
           </button>
@@ -108,7 +108,7 @@ export default function PaymentPage() {
       </div>
 
       <div className="bg-white border border-[#e8ecf2] shadow-sm rounded-xl flex-1 overflow-auto min-h-0">
-        <table className="w-full text-left border-collapse table-fixed">
+        <table className="w-full min-w-[900px] text-left border-collapse table-fixed">
           <thead className="bg-[#f7f8fa] sticky top-0 z-10 shadow-[0_1px_0_#e8ecf2]">
             <tr className="text-[12px] uppercase tracking-wider text-[#5a6a82]">
               <th className="py-3 px-3 font-semibold w-12">#</th>

@@ -3,7 +3,7 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { verifyCaller } from '../../auth'
 import { getDownlineIds } from '../../downline'
-import { ROLE_LABELS } from '../../permissions'
+import { ROLE_LABELS, getSalesRoleOrder } from '../../permissions'
 
 /** §8: a sales-tier caller's own dashboard — their whole downline
  * (headcount by role) plus registration counts across themselves + that
@@ -37,7 +37,18 @@ export async function getSalesDashboardStatsAction() {
     ;(usersRes.data || []).forEach((u: any) => {
       usersByRoleMap[u.role] = (usersByRoleMap[u.role] || 0) + 1
     })
-    const usersByRole = Object.entries(usersByRoleMap).map(([role, count]) => ({ role, label: ROLE_LABELS[role as keyof typeof ROLE_LABELS], count }))
+    // Was a raw ROLE_LABELS[role] lookup — never touched the dynamic
+    // sales-tier label source at all, so a rename on Roles / Commissions
+    // never showed up here. dynamicLabels checked first, same precedence
+    // as everywhere else (a built-in role already has a static
+    // ROLE_LABELS entry, which would otherwise always shadow a rename).
+    const salesRoleOrder = await getSalesRoleOrder(supabaseAdmin)
+    const dynamicLabels = new Map(salesRoleOrder.map((r) => [r.role_code, r.label]))
+    const usersByRole = Object.entries(usersByRoleMap).map(([role, count]) => ({
+      role,
+      label: dynamicLabels.get(role) || ROLE_LABELS[role as keyof typeof ROLE_LABELS] || role,
+      count,
+    }))
 
     const registrationCounts = { pending_registration: 0, registration_done: 0, cancelled: 0 }
     ;(registrationsRes.data || []).forEach((r: any) => {

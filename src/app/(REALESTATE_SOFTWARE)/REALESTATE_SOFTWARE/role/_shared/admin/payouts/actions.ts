@@ -2,7 +2,8 @@
 
 import { createServiceClient } from '@/lib/supabase/server'
 import { verifyCaller } from '../../auth'
-import { isAdminPeer, isOperationManager } from '../../permissions'
+import { canViewCompanyWide, isOperationManager } from '../../permissions'
+import { computePool } from '../../commission'
 
 /** IT/CEO/Governing Council keep read-only company-wide visibility into
  * the payout queue (oversight, same as Registrations §7), but ONLY
@@ -14,8 +15,8 @@ import { isAdminPeer, isOperationManager } from '../../permissions'
  * Paid" stub, not real Razorpay). */
 async function requireCanViewPayouts() {
   const caller = await verifyCaller()
-  if (!caller || !(isAdminPeer(caller.role) || isOperationManager(caller.role))) {
-    return { ok: false as const, error: 'Only IT, CEO, Governing Council, or Operation Manager can view payouts.' }
+  if (!caller || !(canViewCompanyWide(caller.role) || isOperationManager(caller.role))) {
+    return { ok: false as const, error: 'Only IT, CEO, Governing Council, Company, or Operation Manager can view payouts.' }
   }
   return { ok: true as const, role: caller.role }
 }
@@ -51,8 +52,9 @@ export async function getAllPayoutsAction() {
         id, role, commission_percentage, tier_percentage, previous_tier_percentage, computed_amount, amount, payout_status, scheduled_for, processed_at, created_at,
         payee:s_realestate_users!payee_id ( full_name ),
         s_new_registrations (
-          id, plot_size_sqyd, submitted_at,
+          id, plot_size_sqyd, submitted_at, customer_name,
           s_projects ( name ),
+          s_areas ( name ),
           seller:s_realestate_users!submitted_by ( full_name, role )
         )
       `)
@@ -75,6 +77,228 @@ export async function getAllPayoutsAction() {
   } catch (error: any) {
     console.error('Error fetching all payouts:', error)
     return { success: false, data: [] as any[], saleTotals: {} as Record<string, SaleTotals>, canApprove: false, error: error.message }
+  }
+}
+
+/** Per-payee detail for the graph's own cards — their tier % and the
+ * real amount they got on THIS sale, straight from S_sales_payouts, not
+ * recomputed. */
+export interface PayeeFinancial {
+  role: string
+  percentage: number
+  amount: number
+  /** This role's own full tier rate, and whichever rate sits directly
+   * below them in this specific chain (0 for the seller — nobody below
+   * them earned into their share). percentage above is always
+   * tierPercentage - previousTierPercentage, EXCEPT the seller, who
+   * earns their full tierPercentage regardless of what's below them —
+   * same distinction PayoutsPage.tsx's own breakdown already draws.
+   * Carried so the card can show the actual subtraction, not just the
+   * answer. */
+  tierPercentage: number
+  previousTierPercentage: number
+  /** How many people are currently sharing this role's marginal cut on
+   * THIS sale (migration 013 — a 'company_wide_split' role, e.g. CEO,
+   * divides its cut equally among however many active holders were in
+   * the chain when payout-engine.ts ran). 1 for every non-split role,
+   * and for a split role with only one active holder. `percentage`/
+   * `amount` above are already the real, divided-down per-person figures
+   * straight from S_sales_payouts — this is only carried so the card can
+   * add a "split N ways" note, not to redo any math. */
+  splitCount: number
+}
+
+/** Everything the graph needs to draw the actual math for one sale — a
+ * customer card showing land value vs. what they paid, and per-payee
+ * cards showing their own cut. computePool is the SAME function
+ * payout-engine.ts uses to build the real commission pool
+ * (plotSize × rate, paisa-precise); reused here twice — once against
+ * base_price_at_submission for the pool commissions are actually cut
+ * from, once against mrp_at_submission for the customer's real total
+ * (payout-engine.ts's own comment documents this second use, matching
+ * the customer portal's own "Total Amount" figure) — never invented
+ * separately from what the rest of the app already treats as ground
+ * truth. */
+export interface SaleFinancials {
+  customerId: string | null
+  customerName: string
+  plotSizeSqyd: number
+  basePricePerSqyd: number
+  mrpPerSqyd: number
+  totalCustomerPaid: number
+  commissionPool: number
+  totalCommissionPaid: number
+  payeeDetails: Record<string, PayeeFinancial>
+}
+
+/** Who actually got paid on one specific sale — the real S_sales_payouts
+ * rows for `registrationId`, not a hypothetical preview against a
+ * nominal pool. Drives the per-card "Visualize" button on the Payouts
+ * page: each transaction highlights exactly its own seller + payee
+ * chain on the hierarchy graph, not a role-wide guess. */
+export async function getPayoutLineageForRegistrationAction(registrationId: string) {
+  try {
+    const verified = await requireCanViewPayouts()
+    if (!verified.ok)
+      return {
+        success: false,
+        error: verified.error,
+        sellerId: null as string | null,
+        payeeIds: [] as string[],
+        sellerName: '',
+        projectName: '',
+        plotSize: null as number | null,
+        expandPath: [] as string[],
+        financials: null as SaleFinancials | null,
+      }
+
+    const supabaseAdmin = createServiceClient()
+    const [{ data: reg }, { data: lines }] = await Promise.all([
+      supabaseAdmin
+        .from('s_new_registrations')
+        .select(
+          `id, submitted_by, plot_size_sqyd, base_price_at_submission, mrp_at_submission, customer_name, customer_user_id,
+           seller:s_realestate_users!submitted_by ( full_name ),
+           s_projects ( name )`
+        )
+        .eq('id', registrationId)
+        .maybeSingle(),
+      supabaseAdmin.from('s_sales_payouts').select('payee_id, role, commission_percentage, tier_percentage, previous_tier_percentage, amount').eq('registration_id', registrationId),
+    ])
+    if (!reg)
+      return {
+        success: false,
+        error: 'Sale not found.',
+        sellerId: null as string | null,
+        payeeIds: [] as string[],
+        sellerName: '',
+        projectName: '',
+        plotSize: null as number | null,
+        expandPath: [] as string[],
+        financials: null as SaleFinancials | null,
+      }
+
+    // The exact nodes the hierarchy graph must expand to bring the
+    // seller on screen, in top-down order: the seller's assigned
+    // Governing Council, their Director, then every rung of the
+    // parent_id chain down to the seller's own parent. Resolved
+    // structurally rather than by following whoever happens to be
+    // highlighted — a mid-chain person with earns_commission switched
+    // off isn't a payee, and a highlight-driven walk would stop dead at
+    // them and hide everyone below.
+    const expandPath: string[] = []
+    const ancestors: string[] = []
+    let directorId: string | null = null
+
+    const { data: sellerUser } = await supabaseAdmin.from('s_realestate_users').select('id, role, parent_id').eq('id', reg.submitted_by).maybeSingle()
+    if (sellerUser?.role === 'director') directorId = sellerUser.id as string
+
+    let cursor: any = sellerUser
+    // Bounded rather than while(true): the sales cascade is at most a
+    // handful of tiers, and a cyclic parent_id would otherwise hang the
+    // request.
+    for (let hops = 0; cursor?.parent_id && hops < 25; hops++) {
+      const { data: parent } = await supabaseAdmin.from('s_realestate_users').select('id, role, parent_id').eq('id', cursor.parent_id).maybeSingle()
+      if (!parent) break
+      ancestors.push(parent.id as string)
+      if (parent.role === 'director') {
+        directorId = parent.id as string
+        break
+      }
+      cursor = parent
+    }
+
+    // The top of the tree — Company, then every active CEO — always
+    // opens, regardless of this particular sale's chain. Neither sits in
+    // anyone's parent_id line (they're paid company-wide, not through
+    // the wing), so a path built only from ancestors would leave the
+    // graph collapsed above the Governing Council and hide payees who
+    // ARE on this sale.
+    const [{ data: companyRows }, { data: ceoRows }] = await Promise.all([
+      supabaseAdmin.from('s_realestate_users').select('id').eq('role', 'company').eq('is_active', true),
+      supabaseAdmin.from('s_realestate_users').select('id').eq('role', 'ceo').eq('is_active', true),
+    ])
+    expandPath.push(...(companyRows || []).map((r: any) => r.id as string), ...(ceoRows || []).map((r: any) => r.id as string))
+
+    if (directorId) {
+      const { data: assignment } = await supabaseAdmin.from('s_director_gc').select('gc_id').eq('director_id', directorId).maybeSingle()
+      if (assignment?.gc_id) expandPath.push(assignment.gc_id as string)
+    }
+    // ancestors runs seller-upward (…Director last); the graph expands
+    // downward, so it's reversed here.
+    expandPath.push(...ancestors.slice().reverse())
+
+    const plotSize = Number(reg.plot_size_sqyd)
+    const payeeDetails: Record<string, PayeeFinancial> = {}
+    let totalCommissionPaid = 0
+
+    // How many payout rows on THIS sale share the same role — a
+    // 'company_wide_split' role (e.g. 3 active CEOs) produces one row
+    // per holder, each already carrying the divided-down percentage/
+    // amount; counting them here is enough to know "split N ways"
+    // without re-deriving the math from S_payout_rules.
+    //
+    // The seller's own row is excluded, exactly as payout-engine.ts
+    // excludes it from the split itself — theirs is a personal
+    // full-rate commission for closing the sale, not a share of the
+    // role's band. previous_tier_percentage === 0 identifies it as a
+    // stored DB fact (nobody below them in this chain), the same test
+    // PayoutsPage.tsx already uses to find the seller.
+    const roleCounts = new Map<string, number>()
+    ;(lines || []).forEach((l: any) => {
+      if (Number(l.previous_tier_percentage) === 0) return
+      roleCounts.set(l.role as string, (roleCounts.get(l.role as string) || 0) + 1)
+    })
+
+    ;(lines || []).forEach((l: any) => {
+      const amount = Number(l.amount)
+      const isSeller = Number(l.previous_tier_percentage) === 0
+      payeeDetails[l.payee_id as string] = {
+        role: l.role as string,
+        percentage: Number(l.commission_percentage),
+        amount,
+        tierPercentage: Number(l.tier_percentage),
+        previousTierPercentage: Number(l.previous_tier_percentage),
+        splitCount: isSeller ? 1 : roleCounts.get(l.role as string) || 1,
+      }
+      totalCommissionPaid += amount
+    })
+
+    const financials: SaleFinancials = {
+      customerId: (reg.customer_user_id as string) || null,
+      customerName: (reg.customer_name as string) || 'Unknown',
+      plotSizeSqyd: plotSize,
+      basePricePerSqyd: Number(reg.base_price_at_submission),
+      mrpPerSqyd: Number(reg.mrp_at_submission),
+      totalCustomerPaid: computePool(plotSize, Number(reg.mrp_at_submission)),
+      commissionPool: computePool(plotSize, Number(reg.base_price_at_submission)),
+      totalCommissionPaid,
+      payeeDetails,
+    }
+
+    return {
+      success: true,
+      sellerId: reg.submitted_by as string,
+      payeeIds: (lines || []).map((l: any) => l.payee_id as string),
+      sellerName: (reg as any).seller?.full_name || '',
+      projectName: (reg as any).s_projects?.name || '',
+      plotSize: reg.plot_size_sqyd as number | null,
+      expandPath,
+      financials,
+    }
+  } catch (error: any) {
+    console.error('Error fetching payout lineage:', error)
+    return {
+      success: false,
+      error: error.message || 'Failed to load who got paid.',
+      sellerId: null as string | null,
+      payeeIds: [] as string[],
+      sellerName: '',
+      projectName: '',
+      plotSize: null as number | null,
+      expandPath: [] as string[],
+      financials: null as SaleFinancials | null,
+    }
   }
 }
 
