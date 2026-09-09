@@ -7,10 +7,20 @@
 // admin/areas-projects/actions.ts and is not duplicated here.
 
 import { createServiceClient } from '@/lib/supabase/server'
+import { verifyCaller } from './auth'
+import { requirePageModule } from './nav-modules'
 
 export async function getDocumentsForProjectsAction(projectIds: string[]) {
   try {
     if (!projectIds || projectIds.length === 0) return { success: true, data: [] as any[] }
+
+    // This had no caller check at all before — it does now, plus the
+    // module gate for whichever page the caller is reading from:
+    // Customer's Documents page, or the sales tiers' My Projects.
+    const caller = await verifyCaller()
+    if (!caller) return { success: false, data: [] as any[], error: 'Not authenticated.' }
+    const gate = await requirePageModule(caller.role === 'customer' ? 'customer_documents' : 'my_projects')
+    if (!gate.ok) return { success: false, data: [] as any[], error: gate.error }
 
     const supabaseAdmin = createServiceClient()
     const { data, error } = await supabaseAdmin

@@ -18,11 +18,12 @@ import {
   type Node,
   type Edge,
   type NodeProps,
+  type ReactFlowInstance,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import dagre from 'dagre';
 import { Loader2, ChevronRight, Building2, Users as UsersIcon, UserRound } from 'lucide-react';
-import { getHierarchyChildrenAction, type HierarchyNode } from './actions';
+import { getHierarchyChildrenAction, getHierarchyNodeAction, type HierarchyNode } from './actions';
 import type { SaleFinancials } from '../payouts/actions';
 
 const formatINR = (v: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v);
@@ -77,7 +78,7 @@ interface OrgNodeData extends Record<string, unknown> {
 
 function OrgNode({ id, data }: NodeProps) {
   const d = data as OrgNodeData;
-  const isSpecial = d.role === 'company' || d.role === 'ceo' || d.role === 'governing_council' || d.role === 'unassigned';
+  const isSpecial = d.role === 'ceo' || d.role === 'governing_council' || d.role === 'unassigned';
   const fd = d.financialDetail;
 
   return (
@@ -93,7 +94,7 @@ function OrgNode({ id, data }: NodeProps) {
     >
       <Handle type="target" position={Position.Top} className="!bg-[#c4a55a] !w-2 !h-2" />
       <div className="flex items-center gap-2 min-w-0">
-        {d.role === 'company' || d.role === 'ceo' ? <Building2 className="w-3.5 h-3.5 text-[#1e3a5f] shrink-0" /> : <UsersIcon className="w-3.5 h-3.5 text-[#5a6a82] shrink-0" />}
+        {d.role === 'ceo' ? <Building2 className="w-3.5 h-3.5 text-[#1e3a5f] shrink-0" /> : <UsersIcon className="w-3.5 h-3.5 text-[#5a6a82] shrink-0" />}
         <p className="text-sm font-semibold text-[#0f1d33] truncate">{d.full_name}</p>
       </div>
       <p className="text-[11px] text-[#5a6a82] mt-0.5">{d.roleLabel}</p>
@@ -132,12 +133,11 @@ function OrgNode({ id, data }: NodeProps) {
         </div>
       )}
 
-      {/* Company (migration 013, the true root) stays permanently
-          expanded — collapsing it doesn't mean anything, and the
-          auto-expand effect would just reopen it anyway, so no toggle is
-          offered. CEO is a normal, real role one level below it now and
-          collapses/expands like any other node. */}
-      {d.hasChildren && d.role !== 'company' && (
+      {/* The Company account (role 'ceo' — the root) stays permanently
+          expanded: collapsing "the Company" itself doesn't mean
+          anything, and the auto-expand effect would just reopen it
+          anyway, so no toggle is offered. */}
+      {d.hasChildren && d.role !== 'ceo' && (
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -256,9 +256,14 @@ interface HierarchyGraphProps {
    * payout-visualize view; when present, adds the customer card and
    * decorates every payee's own OrgNode with their percentage/amount. */
   financials?: SaleFinancials | null;
+  /** Root the tree at this person instead of the Company. Used by the
+   * wallet's per-sale view, where a payee should only ever see
+   * themselves and what's BELOW them in that sale — never the chain
+   * above. Omit for the normal company-wide views. */
+  rootId?: string | null;
 }
 
-export default function HierarchyGraph({ highlightIds, expandPath, autoExpandAll, sellerId, financials }: HierarchyGraphProps) {
+export default function HierarchyGraph({ highlightIds, expandPath, autoExpandAll, sellerId, financials, rootId }: HierarchyGraphProps) {
   const [nodes, setNodes] = useState<Node[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
@@ -532,13 +537,30 @@ export default function HierarchyGraph({ highlightIds, expandPath, autoExpandAll
     const path = expandPathKey ? expandPathKey.split(',') : [];
     let cancelled = false;
     (async () => {
-      const roots = await loadChildren(null);
+      // Rooted at one person (the wallet's per-sale view) rather than at
+      // the Company: seed that single node as the root, then treat it
+      // exactly like a normal root below. Nothing above it is ever
+      // fetched, so the tree can only run downward from them.
+      let roots: HierarchyNode[];
+      if (rootId) {
+        const res = await getHierarchyNodeAction(rootId);
+        if (cancelled) return;
+        if (!res.success || !res.node) {
+          setError(res.error || 'Could not load your position in this sale.');
+          return;
+        }
+        rawById.current.set(res.node.id, res.node);
+        rootIds.current.add(res.node.id);
+        setDataVersion((v) => v + 1);
+        roots = [res.node];
+      } else {
+        roots = await loadChildren(null);
+      }
       if (cancelled) return;
-      // loadChildren(null) only returns the roots themselves — their
-      // OWN children (the GC/Unassigned level) still have to be
-      // fetched and cached, or marking the roots "expanded" below has
-      // nothing in childrenCache to actually reveal.
-      await Promise.all(roots.map((r) => loadChildren(r.id)));
+      // The roots themselves are all that's loaded so far — their OWN
+      // children still have to be fetched and cached, or marking the
+      // roots "expanded" below has nothing in childrenCache to reveal.
+      await Promise.all(roots.filter((r) => r.hasChildren).map((r) => loadChildren(r.id)));
       if (cancelled) return;
       setExpandedIds((prev) => {
         const next = new Set(prev);
@@ -557,7 +579,7 @@ export default function HierarchyGraph({ highlightIds, expandPath, autoExpandAll
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [expandPathKey, loadChildren]);
+  }, [expandPathKey, loadChildren, rootId]);
 
   useEffect(() => {
     rebuild(rawById.current, parentOf.current, rootIds.current, expandedIds);
@@ -566,6 +588,27 @@ export default function HierarchyGraph({ highlightIds, expandPath, autoExpandAll
   }, [expandedIds, loadingId, highlightIds, rebuild, dataVersion]);
 
   const nodeTypesMemo = useMemo(() => nodeTypes, []);
+
+  // React Flow's own `fitView` prop only frames the viewport ONCE, on
+  // its very first render — which for this component is almost always
+  // before any real data has arrived, since the tree loads lazily in
+  // several rounds after mount (root, then auto-expand or the
+  // expandPath walk streaming more levels in afterward). Left alone,
+  // the camera stays stuck wherever that first near-empty frame put it
+  // — badly zoomed in, showing a couple of stray nodes cut off at the
+  // edges, exactly what a fixed one-shot fit produces on async data.
+  // Re-fitting here on every node-count change (debounced so a burst of
+  // rapid loads doesn't visibly fight itself) keeps the camera framed on
+  // whatever is actually on screen at each step, and lands on the whole
+  // tree once loading finally settles.
+  const flowInstanceRef = useRef<ReactFlowInstance | null>(null);
+  useEffect(() => {
+    if (nodes.length === 0) return;
+    const t = setTimeout(() => {
+      flowInstanceRef.current?.fitView({ padding: 0.2, duration: 400 });
+    }, 250);
+    return () => clearTimeout(t);
+  }, [nodes.length]);
 
   if (error) {
     return (
@@ -577,7 +620,20 @@ export default function HierarchyGraph({ highlightIds, expandPath, autoExpandAll
 
   return (
     <div className="w-full h-full">
-      <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypesMemo} fitView minZoom={0.1} maxZoom={4} proOptions={{ hideAttribution: true }}>
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        nodeTypes={nodeTypesMemo}
+        onInit={(instance) => {
+          flowInstanceRef.current = instance;
+          instance.fitView({ padding: 0.2 });
+        }}
+        fitView
+        fitViewOptions={{ padding: 0.2 }}
+        minZoom={0.1}
+        maxZoom={4}
+        proOptions={{ hideAttribution: true }}
+      >
         <Background color="#e8ecf2" gap={20} />
         <Controls />
         <MiniMap pannable zoomable nodeColor={(n) => ((n.data as OrgNodeData)?.highlighted ? '#10b981' : '#c9d2e0')} />

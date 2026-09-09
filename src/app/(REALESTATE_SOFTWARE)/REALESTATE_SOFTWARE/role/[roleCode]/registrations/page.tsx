@@ -1,9 +1,9 @@
 import { requireRole } from '../../_shared/auth';
-import RegistrationsPage from '../../_shared/registrations/RegistrationsPage';
+import GuardedRegistrationsPage from '../../_shared/registrations/GuardedRegistrationsPage';
 import type { RealEstateRole } from '../../_shared/permissions';
 
 export default async function DynamicRoleRegistrationsPage({ params }: { params: Promise<{ roleCode: string }> }) {
   const { roleCode } = await params;
   const { userId, role } = await requireRole(roleCode as RealEstateRole);
-  return <RegistrationsPage currentUserRole={role} currentUserId={userId} />;
+  return <GuardedRegistrationsPage currentUserRole={role} currentUserId={userId} />;
 }

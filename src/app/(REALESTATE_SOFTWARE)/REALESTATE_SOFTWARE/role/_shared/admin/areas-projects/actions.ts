@@ -3,6 +3,7 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { verifyCaller } from '../../auth'
 import { isAdminPeer } from '../../permissions'
+import { requirePageModule } from '../../nav-modules'
 
 /** Areas & Projects is viewable by every non-Customer role (IT through
  * LIA), but only IT/CEO/Governing Council — the same admin-peer set that
@@ -93,6 +94,10 @@ export async function deleteAreaAction(id: string) {
 
 export async function getAreasAction() {
   try {
+    // Module gate — the page is hidden when this is off, and so
+    // is the data behind it.
+    const _m = await requirePageModule('areas_projects')
+    if (!_m.ok) return { success: false, data: [] as any[], error: _m.error }
     const supabaseAdmin = createServiceClient()
     const { data, error } = await supabaseAdmin
       .from('s_areas')
@@ -316,6 +321,10 @@ export async function deleteProjectAction(id: string) {
 
 export async function getProjectsAction() {
   try {
+    // Module gate — the page is hidden when this is off, and so
+    // is the data behind it.
+    const _m = await requirePageModule('areas_projects')
+    if (!_m.ok) return { success: false, data: [] as any[], error: _m.error }
     const supabaseAdmin = createServiceClient()
 
     const { data, error } = await supabaseAdmin
@@ -347,6 +356,10 @@ export async function getProjectsAction() {
 
 export async function getDocumentsAction() {
   try {
+    // Module gate — the page is hidden when this is off, and so
+    // is the data behind it.
+    const _m = await requirePageModule('areas_projects')
+    if (!_m.ok) return { success: false, data: [] as any[], error: _m.error }
     const supabaseAdmin = createServiceClient()
     const { data, error } = await supabaseAdmin
       .from('s_project_documents')

@@ -41,9 +41,7 @@ export default function OperationManagerLayout({ children }: { children: React.R
   return (
     <div className="flex h-screen bg-[#f7f8fa] overflow-hidden">
       <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-white border-b border-[#e8ecf2] flex items-center justify-between px-4 z-50">
-        <h2 className="text-lg font-bold text-[#0f1d33]">
-          Bhuwanta<span className="text-[#c4a55a]">ERP</span>
-        </h2>
+        <img src="/logo.png" alt="Bhuwanta Developers" className="h-8 w-auto object-contain" />
         <button onClick={() => setIsMobileOpen(!isMobileOpen)} className="p-2 text-[#5a6a82] hover:bg-[#f3f5f8] rounded-lg">
           <Menu className="w-5 h-5" />
         </button>
@@ -65,12 +63,17 @@ export default function OperationManagerLayout({ children }: { children: React.R
         </button>
 
         <div className={`p-4 border-b border-[#e8ecf2] flex items-center h-[76px] ${isCollapsed ? 'justify-center' : 'justify-start'}`}>
-          {!isCollapsed && (
+          {isCollapsed ? (
+            <img
+              src="/logo.png"
+              alt="Bhuwanta"
+              title="Bhuwanta"
+              className="w-10 h-10 rounded-lg object-cover object-left animate-in fade-in duration-300"
+            />
+          ) : (
             <div className="overflow-hidden whitespace-nowrap animate-in fade-in duration-300">
-              <h2 className="text-xl font-bold text-[#0f1d33]">
-                Bhuwanta<span className="text-[#c4a55a]">ERP</span>
-              </h2>
-              <p className="text-[10px] text-[#5a6a82] mt-0.5 font-bold uppercase tracking-widest">Operation Manager</p>
+              <img src="/logo.png" alt="Bhuwanta Developers" className="h-9 w-auto object-contain" />
+              <p className="text-[10px] text-[#5a6a82] mt-1 font-bold uppercase tracking-widest">Role : Operation Manager</p>
             </div>
           )}
         </div>

@@ -3,6 +3,7 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { verifyCaller } from '../../auth'
 import { validatePassword } from '../../password-policy'
+import { requirePageModule } from '../../nav-modules'
 
 /** Self-service password change — every sales tier and Customer gets
  * this (§8/§9's "Settings" page, same pattern everywhere). Not the
@@ -13,6 +14,19 @@ export async function changeOwnPasswordAction(newPassword: string) {
   try {
     const caller = await verifyCaller()
     if (!caller) return { success: false, error: 'Not authenticated.' }
+
+    // The page is gated, and so is the action behind it. A sales tier
+    // needs both Settings (the page this lives on) and Passwords (the
+    // feature itself); a Customer needs their own Settings module.
+    // Without this a crafted call could still change a password for a
+    // role whose Settings page is switched off.
+    const settingsKey = caller.role === 'customer' ? 'customer_settings' : 'settings'
+    const [pageOk, featureOk] = await Promise.all([
+      requirePageModule(settingsKey),
+      caller.role === 'customer' ? Promise.resolve({ ok: true as const, error: '' }) : requirePageModule('passwords'),
+    ])
+    if (!pageOk.ok) return { success: false, error: pageOk.error }
+    if (!featureOk.ok) return { success: false, error: 'Password changes are not enabled for your role.' }
 
     const passwordError = validatePassword(newPassword)
     if (passwordError) return { success: false, error: passwordError }

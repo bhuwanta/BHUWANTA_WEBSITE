@@ -3,6 +3,7 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { verifyCaller } from '../../auth'
 import { ROLE_LABELS, getSalesRoleOrder } from '../../permissions'
+import { requirePageModule } from '../../nav-modules'
 
 /** CEO/GC earn commission (§3a); IT doesn't, so IT's dashboard skips
  * this call entirely (see AdminDashboard.tsx). Deliberately takes no
@@ -37,6 +38,10 @@ export async function getMyEarningsAction() {
 
 export async function getAdminDashboardStatsAction() {
   try {
+    // Module gate: hiding the nav link isn't enough — a crafted
+    // direct call to this action must fail the same way.
+    const _mod = await requirePageModule('dashboard')
+    if (!_mod.ok) return { totalUsers: 0, totalAreas: 0, totalProjects: 0, usersByRole: [], registrationCounts: { pending_registration: 0, registration_done: 0, cancelled: 0 }, commissionPercentage: null } as any
     const caller = await verifyCaller()
     const supabaseAdmin = createServiceClient()
 
@@ -65,7 +70,7 @@ export async function getAdminDashboardStatsAction() {
     // admin-created roles, from S_role_definitions) rather than
     // whatever order the DB returns.
     const salesRoleOrder = await getSalesRoleOrder(supabaseAdmin)
-    const roleOrder = ['it', 'company', 'ceo', 'governing_council', ...salesRoleOrder.map((r) => r.role_code), 'customer'];
+    const roleOrder = ['it', 'ceo', 'governing_council', ...salesRoleOrder.map((r) => r.role_code), 'customer'];
     const dynamicLabels = new Map(salesRoleOrder.map((r) => [r.role_code, r.label]));
     // CEO/Governing Council's renamed labels (migration 011) — a direct
     // query rather than going through getFixedRoleLabelsAction, since

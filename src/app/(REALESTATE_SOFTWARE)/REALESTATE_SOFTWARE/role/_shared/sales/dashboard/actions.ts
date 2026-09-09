@@ -4,6 +4,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { verifyCaller } from '../../auth'
 import { getDownlineIds } from '../../downline'
 import { ROLE_LABELS, getSalesRoleOrder } from '../../permissions'
+import { requirePageModule } from '../../nav-modules'
 
 /** §8: a sales-tier caller's own dashboard — their whole downline
  * (headcount by role) plus registration counts across themselves + that
@@ -14,6 +15,10 @@ import { ROLE_LABELS, getSalesRoleOrder } from '../../permissions'
  * eligible role. */
 export async function getSalesDashboardStatsAction() {
   try {
+    // Module gate: hiding the nav link isn't enough — a crafted
+    // direct call to this action must fail the same way.
+    const _mod = await requirePageModule('dashboard')
+    if (!_mod.ok) return { success: false, error: _mod.error, usersByRole: [], registrationCounts: { pending_registration: 0, registration_done: 0, cancelled: 0 }, totalDownline: 0 } as any
     const caller = await verifyCaller()
     if (!caller) {
       return { success: false, downlineCount: 0, usersByRole: [], registrationCounts: { pending_registration: 0, registration_done: 0, cancelled: 0 }, totalRegistrations: 0, commissionPercentage: null as number | null }

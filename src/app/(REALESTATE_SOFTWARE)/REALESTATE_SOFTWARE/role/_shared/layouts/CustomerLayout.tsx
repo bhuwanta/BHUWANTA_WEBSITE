@@ -1,22 +1,34 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { getMyNavModulesAction } from '../nav-modules';
+import { PAGE_MODULES } from '../page-modules';
 import { IndianRupee, FileText, ClipboardList, Phone, Settings, LogOut, ChevronLeft, ChevronRight, Menu } from 'lucide-react';
 
+/** Every Customer page is switchable from the Modules page. Settings
+ * included — note that switching it off also removes their only way to
+ * change their own password. */
 const NAV_ITEMS = [
-  { path: '/payment', label: 'Payment', icon: IndianRupee, exact: true },
-  { path: '/documents', label: 'Documents', icon: FileText },
-  { path: '/registration-status', label: 'Registration Status', icon: ClipboardList },
-  { path: '/contact', label: 'Contact', icon: Phone },
-  { path: '/settings', label: 'Settings', icon: Settings },
+  { path: '/payment', label: 'Payment', icon: IndianRupee, exact: true, moduleKey: PAGE_MODULES.customerPayment },
+  { path: '/documents', label: 'Documents', icon: FileText, moduleKey: PAGE_MODULES.customerDocuments },
+  { path: '/registration-status', label: 'Registration Status', icon: ClipboardList, moduleKey: PAGE_MODULES.customerRegistrationStatus },
+  { path: '/contact', label: 'Contact', icon: Phone, moduleKey: PAGE_MODULES.customerContact },
+  { path: '/settings', label: 'Settings', icon: Settings, moduleKey: PAGE_MODULES.customerSettings },
 ];
 
 export default function CustomerLayout({ children }: { children: React.ReactNode }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [pageModules, setPageModules] = useState<Record<string, boolean>>({});
   const pathname = usePathname() || '';
+
+  useEffect(() => {
+    getMyNavModulesAction().then(setPageModules);
+  }, []);
+
+  const navItems = NAV_ITEMS.filter((i) => !i.moduleKey || pageModules[i.moduleKey] !== false);
   const basePath = '/REALESTATE_SOFTWARE/role/Customer';
 
   const isActive = (path: string, exact?: boolean) => {
@@ -27,9 +39,7 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
   return (
     <div className="flex h-screen bg-[#f7f8fa] overflow-hidden">
       <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-white border-b border-[#e8ecf2] flex items-center justify-between px-4 z-50">
-        <h2 className="text-lg font-bold text-[#0f1d33]">
-          Bhuwanta<span className="text-[#c4a55a]">ERP</span>
-        </h2>
+        <img src="/logo.png" alt="Bhuwanta Developers" className="h-8 w-auto object-contain" />
         <button onClick={() => setIsMobileOpen(!isMobileOpen)} className="p-2 text-[#5a6a82] hover:bg-[#f3f5f8] rounded-lg">
           <Menu className="w-5 h-5" />
         </button>
@@ -51,18 +61,23 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
         </button>
 
         <div className={`p-4 border-b border-[#e8ecf2] flex items-center h-[76px] ${isCollapsed ? 'justify-center' : 'justify-start'}`}>
-          {!isCollapsed && (
+          {isCollapsed ? (
+            <img
+              src="/logo.png"
+              alt="Bhuwanta"
+              title="Bhuwanta"
+              className="w-10 h-10 rounded-lg object-cover object-left animate-in fade-in duration-300"
+            />
+          ) : (
             <div className="overflow-hidden whitespace-nowrap animate-in fade-in duration-300">
-              <h2 className="text-xl font-bold text-[#0f1d33]">
-                Bhuwanta<span className="text-[#c4a55a]">ERP</span>
-              </h2>
-              <p className="text-[10px] text-[#5a6a82] mt-0.5 font-bold uppercase tracking-widest">Customer</p>
+              <img src="/logo.png" alt="Bhuwanta Developers" className="h-9 w-auto object-contain" />
+              <p className="text-[10px] text-[#5a6a82] mt-1 font-bold uppercase tracking-widest">Role : Customer</p>
             </div>
           )}
         </div>
 
         <nav className="flex-1 p-3 space-y-2 overflow-y-auto mt-2">
-          {NAV_ITEMS.map((item) => {
+          {navItems.map((item) => {
             const Icon = item.icon;
             const href = `${basePath}${item.path}`;
             const active = isActive(item.path, item.exact);

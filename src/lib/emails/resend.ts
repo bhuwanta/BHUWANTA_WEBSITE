@@ -138,6 +138,56 @@ export async function sendSetupPasswordEmail(email: string, name: string, action
   }
 }
 
+/** Sent after an administrator changes someone's password FOR them (the
+ * bulk reset on User Management) — states who did it and hands over the
+ * new credentials directly in an Email/Password block, at the sender's
+ * explicit request (the alternative — a "your password changed, ask
+ * your admin for the new one" email with no password in it — is what
+ * this replaced). */
+export async function sendPasswordChangedEmail(email: string, name: string, newPassword: string) {
+  if (!resend) {
+    console.warn('RESEND_API_KEY is not set. Skipping sendPasswordChangedEmail.');
+    return { success: false, error: 'Resend API key missing' };
+  }
+
+  try {
+    const bodyHtml = `
+      <p style="margin:0 0 4px; font-size:13px; font-weight:700; letter-spacing:0.06em; color:#c4a55a; text-transform:uppercase;">Security</p>
+      <h1 style="margin:0 0 16px; font-size:24px; line-height:1.3; color:#0f1d33;">Your Password Was Changed</h1>
+      <p style="margin:0 0 16px; font-size:15px; line-height:1.6; color:#5a6a82;">
+        ${name ? `Hi ${name}, ` : ''}an administrator reset your Bhuwanta account password for security reasons. Use these to sign in:
+      </p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f7f8fa; border:1px solid #e8ecf2; border-radius:10px; margin:0 0 20px;">
+        <tr>
+          <td style="padding:16px 20px;">
+            <p style="margin:0 0 6px; font-size:14px; color:#5a6a82;">Email: <strong style="color:#0f1d33;">${email}</strong></p>
+            <p style="margin:0; font-size:14px; color:#5a6a82;">Password: <strong style="color:#0f1d33; font-family: 'Courier New', monospace;">${newPassword}</strong></p>
+          </td>
+        </tr>
+      </table>
+      ${renderButton('Sign In Now', `${siteUrl}/REALESTATE_SOFTWARE/login`)}
+      <p style="margin:0; font-size:13px; line-height:1.6; color:#a0abbb;">
+        If you weren't expecting this, contact your administrator straight away.
+      </p>
+    `;
+    const html = renderEmailShell({
+      preheader: `Your Bhuwanta account password was changed by an administrator.`,
+      bodyHtml,
+    });
+
+    const data = await resend.emails.send({
+      from: `Bhuwanta Security <${fromEmail}>`,
+      to: email,
+      subject: 'Your Bhuwanta Password Was Changed',
+      html,
+    });
+    return { success: true, data };
+  } catch (error: any) {
+    console.error('Error sending password-changed email:', error);
+    return { success: false, error: error.message };
+  }
+}
+
 export async function sendRecoveryEmail(email: string, actionLink: string) {
   if (!resend) {
     console.warn('RESEND_API_KEY is not set. Skipping sendRecoveryEmail.');

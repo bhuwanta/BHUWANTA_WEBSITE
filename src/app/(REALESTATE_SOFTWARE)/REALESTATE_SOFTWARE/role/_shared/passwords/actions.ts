@@ -7,15 +7,26 @@ export async function checkPasswordsModuleStatusAction(role: string) {
     const supabaseAdmin = createServiceClient();
     const { data, error } = await supabaseAdmin
       .from('s_modules')
-      .select('enabled_roles')
-      .eq('module_key', 'passwords')
-      .maybeSingle();
+      .select('module_key, enabled_roles')
+      .in('module_key', ['passwords', 'settings']);
 
     if (error) throw error;
 
-    const isEnabled = data && data.enabled_roles && Array.isArray(data.enabled_roles)
-      ? data.enabled_roles.includes(role)
-      : false;
+    const rowFor = (key: string) => (data || []).find((r: any) => r.module_key === key);
+    const listOf = (key: string) => {
+      const row = rowFor(key);
+      return row && Array.isArray(row.enabled_roles) ? (row.enabled_roles as string[]) : null;
+    };
+
+    const passwords = listOf('passwords');
+    // The password controls render inside the Settings page, so a role
+    // without Settings can't reach them however this flag reads — the
+    // dependency is enforced here as well as in the Modules UI so the
+    // two can't disagree. A missing settings row means "not configured
+    // yet", which doesn't block anything.
+    const settings = listOf('settings');
+    const settingsAllows = settings === null || settings.includes(role);
+    const isEnabled = (passwords ? passwords.includes(role) : false) && settingsAllows;
 
     return { success: true, isEnabled };
   } catch (error: any) {

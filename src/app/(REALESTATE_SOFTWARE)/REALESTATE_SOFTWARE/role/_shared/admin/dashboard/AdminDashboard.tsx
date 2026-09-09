@@ -63,45 +63,27 @@ export default function AdminDashboard({ currentUserRole, currentUserId }: Admin
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
         <StatCard icon={Users} label="Total Users" value={stats.totalUsers} />
         <StatCard icon={MapPin} label="Areas" value={stats.totalAreas} />
         <StatCard icon={Building2} label="Projects" value={stats.totalProjects} />
-        {stats.commissionPercentage != null && <StatCard icon={Percent} label="My Commission" value={`${stats.commissionPercentage}%`} />}
-        {earnings && (
-          <StatCard icon={IndianRupee} label="Paid Out To Date" value={formatCurrency(earnings.totalPaid)} accent />
-        )}
       </div>
 
-      {earnings && earnings.totalEarned > 0 && (
-        <div className="bg-white border border-[#e8ecf2] shadow-sm rounded-xl p-5 mb-6 max-w-md">
-          <h3 className="font-bold text-[#0f1d33] mb-3 flex items-center gap-2">
-            <IndianRupee className="w-4 h-4 text-[#c4a55a]" />
-            My Commission
-          </h3>
-          <div className="flex justify-between text-sm mb-1">
-            <span className="text-[#5a6a82]">Paid out</span>
-            <span className="font-semibold text-emerald-600">{formatCurrency(earnings.totalPaid)}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-[#5a6a82]">Pending disbursement</span>
-            <span className="font-semibold text-amber-600">{formatCurrency(earnings.totalPending)}</span>
-          </div>
-          <div className="flex justify-between text-sm mt-1 pt-1 border-t border-[#e8ecf2]">
-            <span className="text-[#5a6a82]">Total accrued</span>
-            <span className="font-semibold text-[#0f1d33]">{formatCurrency(earnings.totalEarned)}</span>
-          </div>
-          <p className="text-[11px] text-[#a0abbb] mt-3 pt-3 border-t border-[#e8ecf2]">Each payout line is rounded up to the nearest rupee.</p>
+      {earnings && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          {stats.commissionPercentage != null && <StatCard icon={Percent} label="My Commission" value={`${stats.commissionPercentage}%`} />}
+          <StatCard icon={IndianRupee} label="Pending Payout" value={formatCurrency(earnings.totalPending)} />
+          <StatCard icon={IndianRupee} label="Paid Out" value={formatCurrency(earnings.totalPaid)} accent />
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         <div className="bg-white border border-[#e8ecf2] shadow-sm rounded-xl p-5">
           <h3 className="font-bold text-[#0f1d33] mb-4">Users by Role</h3>
           {stats.usersByRole.length === 0 ? (
             <p className="text-sm text-[#5a6a82]">No users yet.</p>
           ) : (
-            <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+            <div className="space-y-2 max-h-[28rem] overflow-y-auto pr-1">
               {stats.usersByRole.map((r: any) => (
                 <div key={r.role} className="flex items-center justify-between text-sm">
                   <span className="text-[#0f1d33]">{r.label}</span>

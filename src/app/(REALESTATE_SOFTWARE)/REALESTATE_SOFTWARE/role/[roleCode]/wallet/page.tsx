@@ -1,5 +1,5 @@
 import { requireRole } from '../../_shared/auth';
-import WalletPage from '../../_shared/wallet/WalletPage';
+import WalletPage from '../../_shared/wallet/GuardedWalletPage';
 import type { RealEstateRole } from '../../_shared/permissions';
 
 export default async function DynamicRoleWalletPage({ params }: { params: Promise<{ roleCode: string }> }) {

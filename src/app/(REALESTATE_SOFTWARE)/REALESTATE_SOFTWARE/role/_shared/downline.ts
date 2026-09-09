@@ -224,8 +224,7 @@ export async function getUplineChain(
     if (salesRankOf.has(role)) return roleOrder.length - salesRankOf.get(role)!
     if (role === 'governing_council') return roleOrder.length + 1
     if (role === 'ceo') return roleOrder.length + 2
-    if (role === 'company') return roleOrder.length + 3
-    return roleOrder.length + 4
+    return roleOrder.length + 3
   }
   chain.sort((a, b) => chainPosition(a.role) - chainPosition(b.role))
 

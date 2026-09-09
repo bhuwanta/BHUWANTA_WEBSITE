@@ -52,7 +52,10 @@ export async function updateSession(request: NextRequest) {
     return supabaseResponse
   }
 
-  // If no user and trying to access admin dashboard, redirect to login
+  // If no user and trying to access admin dashboard, redirect to login.
+  // /crm/login is the ONLY exemption on purpose: /crm/signup is left to
+  // fall through to this redirect so nobody can self-register a CRM
+  // account. CRM users are created by an admin. Don't add it here.
   if (
     !user &&
     request.nextUrl.pathname.startsWith('/crm') &&
@@ -74,7 +77,7 @@ export async function updateSession(request: NextRequest) {
     }
   } else if (
     user &&
-    (request.nextUrl.pathname === '/crm/login' || request.nextUrl.pathname === '/signup')
+    (request.nextUrl.pathname === '/crm/login' || request.nextUrl.pathname === '/crm/signup')
   ) {
     const userRole = user.user_metadata?.role || 'Admin'
     const url = request.nextUrl.clone()
@@ -103,6 +106,36 @@ export async function updateSession(request: NextRequest) {
   // cookies) against S_realestate_users' "Users can view own profile" RLS
   // policy (auth.uid() = id) — deliberately NOT the service-role client,
   // since that requires a Node `require()` that Edge middleware can't run.
+  // Bulk password reset lives under role/it/modules for file
+  // organization (it's an it/modules capability, same family as the
+  // Visualize Hierarchy module), but — unlike everything else under
+  // role/it/* — it's reachable by any authenticated, active role, not
+  // just IT: a sales-tier role gets in once IT switches the "Bulk
+  // Change Passwords" module on for them. The segment-based check below
+  // can't express that (it only sees segment[3] === 'it', with no idea
+  // this one path is different), so it's special-cased here — skipping
+  // the coarse "must be IT" guard for this one path, not all of
+  // role/it/*. The REAL, fine-grained decision (IT gets everyone,
+  // everyone else only their own downline if enabled) is
+  // requireBulkPasswordAccess() inside the route itself; this is only
+  // the same "authenticated and active" floor every other role/* route
+  // already gets.
+  if (request.nextUrl.pathname === '/REALESTATE_SOFTWARE/role/it/modules/bulk-password-reset') {
+    const loginUrl = request.nextUrl.clone()
+    loginUrl.pathname = '/REALESTATE_SOFTWARE/login'
+
+    if (!user) {
+      return NextResponse.redirect(loginUrl)
+    }
+
+    const { data: profile } = await supabase.from('s_realestate_users').select('is_active').eq('id', user.id).maybeSingle()
+    if (!profile || !profile.is_active) {
+      return NextResponse.redirect(loginUrl)
+    }
+
+    return supabaseResponse
+  }
+
   if (request.nextUrl.pathname.startsWith('/REALESTATE_SOFTWARE/role/')) {
     const segment = request.nextUrl.pathname.split('/')[3]
     // Falls back to the raw segment itself for any role not in the
@@ -144,19 +177,29 @@ export async function updateSession(request: NextRequest) {
 const REALESTATE_ROLE_BY_PATH_SEGMENT: Record<string, string | string[]> = {
   it: 'it',
   ceo: 'ceo',
-  // IT-only visualizer page that lives outside role/it/ (it opts out of
-  // the sidebar shell via role/it/layout.tsx — see HierarchyGraph.tsx),
-  // so its URL segment isn't a role code by the usual convention. Mapped
-  // here to match its own requireRole('it') check, otherwise the
-  // fallback-to-raw-segment behavior below would compare profile.role
-  // against the literal string 'hierarchy', which can never match any
-  // real role and always bounces to login.
-  hierarchy: 'it',
-  // Same reasoning, but both IT and Operation Manager can open this one
-  // (the per-transaction "Visualize" button on the Payouts page is
-  // shown to both — role/_shared/admin/payouts/PayoutsPage.tsx) — must
-  // match its own requireAnyRole(['it', 'operation_manager']) check.
-  'payouts-visualize': ['it', 'operation_manager'],
+  // Full-screen visualizer page that lives outside any role's sidebar
+  // shell, so its URL segment isn't a role code by the usual convention
+  // and must be mapped here — otherwise the fallback-to-raw-segment
+  // behavior below would compare profile.role against the literal
+  // string 'hierarchy', which can never match and always bounces to
+  // login. Who may actually open it is no longer a fixed list: IT and
+  // Operation Manager always can, and any other role can be switched on
+  // via the "Visualize Hierarchy" module (S_modules). That's a
+  // request-time DB lookup, which this edge middleware deliberately
+  // doesn't do — it stays the coarse layer (authenticated + active),
+  // and the page's own guard plus getHierarchyChildrenAction's
+  // requireCanViewHierarchy enforce the real module rule.
+  hierarchy: ['it', 'ceo', 'governing_council', 'operation_manager', 'director', 'sr_core', 'core', 'gm', 'agm', 'rm', 'lio', 'lia'],
+  // Same reasoning as 'hierarchy' above. IT and Operation Manager can
+  // always open this (the per-transaction "Visualize" button on the
+  // Payouts page); any other role can open it ONLY with ?scope=mine
+  // (from their own Wallet, module-gated) — a request-time DB lookup
+  // this edge middleware doesn't do, so it stays coarse here and the
+  // page's own guard (role/payouts-visualize/page.tsx) plus
+  // getMySaleLineageAction's own re-derivation of the caller enforce the
+  // real rule: scope=mine only ever returns THAT caller's own payout
+  // line, never anyone else's.
+  'payouts-visualize': ['it', 'ceo', 'governing_council', 'operation_manager', 'director', 'sr_core', 'core', 'gm', 'agm', 'rm', 'lio', 'lia'],
   GoverningCouncil: 'governing_council',
   OperationManager: 'operation_manager',
   Customer: 'customer',

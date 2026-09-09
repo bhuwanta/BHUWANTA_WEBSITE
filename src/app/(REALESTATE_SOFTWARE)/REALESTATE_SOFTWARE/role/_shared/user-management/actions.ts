@@ -2,8 +2,8 @@
 
 import { createServiceClient } from '@/lib/supabase/server'
 import { verifyCaller } from '../auth'
-import { sendSetupPasswordEmail } from '@/lib/emails/resend'
-import { canCreateRoleDynamic, canManageRoleDynamic, canViewRole, canViewCompanyWide, isAdminPeer, isOperationManager, isSalesRole, getSalesRoleOrder, type RealEstateRole } from '../permissions'
+import { sendSetupPasswordEmail, sendPasswordChangedEmail } from '@/lib/emails/resend'
+import { canCreateRoleDynamic, canManageRoleDynamic, canViewRole, isAdminPeer, isOperationManager, isSalesRole, getSalesRoleOrder, type RealEstateRole } from '../permissions'
 import { normalizePhone, validatePhone } from '../phone-policy'
 import { getDownlineIds, getSubtreePendingSales } from '../downline'
 import { validatePassword } from '../password-policy'
@@ -26,6 +26,22 @@ export async function checkUserManagementModuleStatusAction(role: RealEstateRole
     console.error('Error checking user management module status:', error);
     return { success: false, isEnabled: false };
   }
+}
+
+/** Live counts of active accounts for the two singleton-protected roles
+ * (Operation Manager, Company/ceo — see the guards in
+ * toggleExecutiveStatusAction/deleteExecutiveAction below). Drives the
+ * UI so the toggle for the LAST active one of either is disabled
+ * up front, the same way a user's own row already is, instead of
+ * letting the click through and only then bouncing off the server-side
+ * guard with an alert. */
+export async function getSingletonRoleCountsAction(): Promise<{ operation_manager: number; ceo: number }> {
+  const supabaseAdmin = createServiceClient()
+  const [om, ceo] = await Promise.all([
+    supabaseAdmin.from('s_realestate_users').select('id', { count: 'exact', head: true }).eq('role', 'operation_manager').eq('is_active', true),
+    supabaseAdmin.from('s_realestate_users').select('id', { count: 'exact', head: true }).eq('role', 'ceo').eq('is_active', true),
+  ])
+  return { operation_manager: om.count || 0, ceo: ceo.count || 0 }
 }
 
 /**
@@ -63,15 +79,16 @@ export async function createExecutiveAction(
 
     const supabaseAdmin = createServiceClient()
 
-    // Company is a singleton, IT-only creation — a bespoke branch rather
-    // than canCreateRoleDynamic (which always denies 'company' as a
-    // target, precisely so this can't be reached through the generic
-    // admin-peer path by CEO/Governing Council too).
-    if (data.role === 'company') {
+    // The top tier (ceo, labelled "Company" — migration 014) is a
+    // singleton, IT-only creation — a bespoke branch rather than
+    // canCreateRoleDynamic (which always denies 'ceo' as a target,
+    // precisely so this can't be reached through the generic admin-peer
+    // path by Governing Council too).
+    if (data.role === 'ceo') {
       if (callerRole !== 'it') {
         return { success: false, error: 'Only IT can create the Company account.' }
       }
-      const { count: companyCount } = await supabaseAdmin.from('s_realestate_users').select('id', { count: 'exact', head: true }).eq('role', 'company')
+      const { count: companyCount } = await supabaseAdmin.from('s_realestate_users').select('id', { count: 'exact', head: true }).eq('role', 'ceo')
       if ((companyCount || 0) > 0) {
         return { success: false, error: 'A Company account already exists — only one is allowed.' }
       }
@@ -117,7 +134,7 @@ export async function createExecutiveAction(
     // Manager aren't part of the downline tree, so NULL. Every
     // sales-tier profile's parent_id is whoever created it (§6's
     // resolved upline-chain question).
-    const parentId = (isAdminPeer(data.role) || isOperationManager(data.role) || data.role === 'company') ? null : callerId;
+    const parentId = (isAdminPeer(data.role) || isOperationManager(data.role)) ? null : callerId;
 
     const { data: insertedUser, error: profileError } = await supabaseAdmin
       .from('s_realestate_users')
@@ -229,43 +246,98 @@ export async function getExecutivesAction(
 
     const supabaseAdmin = createServiceClient()
 
-    let query = supabaseAdmin
-      .from('s_realestate_users')
-      .select('id, bhuwanta_id, full_name, role, phone, parent_id, is_active, created_at', { count: 'exact' })
-
-    if (canViewCompanyWide(callerRole)) {
-      // IT/CEO/Governing Council/Company: see everyone, no downline
-      // scoping (Company is read-only here — this function only lists,
-      // it never mutates).
-      if (roleFilter !== 'all') {
-        query = query.eq('role', roleFilter)
-      }
-    } else {
+    let downlineIds: string[] | null = null
+    if (!isAdminPeer(callerRole)) {
       // Sales tiers: only their own whole downline (§4 walling), never
       // a peer's team, never anyone above them.
-      const downlineIds = await getDownlineIds(supabaseAdmin, callerId);
+      downlineIds = await getDownlineIds(supabaseAdmin, callerId);
       if (downlineIds.length === 0) return { success: true, data: [], count: 0 };
-      query = query.in('id', downlineIds);
 
       if (roleFilter !== 'all') {
         const rankOrder = await getSalesRoleOrder(supabaseAdmin)
         if (!canCreateRoleDynamic(callerRole, roleFilter as RealEstateRole, rankOrder)) {
           return { success: false, data: [], count: 0, error: 'Unauthorized role filter' };
         }
-        query = query.eq('role', roleFilter);
       }
     }
 
-    if (searchQuery) {
-      query = query.or(`full_name.ilike.%${searchQuery}%,phone.ilike.%${searchQuery}%,bhuwanta_id.ilike.%${searchQuery}%`)
+    // Rebuildable per page — a supabase-js query builder mutates itself
+    // on each chained call, so a loop that pages through it (the role
+    // sort below needs every matching row, not just one page) needs a
+    // fresh builder per iteration rather than one shared, already-spent
+    // instance.
+    const buildQuery = () => {
+      let q = supabaseAdmin
+        .from('s_realestate_users')
+        .select('id, bhuwanta_id, full_name, role, phone, parent_id, is_active, created_at', { count: 'exact' })
+      if (isAdminPeer(callerRole)) {
+        // IT/CEO/Governing Council: see everyone, no downline scoping.
+        if (roleFilter !== 'all') q = q.eq('role', roleFilter)
+      } else {
+        q = q.in('id', downlineIds!)
+        if (roleFilter !== 'all') q = q.eq('role', roleFilter)
+      }
+      if (searchQuery) {
+        q = q.or(`full_name.ilike.%${searchQuery}%,phone.ilike.%${searchQuery}%,bhuwanta_id.ilike.%${searchQuery}%`)
+      }
+      return q
     }
+
+    let query = buildQuery()
 
     const from = (page - 1) * limit
     const to = from + limit - 1
 
-    const { data, error, count } = await query
-      .order(sortCol, { ascending: sortDir === 'asc' })
-      .range(from, to)
+    // "role" isn't a plain alphabetical sort — role_code strings ('ceo',
+    // 'lia', 'operation_manager'...) don't sort into the real org
+    // hierarchy, and the sales tiers' rank is dynamic (S_role_definitions)
+    // rather than fixed. So a role-column sort can't be pushed down to
+    // Postgres .order()/.range() — instead fetch every matching row
+    // (filters still applied above, just no DB order/range, and paged in
+    // chunks of 1000 — PostgREST caps a single response at 1000 rows
+    // regardless of .limit(), which silently dropped rows past that on
+    // a 1095-user table the first time this was written unpaginated),
+    // rank each one against the same fixed structure as the filter tabs
+    // (getFilterableRolesAction: IT, Operation Manager, Company,
+    // Governing Council, sales cascade, Customer last), sort in JS, then
+    // slice the requested page out of that.
+    let data: any[] | null, error: any, count: number | null;
+    if (sortCol === 'role') {
+      const rankOrder = await getSalesRoleOrder(supabaseAdmin)
+      const displayOrder = ['it', 'operation_manager', 'ceo', 'governing_council', ...rankOrder.map((r) => r.role_code), 'customer']
+      const rankOf = (role: string) => {
+        const idx = displayOrder.indexOf(role)
+        return idx === -1 ? displayOrder.length : idx
+      }
+
+      const PAGE = 1000
+      const all: any[] = []
+      let totalCount = 0
+      error = null
+      for (let p = 0; ; p++) {
+        const { data: batch, error: batchError, count: batchCount } = await buildQuery().range(p * PAGE, p * PAGE + PAGE - 1)
+        if (batchError) { error = batchError; break }
+        all.push(...(batch || []))
+        totalCount = batchCount || 0
+        if (!batch || batch.length < PAGE) break
+      }
+      data = all
+      count = totalCount
+
+      if (!error && data) {
+        data = [...data].sort((a, b) => {
+          const cmp = rankOf(a.role) - rankOf(b.role)
+          return sortDir === 'asc' ? cmp : -cmp
+        }).slice(from, to + 1)
+      }
+    } else {
+      const paged = await query
+        .order(sortCol, { ascending: sortDir === 'asc' })
+        .range(from, to)
+      data = paged.data
+      error = paged.error
+      count = paged.count
+    }
 
     if (error) {
       console.error('Error fetching users:', error)
@@ -399,12 +471,41 @@ export async function toggleExecutiveStatusAction(
       return { success: false, error: "You cannot deactivate your own account." }
     }
 
+    const { data: targetUser } = await supabaseAdmin.from('s_realestate_users').select('role').eq('id', id).single();
+
     // IT is the platform's root admin — CEO/Governing Council are peers
     // for creation purposes but must not be able to lock IT out.
-    if (callerRole !== 'it') {
-      const { data: targetUser } = await supabaseAdmin.from('s_realestate_users').select('role').eq('id', id).single();
-      if (targetUser?.role === 'it') {
-        return { success: false, error: 'Only IT can deactivate an IT Admin account.' };
+    if (callerRole !== 'it' && targetUser?.role === 'it') {
+      return { success: false, error: 'Only IT can deactivate an IT Admin account.' };
+    }
+
+    // Operation Manager is the sole company-wide approver for
+    // Registration Done / Mark Paid (§7d) — no hierarchy fallback picks
+    // up the slack the way a sales tier's upline would. Deactivating the
+    // LAST active one would leave nothing able to run those actions
+    // company-wide until IT creates or reactivates another, so — same
+    // "can't lock the company out" reasoning as IT's own protection
+    // above — it's blocked outright. A live count, not a one-time flag:
+    // the moment a second Operation Manager is active, either one can be
+    // freely deactivated again.
+    if (targetUser?.role === 'operation_manager' && currentStatus) {
+      const { count } = await supabaseAdmin.from('s_realestate_users').select('id', { count: 'exact', head: true }).eq('role', 'operation_manager').eq('is_active', true)
+      if ((count || 0) <= 1) {
+        return { success: false, error: 'Cannot deactivate the last active Operation Manager — create or activate another one first.' };
+      }
+    }
+
+    // Same reasoning for the Company (ceo role) account — it's the
+    // singleton top-tier payee (§ commission engine has nowhere else to
+    // route the top-tier cut). A second one can never be created while
+    // one exists (canCreateRoleDynamic), so this guard only ever fires
+    // against the sole account — by design it stays permanently
+    // protected unless it's first deleted (freeing the singleton slot)
+    // and a fresh one created.
+    if (targetUser?.role === 'ceo' && currentStatus) {
+      const { count } = await supabaseAdmin.from('s_realestate_users').select('id', { count: 'exact', head: true }).eq('role', 'ceo').eq('is_active', true)
+      if ((count || 0) <= 1) {
+        return { success: false, error: 'Cannot deactivate the last active Company account — create or activate another one first.' };
       }
     }
 
@@ -447,6 +548,35 @@ export async function deleteExecutiveAction(
     // for creation purposes but must not be able to delete IT.
     if (targetUser.role === 'it' && callerRole !== 'it') {
       return { success: false, error: 'Only IT can delete an IT Admin account.' };
+    }
+
+    // Same reasoning as the deactivate guard in toggleExecutiveStatusAction
+    // — deleting is even more permanent, so the last active Operation
+    // Manager is protected here too. An inactive one (a second account
+    // already switched off) can still be deleted freely; this only
+    // blocks a delete that would leave zero ACTIVE Operation Managers.
+    if (targetUser.role === 'operation_manager') {
+      const { data: targetActive } = await supabaseAdmin.from('s_realestate_users').select('is_active').eq('id', id).single();
+      if (targetActive?.is_active) {
+        const { count } = await supabaseAdmin.from('s_realestate_users').select('id', { count: 'exact', head: true }).eq('role', 'operation_manager').eq('is_active', true)
+        if ((count || 0) <= 1) {
+          return { success: false, error: 'Cannot delete the last active Operation Manager — create or activate another one first.' };
+        }
+      }
+    }
+
+    // Same reasoning for the Company (ceo role) account as the deactivate
+    // guard above — only blocks deleting the last ACTIVE one. An
+    // already-inactive sole account can still be deleted, which is the
+    // only way to free the singleton slot for a fresh Company account.
+    if (targetUser.role === 'ceo') {
+      const { data: targetActive } = await supabaseAdmin.from('s_realestate_users').select('is_active').eq('id', id).single();
+      if (targetActive?.is_active) {
+        const { count } = await supabaseAdmin.from('s_realestate_users').select('id', { count: 'exact', head: true }).eq('role', 'ceo').eq('is_active', true)
+        if ((count || 0) <= 1) {
+          return { success: false, error: 'Cannot delete the last active Company account — create or activate another one first.' };
+        }
+      }
     }
 
     if (!isAdminPeer(callerRole)) {
@@ -509,15 +639,16 @@ export async function getCreatableRolesAction(callerRole: RealEstateRole): Promi
     // CEO→LIA run — everyone from CEO down to LIA reads as one
     // unbroken, strictly descending-by-percentage ladder (salesRoleCodes
     // is already highest-rank-first from getSalesRoleOrder).
-    const creatable: RealEstateRole[] = ['it', 'operation_manager', 'ceo', 'governing_council', ...salesRoleCodes];
+    const creatable: RealEstateRole[] = ['it', 'operation_manager', 'governing_council', ...salesRoleCodes];
 
-    // Company is a singleton, IT-only creation (createExecutiveAction
-    // enforces this server-side regardless of what this list shows) — so
-    // it's only ever offered to IT, and only while none exists yet. CEO
-    // and Governing Council never see it as an option.
+    // The top tier (ceo, labelled "Company") is a singleton, IT-only
+    // creation (createExecutiveAction enforces this server-side
+    // regardless of what this list shows) — so it's only ever offered to
+    // IT, and only while none exists yet. Governing Council never sees
+    // it as an option.
     if (callerRole === 'it') {
-      const { count: companyCount } = await supabaseAdmin.from('s_realestate_users').select('id', { count: 'exact', head: true }).eq('role', 'company')
-      if (!companyCount) creatable.unshift('company')
+      const { count: companyCount } = await supabaseAdmin.from('s_realestate_users').select('id', { count: 'exact', head: true }).eq('role', 'ceo')
+      if (!companyCount) creatable.unshift('ceo')
     }
 
     return creatable;
@@ -540,9 +671,199 @@ export async function getCreatableRolesAction(callerRole: RealEstateRole): Promi
 export async function getFilterableRolesAction(callerRole: RealEstateRole): Promise<RealEstateRole[]> {
   const creatable = await getCreatableRolesAction(callerRole)
   if (isAdminPeer(callerRole)) {
-    return [...creatable, 'customer'] as RealEstateRole[]
+    // Fixed display order for the filter tabs (independent of
+    // getCreatableRolesAction's own order, which exists for the Add
+    // User picker): IT, Operation Manager, Company (ceo — always
+    // filterable once it exists, even after it drops out of the
+    // creatable list as a singleton), Governing Council, then the sales
+    // cascade, Customer last.
+    const salesRoles = creatable.filter((r) => r !== 'it' && r !== 'operation_manager' && r !== 'governing_council' && r !== 'ceo')
+    return ['it', 'operation_manager', 'ceo', 'governing_council', ...salesRoles, 'customer'] as RealEstateRole[]
   }
   return creatable
+}
+
+export interface BulkPasswordUser {
+  id: string
+  full_name: string
+  role: string
+  bhuwanta_id: string | null
+}
+
+/** Who's allowed to run a bulk password reset, and how far it reaches.
+ * IT always has it, unconditionally, company-wide. Beyond that it's
+ * opt-in per role via the "Bulk Change Passwords" module (S_modules,
+ * module_key 'bulk_password_reset', configured on the Modules page) —
+ * and even when a role has it switched on, their reach is capped to
+ * their OWN downline (their wing), never anyone else's team and never
+ * upline. Re-derived from the real session on every call, exactly like
+ * requireIt above — never trusts a client-claimed role or id list.
+ * Exported: the streaming reset route (role/it/modules/
+ * bulk-password-reset) needs this same scoping decision, re-verified
+ * server-side against whatever ids the client actually sent, not just
+ * used to decide what the picker shows. */
+export async function requireBulkPasswordAccess(): Promise<
+  | { ok: true; id: string; scope: 'all' }
+  | { ok: true; id: string; scope: 'downline'; downlineIds: string[] }
+  | { ok: false; error: string }
+> {
+  const caller = await verifyCaller()
+  if (!caller) return { ok: false, error: 'Not authenticated, or your account is inactive.' }
+  if (caller.role === 'it') return { ok: true, id: caller.id, scope: 'all' }
+
+  const supabaseAdmin = createServiceClient()
+  const { data: moduleData } = await supabaseAdmin.from('s_modules').select('enabled_roles').eq('module_key', 'bulk_password_reset').maybeSingle()
+  const enabledRoles: string[] = (moduleData?.enabled_roles as string[]) || []
+  if (!enabledRoles.includes(caller.role)) {
+    return { ok: false, error: 'You do not have access to bulk password changes.' }
+  }
+
+  const downlineIds = await getDownlineIds(supabaseAdmin, caller.id)
+  return { ok: true, id: caller.id, scope: 'downline', downlineIds }
+}
+
+/** Every account a bulk password reset can target, in one list (the
+ * main table is paginated 50 at a time; this picker needs the whole
+ * reachable set at once) — IT's own full roster, or a module-enabled
+ * role's own downline, per requireBulkPasswordAccess above.
+ *
+ * Paged through in 1000-row batches on purpose: Supabase's hosted
+ * PostgREST caps the rows a single query body returns at 1000 no matter
+ * what range is asked for, so a plain select would silently stop at the
+ * first thousand and quietly leave the rest unresettable — the same cap
+ * that once made the IT dashboard report "Total Users: 1000" against a
+ * real 1,093. Applied to the downline-scoped query too — a large wing
+ * deserves the same guarantee as the company-wide list, not just IT's.
+ *
+ * The caller is deliberately excluded from the list: a bulk reset that
+ * swept up whoever's running it would change their own password out
+ * from under them mid-operation. Resetting their own stays a
+ * single-account action on the Edit User modal, where it's deliberate. */
+export async function getUsersForBulkPasswordAction(): Promise<{ success: boolean; error?: string; data: BulkPasswordUser[] }> {
+  try {
+    const verified = await requireBulkPasswordAccess()
+    if (!verified.ok) return { success: false, error: verified.error, data: [] }
+
+    const supabaseAdmin = createServiceClient()
+    const idFilter = verified.scope === 'downline' ? verified.downlineIds.filter((id) => id !== verified.id) : null
+    if (idFilter && idFilter.length === 0) return { success: true, data: [] }
+
+    const all: BulkPasswordUser[] = []
+    const PAGE = 1000
+
+    for (let page = 0; ; page++) {
+      let query = supabaseAdmin
+        .from('s_realestate_users')
+        .select('id, full_name, role, bhuwanta_id')
+        .order('full_name', { ascending: true })
+        .range(page * PAGE, page * PAGE + PAGE - 1)
+      query = idFilter ? query.in('id', idFilter) : query.neq('id', verified.id)
+
+      const { data, error } = await query
+      if (error) throw error
+      const batch = (data || []) as BulkPasswordUser[]
+      all.push(...batch)
+      if (batch.length < PAGE) break
+    }
+
+    return { success: true, data: all }
+  } catch (error: any) {
+    console.error('Error loading users for bulk password reset:', error)
+    return { success: false, error: error.message || 'Failed to load users.', data: [] }
+  }
+}
+
+/** UI-display-only check, same non-authoritative pattern as
+ * checkUserManagementModuleStatusAction / checkHierarchyModuleStatusAction
+ * — a sales-tier layout uses this to decide whether to show the "Bulk
+ * Change Passwords" button at all. requireBulkPasswordAccess above (re-
+ * derived from the real session on every real data call) is the actual
+ * access control. */
+export async function checkBulkPasswordModuleStatusAction(role: RealEstateRole) {
+  try {
+    const supabaseAdmin = createServiceClient()
+    const { data: moduleData } = await supabaseAdmin.from('s_modules').select('enabled_roles').eq('module_key', 'bulk_password_reset').maybeSingle()
+    if (!moduleData) return { success: true, isEnabled: false }
+    const isEnabled = ((moduleData.enabled_roles as string[]) || []).includes(role)
+    return { success: true, isEnabled }
+  } catch (error: any) {
+    console.error('Error checking bulk password reset module status:', error)
+    return { success: false, isEnabled: false }
+  }
+}
+
+/** Every real login email for a set of profile ids, paginated past
+ * Supabase's 1000-per-call listUsers cap — same reasoning as
+ * getUsersForBulkPasswordAction's own paging. Auth is the only place an
+ * email lives (S_realestate_users has no email column), and there's no
+ * "give me these specific ids" filter on listUsers, so this walks every
+ * page once and keeps only the ones actually asked for. Exported: the
+ * streaming bulk-password-reset route (api/bulk-password-reset) needs
+ * this same lookup and shouldn't duplicate it. */
+export async function getAuthEmailMap(supabaseAdmin: ReturnType<typeof createServiceClient>, ids: string[]): Promise<Map<string, string>> {
+  const wanted = new Set(ids)
+  const map = new Map<string, string>()
+  const PAGE = 1000
+
+  for (let page = 1; wanted.size > map.size; page++) {
+    const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: PAGE })
+    if (error) {
+      console.error('Error paging auth users for email lookup:', error)
+      break
+    }
+    const users = data?.users || []
+    for (const u of users) {
+      if (wanted.has(u.id) && u.email) map.set(u.id, u.email)
+    }
+    if (users.length < PAGE) break
+  }
+  return map
+}
+
+/** Emails everyone in `succeededIds` their new password directly (an
+ * Email/Password block, at the sender's explicit request — this used to
+ * withhold the password and say "ask your admin", not anymore). Shared
+ * between anything that runs a bulk password reset; today that's only
+ * the streaming route (api/bulk-password-reset/route.ts), which calls
+ * this via next/server's after(), once the reset itself has already
+ * responded to the caller — Resend's own pace shouldn't hold up
+ * confirming the actual password change succeeded.
+ *
+ * Resend's send endpoint allows 10 req/s (confirmed live against this
+ * project's key); 2 concurrent here is comfortably under that. The real
+ * free-tier ceiling isn't the rate limit but the DAILY/MONTHLY send
+ * quota (100/day, 3,000/month on Resend's free plan) — a reset across
+ * hundreds of real recipients can exhaust that outright, in which case
+ * the remaining sends fail individually below rather than affecting the
+ * password changes that already succeeded. */
+export async function sendBulkPasswordChangeNotifications(supabaseAdmin: ReturnType<typeof createServiceClient>, succeededIds: string[], newPassword: string) {
+  if (succeededIds.length === 0) return
+  try {
+    const [{ data: profiles }, emailById] = await Promise.all([
+      supabaseAdmin.from('s_realestate_users').select('id, full_name').in('id', succeededIds),
+      getAuthEmailMap(supabaseAdmin, succeededIds),
+    ])
+    const nameById = new Map<string, string>()
+    ;(profiles || []).forEach((p: any) => nameById.set(p.id as string, (p.full_name as string) || ''))
+
+    const EMAIL_CONCURRENCY = 2
+    for (let i = 0; i < succeededIds.length; i += EMAIL_CONCURRENCY) {
+      const slice = succeededIds.slice(i, i + EMAIL_CONCURRENCY)
+      await Promise.all(
+        slice.map(async (id) => {
+          const email = emailById.get(id)
+          if (!email) return
+          try {
+            await sendPasswordChangedEmail(email, nameById.get(id) || '', newPassword)
+          } catch (e) {
+            console.error(`Error sending password-changed email to ${email}:`, e)
+          }
+        })
+      )
+    }
+  } catch (e) {
+    console.error('Error notifying accounts after bulk password reset:', e)
+  }
 }
 
 /** IT-only. A Director's real "reports to" is resolved through

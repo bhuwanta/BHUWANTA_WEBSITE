@@ -41,7 +41,7 @@ export default function AreasProjectsPage({ canManage = false }: AreasProjectsPa
           </p>
         </div>
 
-        <div className="flex items-center gap-2 bg-white p-1.5 rounded-xl border border-[#e8ecf2] shadow-sm max-w-full overflow-x-auto">
+        <div className="flex items-center gap-2 bg-white p-1.5 rounded-xl border border-[#e8ecf2] shadow-sm w-fit max-w-full overflow-x-auto">
           <button
             onClick={() => setActiveTab('projects')}
             className={`px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap shrink-0 ${activeTab === 'projects' ? 'bg-[#1e3a5f] text-white shadow' : 'text-[#5a6a82] hover:bg-[#f3f5f8]'}`}
@@ -56,7 +56,7 @@ export default function AreasProjectsPage({ canManage = false }: AreasProjectsPa
           </button>
         </div>
 
-        {activeTab === 'projects' ? <ProjectsTab canManage={canManage} /> : <DocumentsTab canManage={canManage} />}
+        {activeTab === 'projects' ? <ProjectsTab canManage={canManage} /> : <ComingSoon />}
       </div>
     </div>
   );
@@ -257,7 +257,7 @@ function ProjectsTab({ canManage }: { canManage: boolean }) {
     <div className="space-y-6">
       {message && !isAreaModalOpen && !isProjectModalOpen && <MessageBanner message={message} />}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <div className="lg:col-span-1 bg-white border border-[#e8ecf2] rounded-xl shadow-sm overflow-hidden flex flex-col h-[600px]">
           <div className="p-5 border-b border-[#e8ecf2] bg-[#f7f8fa] space-y-3">
             <div className="flex items-center justify-between">
@@ -273,7 +273,7 @@ function ProjectsTab({ canManage }: { canManage: boolean }) {
                     setEditingAreaId(null);
                     setIsAreaModalOpen(true);
                   }}
-                  className="flex items-center gap-1.5 bg-white border border-[#e8ecf2] text-[#0f1d33] px-3 py-1.5 rounded-lg font-semibold shadow-sm hover:bg-[#f3f5f8] transition-colors text-xs"
+                  className="flex items-center gap-1.5 gradient-gold text-white px-3 py-1.5 rounded-lg font-semibold shadow-lg shadow-[#c4a55a]/20 transition-all text-xs"
                   title="Create Area"
                 >
                   <Plus className="w-3.5 h-3.5" />
@@ -335,7 +335,7 @@ function ProjectsTab({ canManage }: { canManage: boolean }) {
           </div>
         </div>
 
-        <div className="lg:col-span-2 bg-white border border-[#e8ecf2] rounded-xl shadow-sm overflow-hidden flex flex-col h-[600px]">
+        <div className="lg:col-span-3 bg-white border border-[#e8ecf2] rounded-xl shadow-sm overflow-hidden flex flex-col h-[600px]">
           <div className="p-5 border-b border-[#e8ecf2] bg-[#f7f8fa] flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
             <h2 className="text-lg font-bold text-[#0f1d33] flex items-center gap-2 shrink-0">
               <Building2 className="w-5 h-5 text-[#1e3a5f]" />
@@ -347,7 +347,7 @@ function ProjectsTab({ canManage }: { canManage: boolean }) {
               )}
             </h2>
             <div className="flex items-center gap-2 w-full sm:w-auto">
-              <div className="relative flex-1 sm:w-64">
+              <div className="relative w-full sm:w-72">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5a6a82]" />
                 <input
                   type="text"
@@ -384,23 +384,23 @@ function ProjectsTab({ canManage }: { canManage: boolean }) {
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-[#f3f5f8] text-[#5a6a82] text-xs uppercase tracking-wider font-semibold border-y border-[#e8ecf2]">
-                      <th className="p-4">Project</th>
-                      <th className="p-4">Area</th>
-                      <th className="p-4">Base Price</th>
-                      <th className="p-4">MRP (Default)</th>
-                      <th className="p-4">Director(s)</th>
-                      {canManage && <th className="p-4 text-right">Actions</th>}
+                    <tr className="bg-[#f3f5f8] text-[#5a6a82] text-xs uppercase tracking-wider font-semibold border-y border-[#e8ecf2] whitespace-nowrap">
+                      <th className="p-3 w-40">Project</th>
+                      <th className="p-3">Area</th>
+                      <th className="p-3">Base Price</th>
+                      <th className="p-3">MRP (Default)</th>
+                      <th className="p-3">Director(s)</th>
+                      {canManage && <th className="p-3 text-right">Actions</th>}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#e8ecf2]">
                     {filteredProjects.map((project) => (
                       <tr key={project.id} className="hover:bg-[#f7f8fa] transition-colors">
-                        <td className="p-4 align-top">
-                          <span className="font-bold text-[#0f1d33]">{project.name}</span>
-                          {project.location && <div className="text-xs text-[#5a6a82] mt-0.5">{project.location}</div>}
+                        <td className="p-3 align-top w-40 max-w-40">
+                          <span className="font-bold text-sm text-[#0f1d33] block leading-snug">{project.name}</span>
+                          {project.location && <div className="text-xs text-[#5a6a82] mt-0.5 leading-snug">{project.location}</div>}
                         </td>
-                        <td className="p-4 align-top">
+                        <td className="p-3 align-top">
                           <div className="flex flex-col items-start gap-1.5">
                             <span className="bg-[#1e3a5f]/10 text-[#1e3a5f] px-2.5 py-1 rounded-md text-xs font-medium border border-[#1e3a5f]/20 whitespace-nowrap">{project.s_areas?.name || 'N/A'}</span>
                             {project.google_maps_url && (
@@ -417,15 +417,15 @@ function ProjectsTab({ canManage }: { canManage: boolean }) {
                             )}
                           </div>
                         </td>
-                        <td className="p-4 align-top text-sm text-[#0f1d33] font-medium whitespace-nowrap">{formatPrice(project.base_price)}</td>
-                        <td className="p-4 align-top text-sm text-[#0f1d33] font-medium whitespace-nowrap">{formatPrice(project.mrp_default)}</td>
-                        <td className="p-4 align-top">
+                        <td className="p-3 align-top text-sm text-[#0f1d33] font-medium whitespace-nowrap">{formatPrice(project.base_price)}</td>
+                        <td className="p-3 align-top text-sm text-[#0f1d33] font-medium whitespace-nowrap">{formatPrice(project.mrp_default)}</td>
+                        <td className="p-3 align-top">
                           <button
                             onClick={() => openDirectorsModal(project)}
                             className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-[#e8ecf2] bg-white text-[#1e3a5f] hover:bg-[#f3f5f8] transition-colors whitespace-nowrap"
                           >
                             <Users className="w-3.5 h-3.5" />
-                            View Directors
+                            Directors
                             <span
                               className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
                                 (project.s_director_projects || []).length === 0 ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'
@@ -436,7 +436,7 @@ function ProjectsTab({ canManage }: { canManage: boolean }) {
                           </button>
                         </td>
                         {canManage && (
-                          <td className="p-4 align-top text-right whitespace-nowrap">
+                          <td className="p-3 align-top text-right whitespace-nowrap">
                             <button onClick={() => openEditProject(project)} className="text-[#1e3a5f] font-semibold text-xs hover:underline mr-3">
                               Edit
                             </button>
@@ -711,6 +711,16 @@ function ProjectsTab({ canManage }: { canManage: boolean }) {
           </form>
         </Modal>
       )}
+    </div>
+  );
+}
+
+function ComingSoon() {
+  return (
+    <div className="bg-white border border-[#e8ecf2] rounded-xl shadow-sm flex flex-col items-center justify-center h-[600px] text-center px-6">
+      <FileText className="w-10 h-10 text-[#e8ecf2] mb-3" />
+      <h3 className="text-lg font-bold text-[#0f1d33]">Coming Soon</h3>
+      <p className="text-[#5a6a82] text-sm mt-1">Document management is on its way.</p>
     </div>
   );
 }

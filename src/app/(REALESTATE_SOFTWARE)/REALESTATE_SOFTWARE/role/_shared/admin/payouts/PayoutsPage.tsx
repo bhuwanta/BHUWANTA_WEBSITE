@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Landmark, Loader2, Clock, CheckCircle2, RefreshCw, XCircle, User, MapPin, ShoppingBag, Search, ArrowUp, ArrowDown, Network, Maximize2, X } from 'lucide-react';
+import { Landmark, Loader2, Clock, CheckCircle2, RefreshCw, XCircle, User, MapPin, ShoppingBag, Search, Calendar, Network, Maximize2, X, Building2 } from 'lucide-react';
 import { getAllPayoutsAction, markPayoutCompletedAction, type SaleTotals } from './actions';
+import MultiSelectFilter from '../../components/MultiSelectFilter';
 import { getSalesRoleOrderAction } from '../commission-rates/actions';
 import { getFixedRoleLabelsAction } from '../commission-rates/fixed-role-actions';
 import { ROLE_LABELS, type RealEstateRole } from '../../permissions';
@@ -30,7 +31,17 @@ export default function PayoutsPage({ currentUserRole }: PayoutsPageProps = {}) 
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'completed'>('pending');
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  // 'single' shows one date input and filters to exactly that day;
+  // 'range' shows two and filters inclusively between them. Compared as
+  // plain yyyy-mm-dd strings against submitted_at's own date portion —
+  // sales stay listed newest-first regardless (sortDir is fixed now that
+  // this replaces the old manual sort toggle).
+  const [dateMode, setDateMode] = useState<'single' | 'range'>('single');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
+  const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
+  const sortDir: 'asc' | 'desc' = 'asc';
   const [markingId, setMarkingId] = useState<string | null>(null);
   // Only one sale's detail is ever open at a time — the Expand action
   // opens it as a popup rather than inline, so there's no need for a Set
@@ -64,7 +75,7 @@ export default function PayoutsPage({ currentUserRole }: PayoutsPageProps = {}) 
     } else if (payoutsRes.error) {
       setError(payoutsRes.error);
     }
-    setChainRank([...roleOrderRes.data.map((r) => r.role_code)].reverse().concat(['governing_council', 'ceo', 'company']));
+    setChainRank([...roleOrderRes.data.map((r) => r.role_code)].reverse().concat(['governing_council', 'ceo']));
     const mergedLabels: Record<string, string> = {};
     roleOrderRes.data.forEach((r) => {
       mergedLabels[r.role_code] = r.label;
@@ -110,6 +121,12 @@ export default function PayoutsPage({ currentUserRole }: PayoutsPageProps = {}) 
     if (!groupsMap.has(regId)) groupsMap.set(regId, { registration: reg, lines: [] });
     groupsMap.get(regId)!.lines.push(p);
   });
+
+  // Every area/project name that actually appears in the loaded sales —
+  // the filter options are exactly what's filterable, never a name with
+  // zero matching sales.
+  const areaOptions = Array.from(new Set(Array.from(groupsMap.values()).map((g) => g.registration?.s_areas?.name).filter(Boolean))).sort();
+  const projectOptions = Array.from(new Set(Array.from(groupsMap.values()).map((g) => g.registration?.s_projects?.name).filter(Boolean))).sort();
 
   const matchesFilter = (status: string) => {
     if (statusFilter === 'all') return true;
@@ -184,6 +201,22 @@ export default function PayoutsPage({ currentUserRole }: PayoutsPageProps = {}) 
         .filter(Boolean)
         .some((field: string) => String(field).toLowerCase().includes(q));
     })
+    .filter((g) => {
+      if (!dateFrom) return true;
+      const submitted = g.registration?.submitted_at;
+      if (!submitted) return false;
+      // Local-date portion only (not a UTC slice) — a sale submitted late
+      // at night shouldn't fall on "the wrong day" for whoever's
+      // filtering by their own calendar date.
+      const d = new Date(submitted);
+      const saleDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      if (dateMode === 'single') return saleDate === dateFrom;
+      if (saleDate < dateFrom) return false;
+      if (dateTo && saleDate > dateTo) return false;
+      return true;
+    })
+    .filter((g) => selectedAreas.length === 0 || selectedAreas.includes(g.registration?.s_areas?.name))
+    .filter((g) => selectedProjects.length === 0 || selectedProjects.includes(g.registration?.s_projects?.name))
     .sort((a, b) => {
       const cmp = new Date(b.registration?.submitted_at || 0).getTime() - new Date(a.registration?.submitted_at || 0).getTime();
       return sortDir === 'asc' ? cmp : -cmp;
@@ -207,9 +240,9 @@ export default function PayoutsPage({ currentUserRole }: PayoutsPageProps = {}) 
 
       {error && <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800 max-w-xl shrink-0">{error}</div>}
 
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4 shrink-0">
-        <div className="flex items-center gap-2 bg-white p-1.5 rounded-xl border border-[#e8ecf2] shadow-sm shrink-0 max-w-full overflow-x-auto">
-          {(['pending', 'completed', 'all'] as const).map((s) => (
+      <div className="mb-4 shrink-0 space-y-3">
+        <div className="inline-flex items-center gap-2 bg-white p-1.5 rounded-xl border border-[#e8ecf2] shadow-sm max-w-full overflow-x-auto">
+          {(['all', 'pending', 'completed'] as const).map((s) => (
             <button
               key={s}
               onClick={() => setStatusFilter(s)}
@@ -221,24 +254,68 @@ export default function PayoutsPage({ currentUserRole }: PayoutsPageProps = {}) 
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <div className="relative flex-1 min-w-[220px]">
+          <div className="relative w-full md:w-72">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5a6a82]" />
             <input
               type="text"
               placeholder="Search area, project, customer, seller, payee..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full md:w-80 bg-white border border-[#e8ecf2] rounded-lg pl-9 pr-3 py-2 text-sm text-[#0f1d33] focus:outline-none focus:ring-1 focus:ring-[#c4a55a]"
+              className="w-full bg-white border border-[#e8ecf2] rounded-lg pl-9 pr-3 py-2 text-sm text-[#0f1d33] focus:outline-none focus:ring-1 focus:ring-[#c4a55a]"
             />
           </div>
-          <button
-            onClick={() => setSortDir(sortDir === 'asc' ? 'desc' : 'asc')}
-            title={sortDir === 'asc' ? 'Newest sales first — click for oldest first' : 'Oldest sales first — click for newest first'}
-            className="shrink-0 flex items-center gap-2 bg-white border border-[#e8ecf2] text-[#0f1d33] px-4 py-2 rounded-lg font-semibold shadow-sm hover:bg-[#f3f5f8] transition-colors text-sm"
-          >
-            {sortDir === 'asc' ? <ArrowDown className="w-4 h-4" /> : <ArrowUp className="w-4 h-4" />}
-            Date
-          </button>
+          <div className="shrink-0 flex items-center gap-1.5 bg-white border border-[#e8ecf2] rounded-lg px-3 py-1.5 shadow-sm">
+            <Calendar className="w-4 h-4 text-[#5a6a82] shrink-0" />
+            <div className="flex items-center bg-[#f3f5f8] rounded-md p-0.5 mr-1">
+              {(['single', 'range'] as const).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => {
+                    setDateMode(m);
+                    if (m === 'single') setDateTo('');
+                  }}
+                  className={`px-2 py-1 rounded text-xs font-bold capitalize transition-all ${dateMode === m ? 'bg-white text-[#1e3a5f] shadow-sm' : 'text-[#5a6a82]'}`}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              title={dateMode === 'single' ? 'Show sales from this day only' : 'Start of the range'}
+              className="text-sm text-[#0f1d33] bg-transparent focus:outline-none [color-scheme:light]"
+            />
+            {dateMode === 'range' && (
+              <>
+                <span className="text-[#5a6a82] text-sm">–</span>
+                <input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  min={dateFrom || undefined}
+                  title="End of the range"
+                  className="text-sm text-[#0f1d33] bg-transparent focus:outline-none [color-scheme:light]"
+                />
+              </>
+            )}
+            {dateFrom && (
+              <button
+                onClick={() => {
+                  setDateFrom('');
+                  setDateTo('');
+                }}
+                title="Clear date filter"
+                className="text-[#5a6a82] hover:text-[#0f1d33] shrink-0"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          <MultiSelectFilter icon={MapPin} label="Area" options={areaOptions} selected={selectedAreas} onChange={setSelectedAreas} />
+          <MultiSelectFilter icon={Building2} label="Project" options={projectOptions} selected={selectedProjects} onChange={setSelectedProjects} />
         </div>
       </div>
 
@@ -260,8 +337,8 @@ export default function PayoutsPage({ currentUserRole }: PayoutsPageProps = {}) 
                   <th className="text-left font-semibold text-[#5a6a82] text-xs uppercase tracking-wide px-4 py-3 w-12">Sr.No</th>
                   <th className="text-left font-semibold text-[#5a6a82] text-xs uppercase tracking-wide px-4 py-3">Area</th>
                   <th className="text-left font-semibold text-[#5a6a82] text-xs uppercase tracking-wide px-4 py-3">Project</th>
-                  <th className="text-left font-semibold text-[#5a6a82] text-xs uppercase tracking-wide px-4 py-3">Customer Name</th>
                   <th className="text-left font-semibold text-[#5a6a82] text-xs uppercase tracking-wide px-4 py-3">Sold By</th>
+                  <th className="text-left font-semibold text-[#5a6a82] text-xs uppercase tracking-wide px-4 py-3">Customer Name</th>
                   <th className="text-right font-semibold text-[#5a6a82] text-xs uppercase tracking-wide px-4 py-3">Amount</th>
                   <th className="text-center font-semibold text-[#5a6a82] text-xs uppercase tracking-wide px-4 py-3">Actions</th>
                 </tr>
@@ -279,11 +356,11 @@ export default function PayoutsPage({ currentUserRole }: PayoutsPageProps = {}) 
                         </span>
                       </td>
                       <td className="px-4 py-3 text-[#0f1d33] font-medium whitespace-nowrap">{reg?.s_projects?.name || 'Unknown project'}</td>
-                      <td className="px-4 py-3 text-[#0f1d33] whitespace-nowrap">{reg?.customer_name || '—'}</td>
                       <td className="px-4 py-3 whitespace-nowrap">
                         <span className="text-[#0f1d33]">{reg?.seller?.full_name || '—'}</span>
                         <span className="text-xs text-[#5a6a82] ml-1">({reg?.seller?.role ? roleLabel(reg.seller.role) : '—'})</span>
                       </td>
+                      <td className="px-4 py-3 text-[#0f1d33] whitespace-nowrap">{reg?.customer_name || '—'}</td>
                       <td className="px-4 py-3 text-right whitespace-nowrap">
                         <p className="font-bold text-[#0f1d33]">{formatCurrency(group.totals.totalDistributed)}</p>
                         <p className="text-xs text-[#5a6a82]">
@@ -442,3 +519,4 @@ export default function PayoutsPage({ currentUserRole }: PayoutsPageProps = {}) 
     </div>
   );
 }
+

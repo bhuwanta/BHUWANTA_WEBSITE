@@ -2,8 +2,9 @@
 
 import { createServiceClient } from '@/lib/supabase/server'
 import { verifyCaller } from '../../auth'
-import { canViewCompanyWide, isOperationManager } from '../../permissions'
+import { isAdminPeer, isOperationManager } from '../../permissions'
 import { computePool } from '../../commission'
+import { requirePageModule } from '../../nav-modules'
 
 /** IT/CEO/Governing Council keep read-only company-wide visibility into
  * the payout queue (oversight, same as Registrations §7), but ONLY
@@ -15,9 +16,16 @@ import { computePool } from '../../commission'
  * Paid" stub, not real Razorpay). */
 async function requireCanViewPayouts() {
   const caller = await verifyCaller()
-  if (!caller || !(canViewCompanyWide(caller.role) || isOperationManager(caller.role))) {
-    return { ok: false as const, error: 'Only IT, CEO, Governing Council, Company, or Operation Manager can view payouts.' }
+  if (!caller || !(isAdminPeer(caller.role) || isOperationManager(caller.role))) {
+    return { ok: false as const, error: 'Only IT, Company, Governing Council, or Operation Manager can view payouts.' }
   }
+  // On top of the role check: Company and Governing Council also need
+  // the Payouts module switched on for them. IT and the Operation
+  // Manager aren't governed by it (requirePageModule waves them
+  // through), so this can't take the page away from the two roles that
+  // have to run the disbursement pipeline.
+  const mod = await requirePageModule('payouts')
+  if (!mod.ok) return { ok: false as const, error: mod.error }
   return { ok: true as const, role: caller.role }
 }
 
@@ -208,17 +216,14 @@ export async function getPayoutLineageForRegistrationAction(registrationId: stri
       cursor = parent
     }
 
-    // The top of the tree — Company, then every active CEO — always
-    // opens, regardless of this particular sale's chain. Neither sits in
-    // anyone's parent_id line (they're paid company-wide, not through
-    // the wing), so a path built only from ancestors would leave the
-    // graph collapsed above the Governing Council and hide payees who
-    // ARE on this sale.
-    const [{ data: companyRows }, { data: ceoRows }] = await Promise.all([
-      supabaseAdmin.from('s_realestate_users').select('id').eq('role', 'company').eq('is_active', true),
-      supabaseAdmin.from('s_realestate_users').select('id').eq('role', 'ceo').eq('is_active', true),
-    ])
-    expandPath.push(...(companyRows || []).map((r: any) => r.id as string), ...(ceoRows || []).map((r: any) => r.id as string))
+    // The top of the tree (the Company account, role 'ceo') always
+    // opens, regardless of this particular sale's chain. It doesn't sit
+    // in anyone's parent_id line — it's paid company-wide, not through
+    // the wing — so a path built only from ancestors would leave the
+    // graph collapsed above the Governing Council and hide a payee who
+    // IS on this sale.
+    const { data: topRows } = await supabaseAdmin.from('s_realestate_users').select('id').eq('role', 'ceo').eq('is_active', true)
+    expandPath.push(...(topRows || []).map((r: any) => r.id as string))
 
     if (directorId) {
       const { data: assignment } = await supabaseAdmin.from('s_director_gc').select('gc_id').eq('director_id', directorId).maybeSingle()
@@ -299,6 +304,115 @@ export async function getPayoutLineageForRegistrationAction(registrationId: stri
       expandPath: [] as string[],
       financials: null as SaleFinancials | null,
     }
+  }
+}
+
+/** The wallet-scoped version of the visualizer: what ONE payee is
+ * allowed to see about a sale they personally earned on. Rooted at the
+ * caller's own node rather than the Company, so the tree only ever runs
+ * DOWNWARD from them — an LA who sold sees themselves and the customer,
+ * a Director sees the branch of their own team that led to the sale.
+ *
+ * Entitlement is "you have a payout row on this sale", not a role check:
+ * this is reached from their own Wallet, where every row is by
+ * definition a line they were paid. Deliberately narrower than
+ * getPayoutLineageForRegistrationAction above — only the caller's OWN
+ * commission is returned, never anyone else's, so nobody learns what
+ * their upline or downline earned from a page about their own wallet. */
+export async function getMySaleLineageAction(registrationId: string) {
+  const empty = {
+    success: false,
+    error: '',
+    rootId: null as string | null,
+    sellerId: null as string | null,
+    expandPath: [] as string[],
+    sellerName: '',
+    projectName: '',
+    plotSize: null as number | null,
+    financials: null as SaleFinancials | null,
+  }
+
+  try {
+    const caller = await verifyCaller()
+    if (!caller) return { ...empty, error: 'Not authenticated.' }
+
+    const supabaseAdmin = createServiceClient()
+
+    const { data: myLine } = await supabaseAdmin
+      .from('s_sales_payouts')
+      .select('payee_id, role, commission_percentage, tier_percentage, previous_tier_percentage, amount')
+      .eq('registration_id', registrationId)
+      .eq('payee_id', caller.id)
+      .maybeSingle()
+
+    if (!myLine) return { ...empty, error: 'You were not paid on this sale.' }
+
+    const { data: reg } = await supabaseAdmin
+      .from('s_new_registrations')
+      .select(
+        `id, submitted_by, plot_size_sqyd, base_price_at_submission, mrp_at_submission, customer_name, customer_user_id,
+         seller:s_realestate_users!submitted_by ( full_name ),
+         s_projects ( name )`
+      )
+      .eq('id', registrationId)
+      .maybeSingle()
+    if (!reg) return { ...empty, error: 'Sale not found.' }
+
+    // Walk UP from the seller until we reach the caller, then reverse —
+    // that gives the ids between the caller and the seller, which is
+    // exactly what the graph has to open to bring the seller (and the
+    // customer hanging off them) on screen. A seller who IS the caller
+    // yields an empty path: nothing to expand, their own node is the
+    // whole tree.
+    const ancestors: string[] = []
+    let cursorId: string | null = reg.submitted_by as string
+    for (let hops = 0; cursorId && cursorId !== caller.id && hops < 25; hops++) {
+      const { data } = await supabaseAdmin.from('s_realestate_users').select('id, parent_id').eq('id', cursorId).maybeSingle()
+      const person = data as { id: string; parent_id: string | null } | null
+      if (!person) break
+      if (person.id !== reg.submitted_by) ancestors.push(person.id)
+      cursorId = person.parent_id || null
+    }
+    const expandPath = ancestors.reverse()
+
+    const plotSize = Number(reg.plot_size_sqyd)
+    const financials: SaleFinancials = {
+      customerId: (reg.customer_user_id as string) || null,
+      customerName: (reg.customer_name as string) || 'Unknown',
+      plotSizeSqyd: plotSize,
+      basePricePerSqyd: Number(reg.base_price_at_submission),
+      mrpPerSqyd: Number(reg.mrp_at_submission),
+      totalCustomerPaid: computePool(plotSize, Number(reg.mrp_at_submission)),
+      commissionPool: computePool(plotSize, Number(reg.base_price_at_submission)),
+      // Their own line only — not the sale's full payout total, which
+      // would leak the rest of the chain's earnings by subtraction.
+      totalCommissionPaid: Number(myLine.amount),
+      payeeDetails: {
+        [caller.id]: {
+          role: myLine.role as string,
+          percentage: Number(myLine.commission_percentage),
+          amount: Number(myLine.amount),
+          tierPercentage: Number(myLine.tier_percentage),
+          previousTierPercentage: Number(myLine.previous_tier_percentage),
+          splitCount: 1,
+        },
+      },
+    }
+
+    return {
+      success: true,
+      error: '',
+      rootId: caller.id,
+      sellerId: reg.submitted_by as string,
+      expandPath,
+      sellerName: (reg as any).seller?.full_name || '',
+      projectName: (reg as any).s_projects?.name || '',
+      plotSize: reg.plot_size_sqyd as number | null,
+      financials,
+    }
+  } catch (error: any) {
+    console.error('Error fetching own sale lineage:', error)
+    return { ...empty, error: error.message || 'Failed to load this sale.' }
   }
 }
 

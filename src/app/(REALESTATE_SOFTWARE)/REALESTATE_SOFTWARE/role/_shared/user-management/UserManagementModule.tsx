@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { UserPlus, UserCheck, Loader2, AlertCircle, Search, ChevronLeft, ChevronRight, X, Eye, EyeOff, Edit2, Trash2, CheckCircle2, Users, GitBranch, Clock } from 'lucide-react';
+import { UserPlus, UserCheck, Loader2, AlertCircle, Search, ChevronLeft, ChevronRight, X, Eye, EyeOff, Edit2, Trash2, CheckCircle2, Users, GitBranch, Clock, KeyRound, ShieldAlert } from 'lucide-react';
 import {
   createExecutiveAction,
   getExecutivesAction,
@@ -12,6 +12,10 @@ import {
   getFilterableRolesAction,
   getReportsToCandidatesAction,
   reassignReportsToAction,
+  getUsersForBulkPasswordAction,
+  checkBulkPasswordModuleStatusAction,
+  getSingletonRoleCountsAction,
+  type BulkPasswordUser,
 } from './actions';
 import { getDirectorGcAssignmentsAction, setDirectorGcAction } from '../admin/payout-rules/actions';
 import { getSalesRoleOrderAction } from '../admin/commission-rates/actions';
@@ -31,8 +35,7 @@ interface PendingSaleInfo {
 
 const ROLE_BADGE_CLASS: Record<RealEstateRole, string> = {
   it: 'bg-purple-50 text-purple-600',
-  company: 'bg-[#c4a55a]/20 text-[#8a7333]',
-  ceo: 'bg-[#c4a55a]/10 text-[#c4a55a]',
+  ceo: 'bg-amber-50 text-amber-600',
   governing_council: 'bg-[#c4a55a]/10 text-[#c4a55a]',
   operation_manager: 'bg-blue-50 text-blue-600',
   director: 'bg-[#1e3a5f]/10 text-[#1e3a5f]',
@@ -81,14 +84,57 @@ export default function UserManagementModule({ currentUserRole, currentUserId }:
   const [reportsToMessage, setReportsToMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [blockedPendingSales, setBlockedPendingSales] = useState<PendingSaleInfo[] | null>(null);
 
+  // ---------- Bulk password reset (IT only) ----------
+  const [bulkOpen, setBulkOpen] = useState(false);
+  // IT always has this; a sales-tier role only sees the button once
+  // IT switches it on for their role via the Bulk Change Passwords
+  // module (Modules page) — display-only, the real check re-runs
+  // server-side on every actual request (requireBulkPasswordAccess).
+  const [bulkPasswordEnabled, setBulkPasswordEnabled] = useState(false);
+  const [bulkStep, setBulkStep] = useState<'pick' | 'password'>('pick');
+  const [bulkUsers, setBulkUsers] = useState<BulkPasswordUser[]>([]);
+  const [bulkSelected, setBulkSelected] = useState<Set<string>>(new Set());
+  const [bulkSearch, setBulkSearch] = useState('');
+  const [bulkLoading, setBulkLoading] = useState(false);
+  const [bulkSaving, setBulkSaving] = useState(false);
+  const [bulkPassword, setBulkPassword] = useState('');
+  const [bulkConfirm, setBulkConfirm] = useState('');
+  const [bulkShowPassword, setBulkShowPassword] = useState(false);
+  const [bulkShowConfirm, setBulkShowConfirm] = useState(false);
+  // Same four rules validatePassword() enforces server-side — shown live
+  // here through the same PasswordChecklist the Edit User modal and the
+  // set-password / forgot-password pages use, so the requirements read
+  // identically everywhere a password is chosen.
+  const bulkIsLengthValid = bulkPassword.length >= 8 && bulkPassword.length <= 20;
+  const bulkHasUpperCase = /[A-Z]/.test(bulkPassword);
+  const bulkHasNumber = /[0-9]/.test(bulkPassword);
+  const bulkHasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(bulkPassword);
+  const bulkPasswordValid = bulkIsLengthValid && bulkHasUpperCase && bulkHasNumber && bulkHasSpecialChar;
+  const [bulkError, setBulkError] = useState('');
+  const [bulkResult, setBulkResult] = useState<{ updated: number; failed: number } | null>(null);
+  // Live progress while the streaming reset is running — the Route
+  // Handler (role/it/modules/bulk-password-reset) sends one line per completed
+  // batch, so this updates well before the whole run finishes instead
+  // of sitting on a static spinner for however long 1,000+ accounts take.
+  const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number } | null>(null);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [roleFilter, setRoleFilter] = useState<RealEstateRole | 'all'>('all');
-  const [sortCol, setSortCol] = useState('created_at');
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  // Default to role order (IT, Operation Manager, Company, Governing
+  // Council, sales cascade, Customer last) — same fixed structure as the
+  // All/IT/OM/... filter tabs above the table, so the "All" view reads
+  // as one coherent hierarchy instead of insertion order.
+  const [sortCol, setSortCol] = useState('role');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [users, setUsers] = useState<any[]>([]);
   const [totalUsers, setTotalUsers] = useState(0);
   const [loadingData, setLoadingData] = useState(true);
+  // Live counts for the two singleton-protected roles (Operation
+  // Manager, Company) — lets the toggle disable itself up front for the
+  // LAST active one of either, same as a user's own row, instead of
+  // letting the click through and bouncing off the server-side guard.
+  const [singletonCounts, setSingletonCounts] = useState({ operation_manager: 0, ceo: 0 });
   const itemsPerPage = 50;
   // ROLE_LABELS only covers the 5 fixed roles + the 8 built-in
   // sales-tier ones — a role renamed (or newly created) via the Roles/
@@ -107,6 +153,8 @@ export default function UserManagementModule({ currentUserRole, currentUserId }:
   useEffect(() => {
     getCreatableRolesAction(currentUserRole).then(setCreatableRoles);
     getFilterableRolesAction(currentUserRole).then(setFilterableRoles);
+    if (currentUserRole === 'it') setBulkPasswordEnabled(true);
+    else checkBulkPasswordModuleStatusAction(currentUserRole).then((res) => setBulkPasswordEnabled(res.isEnabled));
     Promise.all([getSalesRoleOrderAction(), getFixedRoleLabelsAction()]).then(([roleOrderRes, fixedLabelsRes]) => {
       const mergedLabels: Record<string, string> = {};
       roleOrderRes.data.forEach((r) => {
@@ -121,7 +169,10 @@ export default function UserManagementModule({ currentUserRole, currentUserId }:
 
   const fetchUsers = async (showLoading = true) => {
     if (showLoading) setLoadingData(true);
-    const res = await getExecutivesAction(currentUserRole, currentUserId, currentPage, itemsPerPage, searchQuery, roleFilter, sortCol, sortDir);
+    const [res] = await Promise.all([
+      getExecutivesAction(currentUserRole, currentUserId, currentPage, itemsPerPage, searchQuery, roleFilter, sortCol, sortDir),
+      getSingletonRoleCountsAction().then(setSingletonCounts),
+    ]);
     if (res.success) {
       setUsers(res.data);
       setTotalUsers(res.count || 0);
@@ -149,6 +200,96 @@ export default function UserManagementModule({ currentUserRole, currentUserId }:
   const SortIcon = ({ col }: { col: string }) => {
     if (sortCol !== col) return <ChevronRight className="w-3 h-3 rotate-90 opacity-40 ml-1 inline" />;
     return <ChevronRight className={`w-3 h-3 ml-1 inline transition-transform ${sortDir === 'asc' ? '-rotate-90' : 'rotate-90'}`} />;
+  };
+
+  const openBulkPassword = async () => {
+    setBulkOpen(true);
+    setBulkStep('pick');
+    setBulkSearch('');
+    setBulkPassword('');
+    setBulkConfirm('');
+    setBulkError('');
+    setBulkResult(null);
+    setBulkProgress(null);
+    setBulkLoading(true);
+    const res = await getUsersForBulkPasswordAction();
+    if (res.success) {
+      setBulkUsers(res.data);
+      // Everyone selected by default — unticking is the deliberate act.
+      setBulkSelected(new Set(res.data.map((u) => u.id)));
+    } else {
+      setBulkError(res.error || 'Failed to load users.');
+    }
+    setBulkLoading(false);
+  };
+
+  const bulkFiltered = bulkUsers.filter((u) => {
+    const q = bulkSearch.trim().toLowerCase();
+    if (!q) return true;
+    return [u.full_name, u.bhuwanta_id, roleLabel(u.role)].filter(Boolean).some((f) => String(f).toLowerCase().includes(q));
+  });
+
+  const handleBulkReset = async () => {
+    setBulkError('');
+    if (bulkPassword !== bulkConfirm) {
+      setBulkError('The two passwords do not match.');
+      return;
+    }
+    setBulkSaving(true);
+    setBulkProgress({ done: 0, total: bulkSelected.size });
+    try {
+      const response = await fetch('/REALESTATE_SOFTWARE/role/it/modules/bulk-password-reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userIds: [...bulkSelected], password: bulkPassword }),
+      });
+
+      if (!response.ok || !response.body) {
+        const body = await response.json().catch(() => ({}));
+        setBulkError(body.error || 'Bulk reset failed.');
+        setBulkSaving(false);
+        return;
+      }
+
+      // Newline-delimited JSON: read the stream as it arrives and update
+      // the "X / Y done" count on every `progress` line, rather than
+      // waiting for the single final response a plain Server Action
+      // would have to give all at once.
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let finalResult: { updated: number; failed: number } | null = null;
+      let streamError: string | null = null;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          const evt = JSON.parse(line);
+          if (evt.type === 'progress' || evt.type === 'start') {
+            setBulkProgress({ done: evt.done ?? 0, total: evt.total });
+          } else if (evt.type === 'done') {
+            finalResult = { updated: evt.updated, failed: evt.failures?.length || 0 };
+          } else if (evt.type === 'error') {
+            streamError = evt.error;
+          }
+        }
+      }
+
+      setBulkSaving(false);
+      if (streamError && !finalResult) {
+        setBulkError(streamError);
+        return;
+      }
+      if (finalResult) setBulkResult(finalResult);
+    } catch (e: any) {
+      setBulkSaving(false);
+      setBulkError(e?.message || 'Bulk reset failed.');
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -348,7 +489,7 @@ export default function UserManagementModule({ currentUserRole, currentUserId }:
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="relative w-full md:w-80">
+            <div className="relative w-full md:w-72">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5a6a82]" />
               <input
                 type="text"
@@ -361,6 +502,12 @@ export default function UserManagementModule({ currentUserRole, currentUserId }:
                 className="w-full bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg pl-9 pr-4 py-2 text-sm text-[#0f1d33] focus:outline-none focus:ring-1 focus:ring-[#c4a55a]"
               />
             </div>
+            {bulkPasswordEnabled && (
+              <button onClick={openBulkPassword} className="shrink-0 flex items-center gap-2 bg-white border border-[#e8ecf2] text-[#0f1d33] px-3 py-2 rounded-lg font-semibold shadow-sm hover:bg-[#f3f5f8] transition-colors text-sm whitespace-nowrap">
+                <KeyRound className="w-4 h-4 text-[#5a6a82]" />
+                Bulk Change Passwords
+              </button>
+            )}
             {!loadingData && (
               <div
                 className="shrink-0 bg-white border border-[#e8ecf2] shadow-sm rounded-xl px-4 py-2 flex items-center gap-3"
@@ -429,7 +576,18 @@ export default function UserManagementModule({ currentUserRole, currentUserId }:
                     <td className="py-4 px-5 whitespace-nowrap">
                       {(() => {
                         const isProtectedIt = user.role === 'it' && currentUserRole !== 'it';
-                        const toggleDisabled = user.id === currentUserId || isProtectedIt;
+                        const isLastActiveOm = user.role === 'operation_manager' && user.is_active && singletonCounts.operation_manager <= 1;
+                        const isLastActiveCeo = user.role === 'ceo' && user.is_active && singletonCounts.ceo <= 1;
+                        const toggleDisabled = user.id === currentUserId || isProtectedIt || isLastActiveOm || isLastActiveCeo;
+                        const title = user.id === currentUserId
+                          ? 'You cannot deactivate your own account'
+                          : isProtectedIt
+                            ? 'Only IT can deactivate an IT Admin account'
+                            : isLastActiveOm
+                              ? 'Cannot deactivate the last active Operation Manager — create or activate another one first'
+                              : isLastActiveCeo
+                                ? 'Cannot deactivate the last active Company account — create or activate another one first'
+                                : user.is_active ? 'Click to Deactivate' : 'Click to Activate';
                         return (
                           <>
                             <button
@@ -438,7 +596,7 @@ export default function UserManagementModule({ currentUserRole, currentUserId }:
                               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
                                 user.is_active ? (toggleDisabled ? 'bg-emerald-500/50 cursor-not-allowed' : 'bg-emerald-500') : 'bg-[#e8ecf2]'
                               }`}
-                              title={user.id === currentUserId ? 'You cannot deactivate your own account' : isProtectedIt ? 'Only IT can deactivate an IT Admin account' : user.is_active ? 'Click to Deactivate' : 'Click to Activate'}
+                              title={title}
                             >
                               <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${user.is_active ? 'translate-x-6' : 'translate-x-1'}`} />
                             </button>
@@ -660,6 +818,216 @@ export default function UserManagementModule({ currentUserRole, currentUserId }:
                 </div>
               </form>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ---------- Bulk password reset (IT only) ---------- */}
+      {bulkOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#0f1d33]/50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between p-5 border-b border-[#e8ecf2] shrink-0">
+              <h2 className="text-xl font-bold text-[#0f1d33] flex items-center gap-2">
+                <KeyRound className="w-5 h-5 text-[#c4a55a]" />
+                Bulk Change Passwords
+              </h2>
+              <button onClick={() => setBulkOpen(false)} className="text-[#5a6a82] hover:bg-[#f3f5f8] p-1.5 rounded-lg transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {bulkResult ? (
+              <div className="p-8 text-center">
+                <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto mb-3" />
+                <p className="text-lg font-bold text-[#0f1d33]">
+                  Password changed for {bulkResult.updated} account{bulkResult.updated === 1 ? '' : 's'}.
+                </p>
+                {bulkResult.failed > 0 && <p className="text-sm text-red-600 mt-2">{bulkResult.failed} account(s) could not be updated.</p>}
+                <p className="text-sm text-[#5a6a82] mt-2">Everyone affected must now sign in with the new password.</p>
+                <button onClick={() => setBulkOpen(false)} className="mt-6 px-5 py-2.5 rounded-lg bg-[#0f1d33] text-white font-semibold text-sm hover:bg-[#1e3a5f] transition-colors">
+                  Done
+                </button>
+              </div>
+            ) : bulkStep === 'pick' ? (
+              <>
+                <div className="p-4 border-b border-[#e8ecf2] shrink-0 space-y-3">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5a6a82]" />
+                    <input
+                      type="text"
+                      placeholder="Search by name, ID, or role..."
+                      value={bulkSearch}
+                      onChange={(e) => setBulkSearch(e.target.value)}
+                      className="w-full bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg pl-9 pr-3 py-2 text-sm text-[#0f1d33] focus:outline-none focus:ring-1 focus:ring-[#c4a55a]"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-semibold text-[#0f1d33]">
+                      {bulkSelected.size} of {bulkUsers.length} selected
+                    </span>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => setBulkSelected((prev) => new Set([...prev, ...bulkFiltered.map((u) => u.id)]))}
+                        className="text-[#1e3a5f] font-semibold hover:underline text-xs"
+                        title={bulkSearch ? 'Select everyone matching the current search' : 'Select everyone'}
+                      >
+                        Select all{bulkSearch ? ` (${bulkFiltered.length} shown)` : ''}
+                      </button>
+                      <button onClick={() => setBulkSelected(new Set())} className="text-[#5a6a82] font-semibold hover:underline text-xs">
+                        Clear
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="overflow-y-auto flex-1 min-h-0">
+                  {bulkLoading ? (
+                    <div className="flex justify-center p-10">
+                      <Loader2 className="w-6 h-6 animate-spin text-[#c4a55a]" />
+                    </div>
+                  ) : bulkFiltered.length === 0 ? (
+                    <p className="p-8 text-center text-sm text-[#5a6a82]">No users match that search.</p>
+                  ) : (
+                    bulkFiltered.map((u) => {
+                      const checked = bulkSelected.has(u.id);
+                      return (
+                        <label key={u.id} className="flex items-center gap-3 px-5 py-2.5 hover:bg-[#f7f8fa] cursor-pointer border-b border-[#e8ecf2] last:border-0">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() =>
+                              setBulkSelected((prev) => {
+                                const next = new Set(prev);
+                                if (next.has(u.id)) next.delete(u.id);
+                                else next.add(u.id);
+                                return next;
+                              })
+                            }
+                            className="w-4 h-4 accent-[#c4a55a] shrink-0"
+                          />
+                          <span className="text-sm text-[#0f1d33] flex-1 truncate">{u.full_name || 'Unnamed'}</span>
+                          <span className="text-xs text-[#5a6a82] shrink-0">{roleLabel(u.role)}</span>
+                          <span className="text-[11px] text-[#a0abbb] shrink-0 w-32 text-right truncate">{u.bhuwanta_id || '—'}</span>
+                        </label>
+                      );
+                    })
+                  )}
+                </div>
+
+                <div className="p-4 border-t border-[#e8ecf2] bg-[#f7f8fa] flex justify-end gap-3 shrink-0">
+                  <button onClick={() => setBulkOpen(false)} className="px-4 py-2 text-sm font-semibold text-[#5a6a82] hover:bg-[#e8ecf2] rounded-lg transition-colors">
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      setBulkError('');
+                      setBulkStep('password');
+                    }}
+                    disabled={bulkSelected.size === 0}
+                    className="px-5 py-2 text-sm font-semibold text-white bg-[#0f1d33] rounded-lg hover:bg-[#1e3a5f] transition-colors disabled:opacity-50"
+                  >
+                    Proceed ({bulkSelected.size})
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="p-6 space-y-4 overflow-y-auto">
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex gap-3 items-start text-amber-800 text-sm">
+                    <ShieldAlert className="w-5 h-5 shrink-0 mt-0.5" />
+                    <p>
+                      Replaces the password on <strong>{bulkSelected.size} account{bulkSelected.size === 1 ? '' : 's'}</strong>
+                      {' — '}can&apos;t be undone. Each gets an email with their new login. Your own account is excluded.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[#0f1d33] mb-1.5">New Password</label>
+                    <div className="relative">
+                      <input
+                        type={bulkShowPassword ? 'text' : 'password'}
+                        value={bulkPassword}
+                        onChange={(e) => setBulkPassword(e.target.value)}
+                        placeholder="8-20 chars, 1 uppercase, 1 number, 1 special"
+                        className="w-full bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-3 py-2 pr-10 text-[#0f1d33] text-sm focus:outline-none focus:border-[#c4a55a] focus:ring-1 focus:ring-[#c4a55a]"
+                      />
+                      <button type="button" onClick={() => setBulkShowPassword(!bulkShowPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#5a6a82] hover:text-[#0f1d33]">
+                        {bulkShowPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    {bulkPassword.length > 0 && (
+                      <PasswordChecklist isLengthValid={bulkIsLengthValid} hasUpperCase={bulkHasUpperCase} hasNumber={bulkHasNumber} hasSpecialChar={bulkHasSpecialChar} />
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[#0f1d33] mb-1.5">Confirm Password</label>
+                    <div className="relative">
+                      <input
+                        type={bulkShowConfirm ? 'text' : 'password'}
+                        value={bulkConfirm}
+                        onChange={(e) => setBulkConfirm(e.target.value)}
+                        placeholder="Type it again"
+                        className="w-full bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-3 py-2 pr-10 text-[#0f1d33] text-sm focus:outline-none focus:border-[#c4a55a] focus:ring-1 focus:ring-[#c4a55a]"
+                      />
+                      <button type="button" onClick={() => setBulkShowConfirm(!bulkShowConfirm)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#5a6a82] hover:text-[#0f1d33]">
+                        {bulkShowConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    {bulkConfirm.length > 0 && (
+                      <div className={`flex items-center gap-2 mt-2 text-xs ${bulkPassword === bulkConfirm ? 'text-emerald-600' : 'text-[#5a6a82]'}`}>
+                        {bulkPassword === bulkConfirm ? <CheckCircle2 className="w-3.5 h-3.5" /> : <div className="w-3.5 h-3.5 rounded-full border border-current opacity-50" />}
+                        <span>Both passwords match</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {bulkError && (
+                    <p className="flex items-start gap-2 text-sm text-red-700 bg-red-50 border border-red-100 rounded-lg p-3">
+                      <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                      {bulkError}
+                    </p>
+                  )}
+
+                  {/* Live "X / Y done" — one line arrives from the
+                      streaming route per batch, well before the whole
+                      run finishes. */}
+                  {bulkSaving && bulkProgress && (
+                    <div className="bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg p-3">
+                      <div className="flex items-center justify-between text-sm mb-2">
+                        <span className="font-semibold text-[#0f1d33] flex items-center gap-2">
+                          <Loader2 className="w-3.5 h-3.5 animate-spin text-[#c4a55a]" />
+                          Changing passwords...
+                        </span>
+                        <span className="text-[#5a6a82] font-medium">
+                          {bulkProgress.done} / {bulkProgress.total} done
+                        </span>
+                      </div>
+                      <div className="w-full h-2 bg-[#e8ecf2] rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-[#c4a55a] transition-all duration-300 ease-out"
+                          style={{ width: `${bulkProgress.total > 0 ? Math.round((bulkProgress.done / bulkProgress.total) * 100) : 0}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="p-4 border-t border-[#e8ecf2] bg-[#f7f8fa] flex justify-end gap-3 shrink-0">
+                  <button onClick={() => setBulkStep('pick')} disabled={bulkSaving} className="px-4 py-2 text-sm font-semibold text-[#5a6a82] hover:bg-[#e8ecf2] rounded-lg transition-colors">
+                    Back
+                  </button>
+                  <button
+                    onClick={handleBulkReset}
+                    disabled={bulkSaving || !bulkPasswordValid || bulkPassword !== bulkConfirm}
+                    className="px-5 py-2 text-sm font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 inline-flex items-center gap-2"
+                  >
+                    {bulkSaving && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {bulkSaving ? `${bulkProgress?.done ?? 0} / ${bulkProgress?.total ?? bulkSelected.size} done...` : `Change ${bulkSelected.size} Password${bulkSelected.size === 1 ? '' : 's'}`}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

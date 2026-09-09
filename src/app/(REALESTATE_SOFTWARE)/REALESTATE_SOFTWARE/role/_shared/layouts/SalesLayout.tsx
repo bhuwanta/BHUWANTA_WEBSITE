@@ -4,7 +4,10 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LayoutDashboard, ClipboardPlus, ClipboardList, Users, Building2, Map, Wallet, Settings, LogOut, ChevronLeft, ChevronRight, Menu } from 'lucide-react';
-import { getPendingRegistrationCountAction } from '../registrations/actions';
+import { getPendingRegistrationCountAction, checkMyRegistrationModulesAction } from '../registrations/actions';
+import { checkMyWalletModuleAction } from '../wallet/actions';
+import { getMyNavModulesAction } from '../nav-modules';
+import { PAGE_MODULES } from '../page-modules';
 import { onRegistrationsChanged } from '../registrations-notify';
 
 interface SalesLayoutProps {
@@ -23,7 +26,19 @@ export default function SalesLayout({ children, basePath, roleLabel, showUserMan
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
+  // Both default true so the links don't visibly flash out on every
+  // page load for the (usual) case where they're enabled. The real
+  // gate is server-side, so an optimistic render costs nothing.
+  const [regModules, setRegModules] = useState({ newRegistration: true, registrationStatus: true });
+  const [walletEnabled, setWalletEnabled] = useState(true);
+  const [pageModules, setPageModules] = useState<Record<string, boolean>>({});
   const pathname = usePathname() || '';
+
+  useEffect(() => {
+    checkMyRegistrationModulesAction().then(setRegModules);
+    checkMyWalletModuleAction().then(setWalletEnabled);
+    getMyNavModulesAction().then(setPageModules);
+  }, []);
 
   useEffect(() => {
     const refresh = () => {
@@ -38,14 +53,14 @@ export default function SalesLayout({ children, basePath, roleLabel, showUserMan
   }, [pathname]);
 
   const navItems = [
-    { path: '', label: 'Dashboard', icon: LayoutDashboard, exact: true },
-    { path: '/new-registration', label: 'New Registration', icon: ClipboardPlus },
-    { path: '/registrations', label: 'Registration Status', icon: ClipboardList },
+    ...(pageModules[PAGE_MODULES.dashboard] !== false ? [{ path: '', label: 'Dashboard', icon: LayoutDashboard, exact: true }] : []),
+    ...(regModules.newRegistration ? [{ path: '/new-registration', label: 'New Registration', icon: ClipboardPlus }] : []),
+    ...(regModules.registrationStatus ? [{ path: '/registrations', label: 'Registration Status', icon: ClipboardList }] : []),
     ...(showUserManagement ? [{ path: '/users', label: 'User Management', icon: Users }] : []),
-    { path: '/areas-projects', label: 'Areas & Projects', icon: Map },
-    { path: '/projects', label: 'My Projects', icon: Building2 },
-    { path: '/wallet', label: 'My Wallet', icon: Wallet },
-    { path: '/settings', label: 'Settings', icon: Settings },
+    ...(pageModules[PAGE_MODULES.areasProjects] !== false ? [{ path: '/areas-projects', label: 'Areas & Projects', icon: Map }] : []),
+    ...(pageModules[PAGE_MODULES.myProjects] !== false ? [{ path: '/projects', label: 'My Projects', icon: Building2 }] : []),
+    ...(walletEnabled ? [{ path: '/wallet', label: 'My Wallet', icon: Wallet }] : []),
+    ...(pageModules[PAGE_MODULES.settings] !== false ? [{ path: '/settings', label: 'Settings', icon: Settings }] : []),
   ];
 
   const isActive = (path: string, exact?: boolean) => {
@@ -56,9 +71,7 @@ export default function SalesLayout({ children, basePath, roleLabel, showUserMan
   return (
     <div className="flex h-screen bg-[#f7f8fa] overflow-hidden">
       <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-white border-b border-[#e8ecf2] flex items-center justify-between px-4 z-50">
-        <h2 className="text-lg font-bold text-[#0f1d33]">
-          Bhuwanta<span className="text-[#c4a55a]">ERP</span>
-        </h2>
+        <img src="/logo.png" alt="Bhuwanta Developers" className="h-8 w-auto object-contain" />
         <button onClick={() => setIsMobileOpen(!isMobileOpen)} className="p-2 text-[#5a6a82] hover:bg-[#f3f5f8] rounded-lg">
           <Menu className="w-5 h-5" />
         </button>
@@ -80,12 +93,17 @@ export default function SalesLayout({ children, basePath, roleLabel, showUserMan
         </button>
 
         <div className={`p-4 border-b border-[#e8ecf2] flex items-center h-[76px] ${isCollapsed ? 'justify-center' : 'justify-start'}`}>
-          {!isCollapsed && (
+          {isCollapsed ? (
+            <img
+              src="/logo.png"
+              alt="Bhuwanta"
+              title="Bhuwanta"
+              className="w-10 h-10 rounded-lg object-cover object-left animate-in fade-in duration-300"
+            />
+          ) : (
             <div className="overflow-hidden whitespace-nowrap animate-in fade-in duration-300">
-              <h2 className="text-xl font-bold text-[#0f1d33]">
-                Bhuwanta<span className="text-[#c4a55a]">ERP</span>
-              </h2>
-              <p className="text-[10px] text-[#5a6a82] mt-0.5 font-bold uppercase tracking-widest">{roleLabel}</p>
+              <img src="/logo.png" alt="Bhuwanta Developers" className="h-9 w-auto object-contain" />
+              <p className="text-[10px] text-[#5a6a82] mt-1 font-bold uppercase tracking-widest">Role : {roleLabel}</p>
             </div>
           )}
         </div>
@@ -126,6 +144,7 @@ export default function SalesLayout({ children, basePath, roleLabel, showUserMan
               </Link>
             );
           })}
+
         </nav>
 
         <div className="p-3 border-t border-[#e8ecf2] shrink-0 flex flex-col gap-2">

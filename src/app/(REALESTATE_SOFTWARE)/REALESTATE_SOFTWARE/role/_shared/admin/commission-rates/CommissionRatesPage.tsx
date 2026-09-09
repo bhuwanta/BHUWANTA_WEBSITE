@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Percent, Loader2, Edit2, Check, X, AlertCircle, Trash2, Plus, Download, Search, ArrowUp, ArrowDown, ArrowUpDown, UserPlus } from 'lucide-react';
+import { Percent, Loader2, Edit2, Check, X, AlertCircle, Trash2, Plus, Download, Search, ArrowUp, ArrowDown, ArrowUpDown, UserPlus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getCommissionRatesAction, updateCommissionRateAction, createCommissionRateAction, deleteCommissionRateAction, getSalesRoleOrderAction, createSalesRoleAction, renameSalesRoleAction } from './actions';
 import { getFixedRoleLabelsAction, renameFixedRoleAction } from './fixed-role-actions';
 import { ROLE_LABELS, type RealEstateRole } from '../../permissions';
@@ -25,6 +25,8 @@ export default function CommissionRatesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortCol, setSortCol] = useState<'index' | 'role' | 'percentage' | 'updatedBy' | 'updatedAt'>('index');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
 
   // Display order: CEO/Governing Council always on top (fixed, never
   // rank-compared — see permissions.ts), then the real, current
@@ -54,7 +56,7 @@ export default function CommissionRatesPage() {
   // never rows in S_role_definitions), which is exactly when the
   // ROLE_LABELS fallback should apply.
   const roleLabel = (role: string): string => dynamicLabels[role] || ROLE_LABELS[role as RealEstateRole] || role;
-  const salesTierOrder = displayOrder.filter((r) => r !== 'company' && r !== 'ceo' && r !== 'governing_council');
+  const salesTierOrder = displayOrder.filter((r) => r !== 'ceo' && r !== 'governing_council');
 
   const load = async () => {
     setLoading(true);
@@ -66,7 +68,7 @@ export default function CommissionRatesPage() {
       });
       setRates(map);
     }
-    setDisplayOrder(['company', 'ceo', 'governing_council', ...roleOrderRes.data.map((r) => r.role_code)]);
+    setDisplayOrder(['ceo', 'governing_council', ...roleOrderRes.data.map((r) => r.role_code)]);
     const mergedLabels: Record<string, string> = {};
     roleOrderRes.data.forEach((r) => {
       mergedLabels[r.role_code] = r.label;
@@ -106,12 +108,7 @@ export default function CommissionRatesPage() {
     // rows in S_role_definitions (no rank concept for them). Kept as an
     // explicit gate rather than assumed-true so a future non-renameable
     // row type on this page fails safe.
-    // Company is a real role_code (migration 013), not a rename-only
-    // fixed role (S_role_labels' CHECK constraint deliberately excludes
-    // it — see that migration) and must never be routed to
-    // renameSalesRoleAction either, which would incorrectly give it a
-    // row in S_role_definitions, the sales-tier cascade table.
-    const canRename = displayOrder.includes(role) && role !== 'company';
+    const canRename = displayOrder.includes(role);
     const isFixedRole = role === 'ceo' || role === 'governing_council';
     if (canRename && !editNameValue.trim()) {
       setError('Enter a role name.');
@@ -229,6 +226,13 @@ export default function CommissionRatesPage() {
     return sortDir === 'asc' ? cmp : -cmp;
   });
 
+  const totalPages = Math.max(1, Math.ceil(sortedRoles.length / itemsPerPage));
+  const pagedRoles = sortedRoles.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, sortCol, sortDir]);
+
   const SortIcon = ({ col }: { col: typeof sortCol }) => {
     if (sortCol !== col) return <ArrowUpDown className="w-3 h-3 ml-1 inline opacity-40" />;
     return sortDir === 'asc' ? <ArrowUp className="w-3 h-3 ml-1 inline" /> : <ArrowDown className="w-3 h-3 ml-1 inline" />;
@@ -288,39 +292,38 @@ export default function CommissionRatesPage() {
 
   return (
     <div className="p-4 md:p-6 bg-[#f7f8fa] h-full flex flex-col">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 shrink-0">
-        <div>
-          <h1 className="text-2xl font-bold text-[#0f1d33] flex items-center gap-2">
-            <Percent className="w-6 h-6 text-[#c4a55a]" />
-            Roles / Commissions
-          </h1>
+      <div className="mb-4 shrink-0">
+        <h1 className="text-2xl font-bold text-[#0f1d33] flex items-center gap-2">
+          <Percent className="w-6 h-6 text-[#c4a55a]" />
+          Roles & Commission
+        </h1>
+      </div>
+
+      <div className="flex items-center gap-3 mb-3 shrink-0">
+        <div className="relative w-full md:w-72">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5a6a82]" />
+          <input
+            type="text"
+            placeholder="Search role..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-white border border-[#e8ecf2] rounded-lg pl-9 pr-3 py-2 text-sm text-[#0f1d33] focus:outline-none focus:ring-1 focus:ring-[#c4a55a]"
+          />
         </div>
-        <div className="flex items-center gap-3 shrink-0">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5a6a82]" />
-            <input
-              type="text"
-              placeholder="Search role..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-48 bg-white border border-[#e8ecf2] rounded-lg pl-9 pr-3 py-2 text-sm text-[#0f1d33] focus:outline-none focus:ring-1 focus:ring-[#c4a55a]"
-            />
-          </div>
-          <button
-            onClick={handleExport}
-            className="flex items-center gap-2 bg-white border border-[#e8ecf2] text-[#0f1d33] px-4 py-2 rounded-lg font-semibold shadow-sm hover:bg-[#f3f5f8] transition-colors text-sm"
-          >
-            <Download className="w-4 h-4" />
-            Export CSV
-          </button>
-          <button
-            onClick={openCreateModal}
-            className="flex items-center gap-2 gradient-gold text-white px-4 py-2 rounded-lg font-semibold shadow-sm hover:opacity-90 transition-opacity text-sm"
-          >
-            <UserPlus className="w-4 h-4" />
-            Create New Role
-          </button>
-        </div>
+        <button
+          onClick={handleExport}
+          className="flex items-center gap-2 bg-white border border-[#e8ecf2] text-[#0f1d33] px-4 py-2 rounded-lg font-semibold shadow-sm hover:bg-[#f3f5f8] transition-colors text-sm"
+        >
+          <Download className="w-4 h-4" />
+          Export CSV
+        </button>
+        <button
+          onClick={openCreateModal}
+          className="flex items-center gap-2 gradient-gold text-white px-4 py-2 rounded-lg font-semibold shadow-sm hover:opacity-90 transition-opacity text-sm"
+        >
+          <UserPlus className="w-4 h-4" />
+          Create New Role
+        </button>
       </div>
 
       {error && (
@@ -340,115 +343,43 @@ export default function CommissionRatesPage() {
             <table className="w-full min-w-[760px] text-left border-collapse">
               <thead className="sticky top-0 z-10">
                 <tr className="bg-[#f3f5f8] text-[#5a6a82] text-xs uppercase tracking-wider font-semibold border-b border-[#e8ecf2]">
-                  <th className="p-4 w-16 cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('index')}>
+                  <th className="p-4 whitespace-nowrap cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('index')}>
                     Sr. No. <SortIcon col="index" />
                   </th>
-                  <th className="p-4 cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('role')}>
+                  <th className="p-4 whitespace-nowrap cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('role')}>
                     Role <SortIcon col="role" />
                   </th>
-                  <th className="p-4 cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('percentage')}>
+                  <th className="p-4 whitespace-nowrap cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('percentage')}>
                     Percentage <SortIcon col="percentage" />
                   </th>
-                  <th className="p-4 cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('updatedBy')}>
+                  <th className="p-4 whitespace-nowrap cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('updatedBy')}>
                     Last Updated By <SortIcon col="updatedBy" />
                   </th>
-                  <th className="p-4 cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('updatedAt')}>
+                  <th className="p-4 whitespace-nowrap cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('updatedAt')}>
                     Last Updated At <SortIcon col="updatedAt" />
                   </th>
-                  <th className="p-4 text-right">Action</th>
+                  <th className="p-4 whitespace-nowrap text-right">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#e8ecf2]">
-                {sortedRoles.map((role, index) => {
+                {pagedRoles.map((role, index) => {
                   const rate = rates[role];
                   const isEditing = editingRole === role;
                   const isAdding = addingRole === role;
-                  // Company is a real role_code (migration 013), not a rename-only
-    // fixed role (S_role_labels' CHECK constraint deliberately excludes
-    // it — see that migration) and must never be routed to
-    // renameSalesRoleAction either, which would incorrectly give it a
-    // row in S_role_definitions, the sales-tier cascade table.
-    const canRename = displayOrder.includes(role) && role !== 'company';
+                  const canRename = displayOrder.includes(role);
                   return (
                     <tr key={role} className="hover:bg-[#f7f8fa] transition-colors">
-                      <td className="p-4 text-[#5a6a82] text-sm">{index + 1}</td>
-                      <td className="p-4 font-semibold text-[#0f1d33]">
-                        {isEditing && canRename ? (
-                          <input
-                            type="text"
-                            autoFocus
-                            value={editNameValue}
-                            onChange={(e) => setEditNameValue(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') saveEdit(role);
-                              if (e.key === 'Escape') setEditingRole(null);
-                            }}
-                            className="w-40 bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-2 py-1.5 text-sm text-[#0f1d33] focus:outline-none focus:ring-1 focus:ring-[#c4a55a]"
-                          />
-                        ) : (
-                          roleLabel(role)
-                        )}
-                      </td>
+                      <td className="p-4 text-[#5a6a82] text-sm">{(currentPage - 1) * itemsPerPage + index + 1}</td>
+                      <td className="p-4 font-semibold text-[#0f1d33]">{roleLabel(role)}</td>
                       <td className="p-4">
-                        {isEditing ? (
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="number"
-                              step="0.01"
-                              autoFocus={!canRename}
-                              value={editValue}
-                              onChange={(e) => setEditValue(e.target.value)}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') saveEdit(role);
-                                if (e.key === 'Escape') setEditingRole(null);
-                              }}
-                              className="w-24 bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-2 py-1.5 text-sm text-[#0f1d33] focus:outline-none focus:ring-1 focus:ring-[#c4a55a]"
-                            />
-                            <span className="text-[#5a6a82] text-sm">%</span>
-                          </div>
-                        ) : isAdding ? (
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="number"
-                              step="0.01"
-                              autoFocus
-                              placeholder="e.g. 15"
-                              value={addValue}
-                              onChange={(e) => setAddValue(e.target.value)}
-                              className="w-24 bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-2 py-1.5 text-sm text-[#0f1d33] focus:outline-none focus:ring-1 focus:ring-[#c4a55a]"
-                            />
-                            <span className="text-[#5a6a82] text-sm">%</span>
-                          </div>
-                        ) : rate ? (
-                          <span className="text-[#0f1d33] font-bold">{rate.percentage}%</span>
-                        ) : (
-                          <span className="text-[#a0abbb] italic text-sm">Not set</span>
-                        )}
+                        {rate ? <span className="text-[#0f1d33] font-bold">{rate.percentage}%</span> : <span className="text-[#a0abbb] italic text-sm">Not set</span>}
                       </td>
                       <td className="p-4 text-sm text-[#5a6a82]">{rate?.updatedBy || '—'}</td>
                       <td className="p-4 text-sm text-[#5a6a82]">{rate?.updatedAt ? new Date(rate.updatedAt).toLocaleString() : '—'}</td>
                       <td className="p-4 text-right">
-                        {isEditing ? (
+                        {rate ? (
                           <div className="flex items-center justify-end gap-1">
-                            <button onClick={() => saveEdit(role)} disabled={saving} className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded transition-colors">
-                              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                            </button>
-                            <button onClick={() => setEditingRole(null)} className="p-1.5 text-[#5a6a82] hover:bg-[#f3f5f8] rounded transition-colors">
-                              <X className="w-4 h-4" />
-                            </button>
-                          </div>
-                        ) : isAdding ? (
-                          <div className="flex items-center justify-end gap-1">
-                            <button onClick={() => saveAdd(role)} disabled={saving} className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded transition-colors">
-                              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                            </button>
-                            <button onClick={() => setAddingRole(null)} className="p-1.5 text-[#5a6a82] hover:bg-[#f3f5f8] rounded transition-colors">
-                              <X className="w-4 h-4" />
-                            </button>
-                          </div>
-                        ) : rate ? (
-                          <div className="flex items-center justify-end gap-1">
-                            <button onClick={() => startEdit(role)} className="p-1.5 text-[#1e3a5f] hover:bg-[#1e3a5f]/10 rounded transition-colors" title={displayOrder.includes(role) && role !== 'company' ? 'Edit name and percentage' : 'Edit percentage'}>
+                            <button onClick={() => startEdit(role)} className="p-1.5 text-[#1e3a5f] hover:bg-[#1e3a5f]/10 rounded transition-colors" title={displayOrder.includes(role) ? 'Edit name and percentage' : 'Edit percentage'}>
                               <Edit2 className="w-4 h-4" />
                             </button>
                             <button onClick={() => handleDelete(role)} className="p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors" title="Delete rate">
@@ -469,7 +400,122 @@ export default function CommissionRatesPage() {
             </table>
           </div>
         )}
+
+        {!loading && (
+          <div className="border-t border-[#e8ecf2] p-4 flex items-center justify-between bg-white shrink-0 rounded-b-xl text-sm">
+            <p className="text-[#5a6a82]">
+              Showing <span className="font-semibold text-[#0f1d33]">{sortedRoles.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}</span> to{' '}
+              <span className="font-semibold text-[#0f1d33]">{Math.min(currentPage * itemsPerPage, sortedRoles.length)}</span> of{' '}
+              <span className="font-semibold text-[#0f1d33]">{sortedRoles.length}</span> roles
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="p-1.5 border border-[#e8ecf2] rounded hover:bg-[#f3f5f8] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <span className="text-[#0f1d33] font-medium px-2">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="p-1.5 border border-[#e8ecf2] rounded hover:bg-[#f3f5f8] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
+
+      {(editingRole || addingRole) && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0f1d33]/50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-5 border-b border-[#e8ecf2] bg-[#f7f8fa]">
+              <h3 className="text-lg font-bold text-[#0f1d33] flex items-center gap-2">
+                <Edit2 className="w-5 h-5 text-[#1e3a5f]" />
+                {editingRole ? `Edit ${roleLabel(editingRole)}` : `Add Rate — ${roleLabel(addingRole!)}`}
+              </h3>
+              <button
+                onClick={() => (editingRole ? setEditingRole(null) : setAddingRole(null))}
+                className="text-[#5a6a82] hover:text-[#0f1d33] transition-colors rounded-full p-1 hover:bg-[#e8ecf2]"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                editingRole ? saveEdit(editingRole) : saveAdd(addingRole!);
+              }}
+              className="p-6"
+            >
+              {error && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-lg flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 shrink-0" />
+                  <p className="text-sm text-red-800">{error}</p>
+                </div>
+              )}
+
+              {editingRole && displayOrder.includes(editingRole) && (
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold text-[#0f1d33] mb-2">
+                    Role Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    autoFocus
+                    value={editNameValue}
+                    onChange={(e) => setEditNameValue(e.target.value)}
+                    className="w-full bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-4 py-2 text-[#0f1d33] text-sm focus:outline-none focus:border-[#1e3a5f] focus:ring-1 focus:ring-[#1e3a5f]"
+                  />
+                </div>
+              )}
+
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-[#0f1d33] mb-2">
+                  Commission Percentage <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    step="0.01"
+                    required
+                    autoFocus={!editingRole || !displayOrder.includes(editingRole)}
+                    value={editingRole ? editValue : addValue}
+                    onChange={(e) => (editingRole ? setEditValue(e.target.value) : setAddValue(e.target.value))}
+                    placeholder="e.g. 15"
+                    className="w-full bg-[#f3f5f8] border border-[#e8ecf2] rounded-lg px-4 py-2 pr-9 text-[#0f1d33] text-sm focus:outline-none focus:border-[#1e3a5f] focus:ring-1 focus:ring-[#1e3a5f]"
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[#5a6a82] text-sm">%</span>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => (editingRole ? setEditingRole(null) : setAddingRole(null))}
+                  className="px-4 py-2 text-[#5a6a82] font-semibold hover:bg-[#f3f5f8] rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="gradient-gold text-white font-semibold rounded-lg px-6 py-2 flex items-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50"
+                >
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                  {saving ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {isCreateOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0f1d33]/50 backdrop-blur-sm">

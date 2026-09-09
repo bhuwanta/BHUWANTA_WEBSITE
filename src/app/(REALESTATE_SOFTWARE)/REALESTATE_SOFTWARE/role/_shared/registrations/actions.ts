@@ -3,16 +3,80 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { verifyCaller } from '../auth'
 import { sendSetupPasswordEmail } from '@/lib/emails/resend'
-import { isAdminPeer, canViewCompanyWide, isSalesRole, isOperationManager } from '../permissions'
+import { isAdminPeer, isSalesRole, isOperationManager } from '../permissions'
 import { getDownlineIds, findUplineDirectorId } from '../downline'
 import { runCommissionPayout } from '../payout-engine'
 import { computeRatePerSqyd, computePool } from '../commission'
+import { requirePageModule } from '../nav-modules'
 
 /** A "table doesn't exist" error, however it's reported: PostgREST
  * surfaces it as a PGRST205 schema-cache miss, raw Postgres as 42P01.
  * Used to degrade gracefully when migration 006 hasn't been run yet. */
 function isMissingTableError(error: { code?: string } | null): boolean {
   return error?.code === 'PGRST205' || error?.code === '42P01'
+}
+
+/** Is `moduleKey` switched on for `role`? Missing module row reads as
+ * enabled, NOT disabled: these two modules seed themselves on first
+ * visit to the Modules page (ensureNewRegistrationModuleExists /
+ * ensureRegistrationStatusModuleExists), so a system where IT hasn't
+ * opened that page yet has no row at all — failing closed there would
+ * lock every sales tier out of a core feature until IT happened to
+ * click into Modules. */
+async function isModuleEnabledFor(moduleKey: string, role: string): Promise<boolean> {
+  const supabaseAdmin = createServiceClient()
+  const { data } = await supabaseAdmin.from('s_modules').select('enabled_roles').eq('module_key', moduleKey).maybeSingle()
+  if (!data) return true
+  return ((data.enabled_roles as string[]) || []).includes(role)
+}
+
+/** Registration Status. IT/Company/Governing Council and the Operation
+ * Manager always see it — it's their company-wide oversight view (§7d)
+ * and isn't what this module governs. For a sales tier it's opt-out:
+ * they see their own subtree only while the module allows it. */
+export async function requireCanViewRegistrations() {
+  const caller = await verifyCaller()
+  if (!caller) return { ok: false as const, error: 'Not authenticated, or your account is inactive.' }
+  if (isAdminPeer(caller.role) || isOperationManager(caller.role)) return { ok: true as const, caller }
+  if (isSalesRole(caller.role) && !(await isModuleEnabledFor('registration_status', caller.role))) {
+    return { ok: false as const, error: 'The Registration Status module is not enabled for your role.' }
+  }
+  return { ok: true as const, caller }
+}
+
+/** New Registration. CEO keeps the standing §7d exception (the one
+ * admin peer allowed to submit a sale) unconditionally; every sales
+ * tier goes through the module. IT and Governing Council still cannot
+ * submit one at all, module or not. */
+export async function requireCanCreateRegistration() {
+  const caller = await verifyCaller()
+  if (!caller) return { ok: false as const, error: 'Not authenticated, or your account is inactive.' }
+  if (caller.role === 'ceo') return { ok: true as const, caller }
+  if (!isSalesRole(caller.role)) {
+    return { ok: false as const, error: 'Only sales-tier roles (and Company) can submit a New Registration.' }
+  }
+  if (!(await isModuleEnabledFor('new_registration', caller.role))) {
+    return { ok: false as const, error: 'The New Registration module is not enabled for your role.' }
+  }
+  return { ok: true as const, caller }
+}
+
+/** Non-authoritative status checks for the CALLER's own session role —
+ * they decide whether a nav link is drawn at all. The real gates are
+ * requireCanViewRegistrations / requireCanCreateRegistration above,
+ * re-derived from the session on every data call. */
+export async function checkMyRegistrationModulesAction(): Promise<{ newRegistration: boolean; registrationStatus: boolean }> {
+  const caller = await verifyCaller()
+  if (!caller) return { newRegistration: false, registrationStatus: false }
+  if (isAdminPeer(caller.role) || isOperationManager(caller.role)) {
+    return { newRegistration: caller.role === 'ceo', registrationStatus: true }
+  }
+  if (!isSalesRole(caller.role)) return { newRegistration: false, registrationStatus: false }
+  const [newRegistration, registrationStatus] = await Promise.all([
+    isModuleEnabledFor('new_registration', caller.role),
+    isModuleEnabledFor('registration_status', caller.role),
+  ])
+  return { newRegistration, registrationStatus }
 }
 
 /** Ids of every `pending_registration` row this caller is allowed to
@@ -25,7 +89,7 @@ async function getVisiblePendingRegistrationIds(
 ): Promise<string[] | null> {
   let query = supabaseAdmin.from('s_new_registrations').select('id').eq('status', 'pending_registration')
 
-  if (!canViewCompanyWide(caller.role) && !isOperationManager(caller.role)) {
+  if (!isAdminPeer(caller.role) && !isOperationManager(caller.role)) {
     if (!isSalesRole(caller.role)) return null
     const downlineIds = await getDownlineIds(supabaseAdmin, caller.id)
     query = query.in('submitted_by', [caller.id, ...downlineIds])
@@ -150,8 +214,9 @@ export async function markOneRegistrationReadAction(registrationId: string) {
  */
 export async function getRegistrationsAction() {
   try {
-    const caller = await verifyCaller()
-    if (!caller) return { success: false, data: [], canMarkDone: false, companyWide: false, error: 'Not authenticated.' }
+    const verified = await requireCanViewRegistrations()
+    if (!verified.ok) return { success: false, data: [], canMarkDone: false, companyWide: false, error: verified.error }
+    const caller = verified.caller
 
     const supabaseAdmin = createServiceClient()
 
@@ -171,7 +236,7 @@ export async function getRegistrationsAction() {
       .order('submitted_at', { ascending: false })
 
     const canMarkDone = isOperationManager(caller.role)
-    const companyWide = canViewCompanyWide(caller.role) || isOperationManager(caller.role)
+    const companyWide = isAdminPeer(caller.role) || isOperationManager(caller.role)
 
     if (!companyWide) {
       if (!isSalesRole(caller.role)) {
@@ -565,15 +630,14 @@ export async function createRegistrationAction(input: {
   existingCustomerId?: string
 }) {
   try {
-    const caller = await verifyCaller()
-    if (!caller) return { success: false, error: 'Not authenticated.' }
     // CEO can also submit a sale directly — the one admin peer allowed
     // to (§7d-style explicit exception, not the usual isAdminPeer
     // treatment of it/ceo/governing_council as equal; IT and Governing
-    // Council still cannot submit a registration).
-    if (!isSalesRole(caller.role) && caller.role !== 'ceo') {
-      return { success: false, error: 'Only sales-tier roles (and CEO) can submit a New Registration.' }
-    }
+    // Council still cannot submit a registration). A sales tier also
+    // needs the New Registration module switched on for its role.
+    const verified = await requireCanCreateRegistration()
+    if (!verified.ok) return { success: false, error: verified.error }
+    const caller = verified.caller
 
     if (!input.plotSizeSqyd || input.plotSizeSqyd <= 0) {
       return { success: false, error: 'Enter a valid plot size.' }
@@ -796,6 +860,10 @@ export async function markPaymentPaidAction(registrationId: string) {
     const caller = await verifyCaller()
     if (!caller) return { success: false, error: 'Not authenticated.' }
     if (caller.role !== 'customer') return { success: false, error: 'Only the customer can confirm their own payment.' }
+    // Confirming payment IS the Payment page's whole purpose, so the
+    // action carries the same module gate the page does.
+    const payGate = await requirePageModule('customer_payment')
+    if (!payGate.ok) return { success: false, error: payGate.error }
 
     const supabaseAdmin = createServiceClient()
     const { data: registration } = await supabaseAdmin

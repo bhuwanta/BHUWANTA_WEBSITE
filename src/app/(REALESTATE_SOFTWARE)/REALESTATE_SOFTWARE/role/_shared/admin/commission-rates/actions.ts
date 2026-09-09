@@ -3,6 +3,7 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { verifyCaller } from '../../auth'
 import { isAdminPeer, getSalesRoleOrder } from '../../permissions'
+import { removeRoleFromAllModulesAction } from '../modules/actions'
 
 /** Client-callable wrapper around permissions.ts's getSalesRoleOrder —
  * client components (this page, PayoutsPage, ModuleCard) can't query
@@ -108,6 +109,10 @@ export async function createSalesRoleAction(input: { label: string; percentage: 
     if (rateError) {
       console.error('Error creating commission rate for new role, rolling back role definition:', rateError)
       await supabaseAdmin.from('s_role_definitions').delete().eq('role_code', roleCode)
+      // The role code stops existing here, so any module grant naming
+      // it has to go too — otherwise a later role reusing the code
+      // would inherit whatever this one had been given.
+      await removeRoleFromAllModulesAction(roleCode)
       return { success: false, error: 'Failed to set the commission rate — the new role was not created.' }
     }
 

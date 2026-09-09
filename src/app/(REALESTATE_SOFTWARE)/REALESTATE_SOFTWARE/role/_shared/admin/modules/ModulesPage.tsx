@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Blocks, Users, Key } from 'lucide-react';
-import { getModulesAction, ensurePasswordsModuleExists, ensureUserManagementModuleExists } from './actions';
+import { Blocks, Users, Key, Network, KeyRound, ClipboardPlus, ClipboardList, Wallet, LayoutDashboard, Map, Landmark, Settings, Building2, IndianRupee, FileText, Phone } from 'lucide-react';
+import { getModulesAction, ensurePasswordsModuleExists, ensureUserManagementModuleExists, ensureHierarchyModuleExists, ensureBulkPasswordResetModuleExists, ensureNewRegistrationModuleExists, ensureRegistrationStatusModuleExists, ensureWalletModuleExists, ensurePageModulesExist } from './actions';
 import { ModuleCard } from './ModuleCard';
 
 export default function ModulesPage() {
@@ -17,6 +17,12 @@ export default function ModulesPage() {
     setLoading(true);
     await ensurePasswordsModuleExists();
     await ensureUserManagementModuleExists();
+    await ensureHierarchyModuleExists();
+    await ensureBulkPasswordResetModuleExists();
+    await ensureNewRegistrationModuleExists();
+    await ensureRegistrationStatusModuleExists();
+    await ensureWalletModuleExists();
+    await ensurePageModulesExist();
     const res = await getModulesAction();
     if (res.success) {
       setModules(res.data);
@@ -38,14 +44,101 @@ export default function ModulesPage() {
         <div className="flex-1 flex items-center justify-center text-[#5a6a82]">Loading modules...</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {modules.find((m) => m.module_key === 'dashboard') && (
+            <ModuleCard mod={modules.find((m) => m.module_key === 'dashboard')} icon={LayoutDashboard} onUpdate={loadModules} />
+          )}
+          {modules.find((m) => m.module_key === 'areas_projects') && (
+            <ModuleCard mod={modules.find((m) => m.module_key === 'areas_projects')} icon={Map} onUpdate={loadModules} />
+          )}
+          {modules.find((m) => m.module_key === 'my_projects') && (
+            <ModuleCard mod={modules.find((m) => m.module_key === 'my_projects')} icon={Building2} onUpdate={loadModules} />
+          )}
+          {modules.find((m) => m.module_key === 'payouts') && (
+            <ModuleCard mod={modules.find((m) => m.module_key === 'payouts')} icon={Landmark} onUpdate={loadModules} audience="adminPeers" />
+          )}
+          {modules.find((m) => m.module_key === 'settings') && (
+            <ModuleCard mod={modules.find((m) => m.module_key === 'settings')} icon={Settings} onUpdate={loadModules} />
+          )}
           {modules.find((m) => m.module_key === 'passwords') && (
-            <ModuleCard mod={modules.find((m) => m.module_key === 'passwords')} icon={Key} onUpdate={loadModules} />
+            <ModuleCard
+              mod={modules.find((m) => m.module_key === 'passwords')}
+              icon={Key}
+              onUpdate={loadModules}
+              includeAdminPeers
+              // Rendered right after Settings, and locked to it: the
+              // password controls live inside the Settings page, so a
+              // role can only get this once it has that.
+              dependsOn={{ moduleKey: 'settings', label: 'Settings' }}
+            />
           )}
           {modules.find((m) => m.module_key === 'user_management') && (
-            <ModuleCard mod={modules.find((m) => m.module_key === 'user_management')} icon={Users} onUpdate={loadModules} />
+            <ModuleCard mod={modules.find((m) => m.module_key === 'user_management')} icon={Users} onUpdate={loadModules} includeAdminPeers />
+          )}
+          {modules.find((m) => m.module_key === 'hierarchy_visualizer') && (
+            <ModuleCard
+              mod={modules.find((m) => m.module_key === 'hierarchy_visualizer')}
+              icon={Network}
+              onUpdate={loadModules}
+              // requireCanViewHierarchy only exempts IT and Operation
+              // Manager unconditionally — Company and Governing Council
+              // need to be explicitly enabled here like any sales-tier
+              // role, so they must appear in the toggle list.
+              includeAdminPeers
+            />
+          )}
+          {modules.find((m) => m.module_key === 'bulk_password_reset') && (
+            <ModuleCard
+              mod={modules.find((m) => m.module_key === 'bulk_password_reset')}
+              icon={KeyRound}
+              onUpdate={loadModules}
+              // The bottom-most sales tier (LIA/LA) has no downline —
+              // nobody for a bulk reset to reach — so it's left off the
+              // toggle list entirely, same reasoning as User Management
+              // not existing for that tier at all.
+              excludeBottomTier
+              // requireBulkPasswordAccess only exempts IT unconditionally
+              // — Company and Governing Council need to be explicitly
+              // enabled here too (their downline then resolves to
+              // everyone below them in the chain).
+              includeAdminPeers
+            />
+          )}
+          {modules.find((m) => m.module_key === 'new_registration') && (
+            <ModuleCard mod={modules.find((m) => m.module_key === 'new_registration')} icon={ClipboardPlus} onUpdate={loadModules} />
+          )}
+          {modules.find((m) => m.module_key === 'registration_status') && (
+            <ModuleCard mod={modules.find((m) => m.module_key === 'registration_status')} icon={ClipboardList} onUpdate={loadModules} />
+          )}
+          {modules.find((m) => m.module_key === 'wallet') && (
+            <ModuleCard mod={modules.find((m) => m.module_key === 'wallet')} icon={Wallet} onUpdate={loadModules} />
+          )}
+          {modules.find((m) => m.module_key === 'customer_payment') && (
+            <ModuleCard mod={modules.find((m) => m.module_key === 'customer_payment')} icon={IndianRupee} onUpdate={loadModules} audience="customer" />
+          )}
+          {modules.find((m) => m.module_key === 'customer_documents') && (
+            <ModuleCard mod={modules.find((m) => m.module_key === 'customer_documents')} icon={FileText} onUpdate={loadModules} audience="customer" />
+          )}
+          {modules.find((m) => m.module_key === 'customer_registration_status') && (
+            <ModuleCard mod={modules.find((m) => m.module_key === 'customer_registration_status')} icon={ClipboardList} onUpdate={loadModules} audience="customer" />
+          )}
+          {modules.find((m) => m.module_key === 'customer_contact') && (
+            <ModuleCard mod={modules.find((m) => m.module_key === 'customer_contact')} icon={Phone} onUpdate={loadModules} audience="customer" />
+          )}
+          {modules.find((m) => m.module_key === 'customer_settings') && (
+            <ModuleCard mod={modules.find((m) => m.module_key === 'customer_settings')} icon={Settings} onUpdate={loadModules} audience="customer" />
           )}
           {modules
-            .filter((m) => m.module_key !== 'passwords' && m.module_key !== 'user_management')
+            .filter(
+              (m) =>
+                m.module_key !== 'passwords' &&
+                m.module_key !== 'user_management' &&
+                m.module_key !== 'hierarchy_visualizer' &&
+                m.module_key !== 'bulk_password_reset' &&
+                m.module_key !== 'new_registration' &&
+                m.module_key !== 'registration_status' &&
+                m.module_key !== 'wallet' &&
+                !['dashboard', 'areas_projects', 'payouts', 'settings', 'customer_payment', 'customer_documents', 'customer_registration_status', 'customer_contact', 'customer_settings', 'my_projects'].includes(m.module_key)
+            )
             .map((mod) => (
               <div key={mod.id} className="bg-white border border-[#e8ecf2] shadow-sm rounded-xl p-6 flex flex-col items-center justify-center text-center">
                 <Blocks className="w-8 h-8 text-[#a0abbb] mb-3" />

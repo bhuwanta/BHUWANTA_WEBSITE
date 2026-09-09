@@ -234,13 +234,13 @@ CREATE TABLE public.S_role_definitions (
 -- matches SALES_RANK_ORDER exactly, pure data, zero behavior change.
 INSERT INTO public.S_role_definitions (role_code, label, rank, is_system) VALUES
     ('director', 'Director', 1, true),
-    ('sr_core', 'Sr. Core', 2, true),
+    ('sr_core', 'Deputy Director', 2, true),
     ('core', 'Core', 3, true),
     ('gm', 'GM', 4, true),
     ('agm', 'AGM', 5, true),
     ('rm', 'RM', 6, true),
-    ('lio', 'LIO', 7, true),
-    ('lia', 'LIA', 8, true);
+    ('lio', 'LO', 7, true),
+    ('lia', 'LA', 8, true);
 
 -- Per-role payout policy (migration 010). Read by getUplineChain
 -- (role/_shared/downline.ts) to decide WHO is paid on a sale, separately
@@ -261,7 +261,9 @@ CREATE TABLE public.S_payout_rules (
     --                       on every sale (same as 'company_wide'), but
     --                       the marginal percentage is divided equally
     --                       among however many are active — see
-    --                       payout-engine.ts. CEO uses this now.
+    --                       payout-engine.ts. Unused by default since
+    --                       migration 014 made the top tier a singleton;
+    --                       kept as an option on the Payout Rules page.
     scope VARCHAR(20) NOT NULL DEFAULT 'chain',
     updated_by UUID REFERENCES public.S_realestate_users(id),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
@@ -278,8 +280,7 @@ INSERT INTO public.S_payout_rules (role_code, scope) VALUES
     ('lio', 'chain'),
     ('lia', 'chain'),
     ('governing_council', 'director_assigned'),
-    ('ceo', 'company_wide_split'),
-    ('company', 'company_wide');
+    ('ceo', 'company_wide');
 
 -- (migration 011) Custom display label for one of the 5 fixed roles —
 -- it/ceo/governing_council/operation_manager/customer — which have no
@@ -324,9 +325,9 @@ CREATE TABLE public.S_commission_rates (
 );
 
 -- Seed with the current rates (HIERARCHY.md §3a). it/customer are
--- intentionally absent — not commission-eligible. CEO raised to 30% and
--- Company added at 33% in migration 013 (a genuine new role_code, above
--- CEO — see S_role_labels' comment for why it's NOT a rename target).
+-- intentionally absent — not commission-eligible. CEO sits at 30% and is
+-- the top tier — displayed everywhere as "Company" via S_role_labels
+-- (migration 014), held by exactly one account.
 INSERT INTO public.S_commission_rates (role, percentage) VALUES
     ('lia', 10.00),
     ('lio', 12.00),
@@ -337,8 +338,10 @@ INSERT INTO public.S_commission_rates (role, percentage) VALUES
     ('sr_core', 22.00),
     ('director', 24.00),
     ('governing_council', 26.00),
-    ('ceo', 30.00),
-    ('company', 33.00);
+    ('ceo', 30.00);
+
+-- (migration 014) The top tier displays as "Company" everywhere.
+INSERT INTO public.S_role_labels (role_code, label) VALUES ('ceo', 'Company');
 
 -- ==========================================
 -- AREAS AND PROJECTS

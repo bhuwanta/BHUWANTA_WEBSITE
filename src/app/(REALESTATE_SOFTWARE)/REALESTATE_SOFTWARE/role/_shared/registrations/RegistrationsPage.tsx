@@ -357,8 +357,8 @@ export default function RegistrationsPage({ currentUserRole, currentUserId }: Re
         <table className="w-full min-w-[1100px] text-left border-collapse">
           <thead className="bg-[#f7f8fa] sticky top-0 z-10 shadow-[0_1px_0_#e8ecf2]">
             <tr className="text-[10px] uppercase tracking-wide text-[#5a6a82]">
-              <th className="py-2 px-1.5 font-semibold cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none" onClick={() => handleSort('srno')}>
-                <span className="inline-flex items-center gap-1 whitespace-nowrap">
+              <th className="py-2 px-1.5 font-semibold cursor-pointer hover:bg-[#e8ecf2] transition-colors select-none text-center" onClick={() => handleSort('srno')}>
+                <span className="inline-flex items-center justify-center gap-1 whitespace-nowrap w-full">
                   Sr. No. <SortIcon col="srno" />
                 </span>
               </th>
@@ -420,8 +420,8 @@ export default function RegistrationsPage({ currentUserRole, currentUserId }: Re
             ) : (
               sorted.map((reg, index) => (
                 <tr key={reg.id} className={`hover:bg-[#f3f5f8] transition-colors ${!reg.isRead ? 'bg-[#c4a55a]/[0.04]' : ''}`}>
-                  <td className="py-1.5 px-1.5 text-[#5a6a82] whitespace-nowrap align-top">
-                    <div className="flex items-center gap-1.5">
+                  <td className="py-1.5 px-1.5 text-[#5a6a82] whitespace-nowrap align-top text-center">
+                    <div className="flex items-center justify-center gap-1.5">
                       {!reg.isRead && <span title="Unread" className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />}
                       {index + 1}
                     </div>

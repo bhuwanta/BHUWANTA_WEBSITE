@@ -3,6 +3,7 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { verifyCaller } from '../../auth'
 import { findUplineDirectorId } from '../../downline'
+import { requirePageModule } from '../../nav-modules'
 
 /**
  * §5: "A Director's whole downline inherits his Project assignments."
@@ -24,6 +25,12 @@ import { findUplineDirectorId } from '../../downline'
  */
 export async function getMyProjectsAction() {
   try {
+    // Module gate. This action backs TWO pages — My Projects, and the
+    // project dropdown on New Registration — so either module being on
+    // is enough. Gating it on my_projects alone would empty the
+    // dropdown for a role allowed to sell but not to browse projects.
+    const [ownPage, forSelling] = await Promise.all([requirePageModule('my_projects'), requirePageModule('new_registration')])
+    if (!ownPage.ok && !forSelling.ok) return { success: false, error: ownPage.error, data: [] }
     const caller = await verifyCaller()
     if (!caller) return { success: false, data: [] as any[], error: 'Not authenticated.' }
 

@@ -33,7 +33,7 @@ async function requireAdminPeer() {
 
 /** Non-sales roles that can still earn commission, in rank order above
  * the sales tiers. Sales-tier roles come from S_role_definitions. */
-const NON_SALES_COMMISSION_ROLES: RealEstateRole[] = ['governing_council', 'ceo', 'company']
+const NON_SALES_COMMISSION_ROLES: RealEstateRole[] = ['governing_council', 'ceo']
 
 /** CEO/Governing Council's renamed labels (S_role_labels, migration
  * 011) — an absent row means "use the ROLE_LABELS static default",
